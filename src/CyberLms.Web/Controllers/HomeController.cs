@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CyberLms.Web.Controllers;
 
 [Authorize]
-public class HomeController(AppDbContext db) : Controller
+public class HomeController(AppDbContext db) : AppController
 {
     public async Task<IActionResult> Index()
     {
@@ -31,7 +31,11 @@ public class HomeController(AppDbContext db) : Controller
         return View(vm);
     }
 
-    [AllowAnonymous]
-    public IActionResult Error() => View(new ErrorVm { RequestId = HttpContext.TraceIdentifier });
+    [AllowAnonymous, IgnoreAntiforgeryToken]
+    public IActionResult Error() => View("Status", new ErrorVm { Code = 500, RequestId = HttpContext.TraceIdentifier });
+
+    /// <summary>Friendly Arabic page for 400/403/404/500 (re-executed by the status-code middleware).</summary>
+    [AllowAnonymous, IgnoreAntiforgeryToken] // re-executed for failed POSTs (e.g. CSRF 400), so it must not demand a token itself
+    public IActionResult Status(int code = 500) => View(new ErrorVm { Code = code, RequestId = HttpContext.TraceIdentifier });
 }
 

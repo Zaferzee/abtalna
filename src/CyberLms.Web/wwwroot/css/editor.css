@@ -1,0 +1,28 @@
+/* Rich-text editor (Quill) overrides: localised strings (CSS variables set by the content form) and right-to-left layout. Loaded AFTER quill.snow.css. */
+.ql-container { min-height: 260px; background: #fff; }
+.ql-editor { min-height: 260px; }
+/* Editor (Quill) in RTL */
+[dir=rtl] .ql-editor { direction: rtl; text-align: right; }
+[dir=rtl] .ql-editor.ql-blank::before { right: 15px; left: auto; }
+[dir=rtl] .ql-toolbar.ql-snow { text-align: right; }
+/* Quill's built-in English strings are replaced by texts from the localisation resources (CSS variables set by the content form) */
+.ql-snow .ql-tooltip::before { content: var(--t-ql-visit, "Visit URL:"); }
+.ql-snow .ql-tooltip[data-mode=link]::before { content: var(--t-ql-enter, "Enter link:"); }
+.ql-snow .ql-tooltip a.ql-action::after { content: var(--t-ql-edit, "Edit"); }
+.ql-snow .ql-tooltip a.ql-remove::before { content: var(--t-ql-remove, "Remove"); }
+.ql-snow .ql-tooltip.ql-editing a.ql-action::after { content: var(--t-ql-save, "Save"); }
+.ql-snow .ql-picker.ql-header .ql-picker-label::before, .ql-snow .ql-picker.ql-header .ql-picker-item::before { content: var(--t-ql-normal, "Normal"); }
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: var(--t-ql-h2, "Heading 2"); }
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: var(--t-ql-h3, "Heading 3"); }
+[dir=rtl] .ql-snow .ql-tooltip { direction: rtl; text-align: right; }
+[dir=rtl] .ql-snow .ql-tooltip::before { margin-left: 8px; margin-right: 0; }
+[dir=rtl] .ql-snow .ql-tooltip a.ql-action::after { border-right: 0; border-left: 1px solid #ccc; margin-left: 0; margin-right: 16px; padding-right: 0; padding-left: 8px; }
+[dir=rtl] .ql-snow .ql-tooltip.ql-editing a.ql-action::after { border-left: 0; padding-left: 0; }
+[dir=rtl] .ql-snow .ql-tooltip a.ql-remove::before { margin-left: 0; margin-right: 8px; }
+[dir=rtl] .ql-snow .ql-picker-options { text-align: right; }
+[dir=rtl] .ql-snow .ql-picker-label { padding-left: 18px; padding-right: 8px; }
+[dir=rtl] .ql-snow .ql-picker-label svg { right: auto; left: 0; }
+/* Quill lists in right-to-left pages (bullets/numbers on the right) */
+[dir=rtl] .ql-editor ol, [dir=rtl] .ql-editor ul { padding-right: 0; padding-left: 0; }
+[dir=rtl] .ql-editor li:not(.ql-direction-ltr) { padding-left: 0; padding-right: 1.5em; }
+[dir=rtl] .ql-editor li:not(.ql-direction-ltr) > .ql-ui:before { margin-left: .3em; margin-right: -1.5em; text-align: left; }

@@ -67,6 +67,9 @@ Configure `Smtp:*` (and the password via secret) then *Admin -> Settings -> Emai
 5. Create an assessment + questions; take it as the employee; check *Reports* and export CSV/Excel.
 6. Upload a >30 MB video to confirm the upload limit configuration.
 
+## 10b. Arabic / RTL check
+After the smoke test, run section 1 of `PRODUCTION_ACCEPTANCE.md` on the server URL (login page, an admin screen, an assessment, a report export, a test e-mail) and record the results. Client PCs need an Arabic-capable font (Segoe UI/Tahoma are standard on Windows).
+
 ## 11. Updating
 Stop the site (or drop `app_offline.htm` into the folder), copy the new publish output over the old one **keeping `appsettings.Production.json`**, start again. Migrations run automatically.
 

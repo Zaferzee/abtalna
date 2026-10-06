@@ -5,17 +5,17 @@ namespace CyberLms.Web.Models;
 
 public class LoginVm
 {
-    [Required] public string Username { get; set; } = "";
-    [Required, DataType(DataType.Password)] public string Password { get; set; } = "";
+    [Required, Display(Name = "Username")] public string Username { get; set; } = "";
+    [Required, DataType(DataType.Password), Display(Name = "Password")] public string Password { get; set; } = "";
     public string? ReturnUrl { get; set; }
     public string? Error { get; set; }
 }
 
 public class ChangePasswordVm
 {
-    [DataType(DataType.Password)] public string? Current { get; set; }
-    [Required, DataType(DataType.Password)] public string New { get; set; } = "";
-    [Required, DataType(DataType.Password), Compare(nameof(New), ErrorMessage = "Passwords do not match.")] public string Confirm { get; set; } = "";
+    [DataType(DataType.Password), Display(Name = "Current password")] public string? Current { get; set; }
+    [Required, DataType(DataType.Password), Display(Name = "New password")] public string New { get; set; } = "";
+    [Required, DataType(DataType.Password), Compare(nameof(New)), Display(Name = "Confirm new password")] public string Confirm { get; set; } = "";
 }
 
 public class UserDashboardVm
@@ -75,4 +75,4 @@ public class Pager
     public int Total { get; set; }
     public int Pages => Math.Max(1, (int)Math.Ceiling(Total / (double)PageSize));
 }
-public class ErrorVm { public string RequestId { get; set; } = ""; }
+public class ErrorVm { public int Code { get; set; } public string RequestId { get; set; } = ""; }

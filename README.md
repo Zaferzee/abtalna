@@ -11,7 +11,7 @@ Internal, on-premises LMS for publishing cybersecurity policies/controls/trainin
 | Require acknowledgment, see who did / did not acknowledge, reset | Read content, watch video, open attachments |
 | Build assessments (single / true-false / multiple choice), pass mark, attempts | Take assessments, see Passed/Failed immediately |
 | Reports (assessment results, attempts, acknowledgments) + CSV/Excel export, email reminders | Acknowledge policies, view own history |
-| Users (create, import CSV, roles, reset password), audit log | Arabic / English UI with RTL |
+| Users (create, import CSV, roles, reset password), audit log | **Arabic-first, fully RTL** interface (English kept for future use) |
 | **Settings -> Branding & Appearance** (names, logo, favicon, colors, login page, welcome, footer), SMTP | |
 
 ## Quick start (development)
@@ -33,8 +33,9 @@ src/CyberLms.Web/
   Controllers/       employee-facing (Home, Content, Assessments, MyResults, Account, Files)
   Areas/Admin/       admin controllers, models, views
   Views/, wwwroot/   UI and local static libraries
-tests/CyberLms.Tests unit tests (scoring, CSV) + end-to-end HTTP tests against PostgreSQL
-docs/                DEPLOYMENT, DATABASE, ACTIVE_DIRECTORY, BACKUP_RESTORE, FUTURE_ROADMAP
+tests/CyberLms.Tests unit + localization-coverage + end-to-end HTTP tests (PostgreSQL)
+tests/ui/            Playwright walk-through that screenshots every Arabic screen and lists untranslated words
+docs/                DEPLOYMENT, DATABASE, ACTIVE_DIRECTORY, BACKUP_RESTORE, LOCALIZATION, PRODUCTION_ACCEPTANCE, FUTURE_ROADMAP
 scripts/backup.ps1   nightly backup script
 ```
 
@@ -42,4 +43,4 @@ scripts/backup.ps1   nightly backup script
 No secrets in the repository (connection string, SMTP password, seed admin password come from environment/secret config). CSRF tokens on every POST, server-side role authorization, HTML sanitization of rich text, strict upload validation (extension + size + file signature, generated storage names, files outside the web root, served only via authenticated endpoints), lockout after repeated failures, secure cookies/HSTS/CSP, no stack traces in production.
 
 ## Documentation
-[Deployment](docs/DEPLOYMENT.md) - [Database & ERD](docs/DATABASE.md) - [Active Directory](docs/ACTIVE_DIRECTORY.md) - [Backup/restore](docs/BACKUP_RESTORE.md) - [Roadmap & limitations](docs/FUTURE_ROADMAP.md)
+[Production acceptance (Arabic/RTL)](docs/PRODUCTION_ACCEPTANCE.md) - [Localization](docs/LOCALIZATION.md) - [Deployment](docs/DEPLOYMENT.md) - [Database & ERD](docs/DATABASE.md) - [Active Directory](docs/ACTIVE_DIRECTORY.md) - [Backup/restore](docs/BACKUP_RESTORE.md) - [Roadmap & limitations](docs/FUTURE_ROADMAP.md)

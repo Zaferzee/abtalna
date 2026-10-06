@@ -31,10 +31,10 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
     public async Task<IActionResult> SaveGeneral(SettingsVm vm)
     {
         if (!string.IsNullOrWhiteSpace(vm.BaseUrl) && !(Uri.TryCreate(vm.BaseUrl, UriKind.Absolute, out var u) && u.Scheme is "http" or "https"))
-        { TempData["Error"] = "Base URL must be an http(s) URL."; return RedirectToAction(nameof(Index)); }
+        { Failure("Base URL must be an http(s) URL."); return RedirectToAction(nameof(Index)); }
         await settings.SaveAsync(db, new Dictionary<string, string?> { ["App.BaseUrl"] = vm.BaseUrl?.Trim(), ["General.DefaultLanguage"] = vm.DefaultLanguage is "ar" ? "ar" : "en" });
         audit.Add("SETTINGS_UPDATED", "Settings", "General"); await db.SaveChangesAsync();
-        TempData["Success"] = "General settings saved.";
+        Success("General settings saved.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -43,12 +43,12 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
     {
         var colors = new (string Label, string Value)[]
         {
-            ("Primary", vm.PrimaryColor), ("Secondary", vm.SecondaryColor), ("Accent", vm.AccentColor), ("Header", vm.HeaderColor),
-            ("Header text", vm.HeaderTextColor), ("Sidebar", vm.SidebarColor), ("Sidebar text", vm.SidebarTextColor), ("Login background", vm.LoginBackgroundColor),
+            (L["Primary color"], vm.PrimaryColor), (L["Secondary color"], vm.SecondaryColor), (L["Accent color"], vm.AccentColor), (L["Header background"], vm.HeaderColor),
+            (L["Header text"], vm.HeaderTextColor), (L["Sidebar background"], vm.SidebarColor), (L["Sidebar text"], vm.SidebarTextColor), (L["Login page background"], vm.LoginBackgroundColor),
         };
         var bad = colors.Where(c => !Branding.ColorRegex.IsMatch(c.Value ?? "")).Select(c => c.Label).ToList();
-        if (bad.Count > 0) { TempData["Error"] = $"Invalid color for: {string.Join(", ", bad)} (use #RRGGBB)."; return RedirectToAction(nameof(Index)); }
-        if (string.IsNullOrWhiteSpace(vm.OrgName) || string.IsNullOrWhiteSpace(vm.SystemName)) { TempData["Error"] = "Organization name and system name are required."; return RedirectToAction(nameof(Index)); }
+        if (bad.Count > 0) { Failure("Invalid color for: {0} (use #RRGGBB).", string.Join(L.Sep, bad)); return RedirectToAction(nameof(Index)); }
+        if (string.IsNullOrWhiteSpace(vm.OrgName) || string.IsNullOrWhiteSpace(vm.SystemName)) { Failure("Organization name and system name are required."); return RedirectToAction(nameof(Index)); }
 
         static string Cut(string? s, int n) { s = s?.Trim() ?? ""; return s.Length > n ? s[..n] : s; }
         var values = new Dictionary<string, string?>
@@ -67,19 +67,19 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
             if (file is { Length: > 0 })
             {
                 var (err, stored) = await storage.SaveAsync(file, "branding", [AttachmentKind.Image]);
-                if (err != null) { errors.Add($"{label}: {err}"); return; }
+                if (err != null) { errors.Add($"{label}: {L.Format(err.Key, err.Args)}"); return; }
                 oldFiles.Add(settings.Get(key)); values[key] = stored!.RelativePath;
             }
             else if (remove) { oldFiles.Add(settings.Get(key)); values[key] = null; }
         }
-        await Handle(logo, removeLogo, Branding.Keys.Logo, "Logo");
-        await Handle(favicon, removeFavicon, Branding.Keys.Favicon, "Favicon");
-        await Handle(loginBackground, removeLoginBackground, Branding.Keys.LoginBgImage, "Login background");
+        await Handle(logo, removeLogo, Branding.Keys.Logo, L["Logo"]);
+        await Handle(favicon, removeFavicon, Branding.Keys.Favicon, L["Favicon"]);
+        await Handle(loginBackground, removeLoginBackground, Branding.Keys.LoginBgImage, L["Login background image"]);
         values[Branding.Keys.Version] = DateTime.UtcNow.Ticks.ToString(); // cache-busts logo/theme URLs => visible immediately
         await settings.SaveAsync(db, values);
         oldFiles.ForEach(storage.Delete);
         audit.Add("BRANDING_UPDATED", "Settings", "Branding"); await db.SaveChangesAsync();
-        TempData[errors.Count > 0 ? "Error" : "Success"] = errors.Count > 0 ? "Saved, but: " + string.Join(" ", errors) : "Branding saved and applied.";
+        TempData[errors.Count > 0 ? "Error" : "Success"] = errors.Count > 0 ? L.Format("Saved, but: {0}", string.Join(" ", errors)) : L["Branding saved and applied."];
         return RedirectToAction(nameof(Index));
     }
 
@@ -92,7 +92,7 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
         await settings.SaveAsync(db, keys);
         old.ForEach(storage.Delete);
         audit.Add("BRANDING_RESET", "Settings", "Branding"); await db.SaveChangesAsync();
-        TempData["Success"] = "Branding reset to defaults.";
+        Success("Branding reset to defaults.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -106,25 +106,26 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
             ["Smtp.Security"] = vm.SmtpSecurity is "None" or "StartTls" or "Ssl" ? vm.SmtpSecurity : "Auto",
         });
         audit.Add("SETTINGS_UPDATED", "Settings", "SMTP"); await db.SaveChangesAsync();
-        TempData["Success"] = "Email settings saved. (The SMTP password is read from server configuration, not from this page.)";
+        Success("Email settings saved. (The SMTP password is read from server configuration, not from this page.)");
         return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
     public async Task<IActionResult> TestEmail(string to)
     {
+        if (!new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(to)) { Failure("Enter a valid e-mail address."); return RedirectToAction(nameof(Index)); }
         var c = smtp.Get();
-        if (!c.Configured) { TempData["Error"] = "Configure host and sender first."; return RedirectToAction(nameof(Index)); }
+        if (!c.Configured) { Failure("Configure host and sender first."); return RedirectToAction(nameof(Index)); }
         try
         {
             using var client = new SmtpClient();
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
             await SmtpSender.ConnectAsync(client, c, cts.Token);
-            await client.SendAsync(SmtpSender.Build(c, new MailJob(to, "Test email", "<p>SMTP settings are working.</p>")), cts.Token);
+            await client.SendAsync(SmtpSender.Build(c, new MailJob(to, Res.Ar("Test email"), $"<div dir=\"rtl\" style=\"text-align:right\"><p>{System.Net.WebUtility.HtmlEncode(Res.Ar("SMTP settings are working."))}</p></div>")), cts.Token);
             await client.DisconnectAsync(true, cts.Token);
-            TempData["Success"] = $"Test email sent to {to}.";
+            Success("Test email sent to {0}.", to);
         }
-        catch (Exception ex) { TempData["Error"] = "Test failed: " + ex.Message; }
+        catch (Exception ex) { Failure("Test failed: {0}", ex.Message); }
         return RedirectToAction(nameof(Index));
     }
 }

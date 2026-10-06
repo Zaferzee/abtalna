@@ -8,8 +8,8 @@ namespace CyberLms.Web.Areas.Admin.Models;
 public class ContentFormVm
 {
     public int Id { get; set; }
-    [Required, StringLength(300)] public string Title { get; set; } = "";
-    [StringLength(2000)] public string? Description { get; set; }
+    [Required, StringLength(300), Display(Name = "Title")] public string Title { get; set; } = "";
+    [StringLength(2000), Display(Name = "Description")] public string? Description { get; set; }
     public string? Body { get; set; }
     public ContentType Type { get; set; } = ContentType.General;
     public bool RequiresAcknowledgment { get; set; }
@@ -31,8 +31,8 @@ public record ContentRow(Content Content, int Acked);
 public class AssessmentFormVm
 {
     public int Id { get; set; }
-    [Required, StringLength(300)] public string Title { get; set; } = "";
-    [StringLength(2000)] public string? Description { get; set; }
+    [Required, StringLength(300), Display(Name = "Title")] public string Title { get; set; } = "";
+    [StringLength(2000), Display(Name = "Description")] public string? Description { get; set; }
     public int? ContentId { get; set; }
     [Range(0, 100), Display(Name = "Passing percentage")] public int PassingPercentage { get; set; } = 70;
     [Range(0, 100), Display(Name = "Max attempts (0 = unlimited)")] public int MaxAttempts { get; set; } = 1;
@@ -44,9 +44,9 @@ public class QuestionFormVm
 {
     public int Id { get; set; }
     public int AssessmentId { get; set; }
-    [Required, StringLength(2000)] public string Text { get; set; } = "";
+    [Required, StringLength(2000), Display(Name = "Question text")] public string Text { get; set; } = "";
     public QuestionType Type { get; set; } = QuestionType.SingleChoice;
-    [Range(1, 1000)] public int Points { get; set; } = 1;
+    [Range(1, 1000), Display(Name = "Points")] public int Points { get; set; } = 1;
     public int SortOrder { get; set; }
     public List<string?> Options { get; set; } = Enumerable.Repeat<string?>(null, 8).ToList();
     public List<int> Correct { get; set; } = new();
@@ -58,14 +58,14 @@ public class QuestionsVm { public Assessment Assessment { get; set; } = null!; p
 public class UserFormVm
 {
     public int Id { get; set; }
-    [Required, StringLength(256)] public string Username { get; set; } = "";
+    [Required, StringLength(256), Display(Name = "Username")] public string Username { get; set; } = "";
     [Required, StringLength(256), Display(Name = "Display name")] public string DisplayName { get; set; } = "";
-    [EmailAddress, StringLength(256)] public string? Email { get; set; }
-    [StringLength(256)] public string? Department { get; set; }
+    [EmailAddress, StringLength(256), Display(Name = "Email")] public string? Email { get; set; }
+    [StringLength(256), Display(Name = "Department")] public string? Department { get; set; }
     public bool IsAdmin { get; set; }
     public bool IsActive { get; set; } = true;
     public string AuthSource { get; set; } = "Local";
-    [DataType(DataType.Password)] public string? Password { get; set; }
+    [DataType(DataType.Password), Display(Name = "Password")] public string? Password { get; set; }
 }
 
 public class UserListVm

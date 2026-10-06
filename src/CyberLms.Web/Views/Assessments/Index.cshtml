@@ -1,7 +1,7 @@
 @model List<AssessmentListItem>
 @{ ViewData["Title"] = L["Assessments"]; }
 <h1 class="h4 mb-3">@L["Assessments"]</h1>
-@if (Model.Count == 0) { <div class="text-muted">@L["Nothing here yet."]</div> }
+@if (Model.Count == 0) { <div class="alert alert-light border">@L["No assessments available."]</div> }
 <div class="row g-3">
 @foreach (var i in Model)
 {
@@ -9,14 +9,14 @@
         <h2 class="h6 bidi">@i.Assessment.Title</h2>
         <p class="text-muted small bidi">@i.Assessment.Description</p>
         <ul class="list-unstyled small flex-grow-1">
-            <li>@L["Questions"]: @i.QuestionCount</li>
+            <li>@L["Number of questions"]: @i.QuestionCount</li>
             <li>@L["Passing score"]: @i.Assessment.PassingPercentage%</li>
             <li>@L["Attempts"]: @i.CompletedAttempts / @(i.Assessment.MaxAttempts == 0 ? L["Unlimited"] : i.Assessment.MaxAttempts.ToString())</li>
-            @if (i.Best != null) { <li>@L["Score"]: <strong>@i.Best.Percentage.ToString("0.#")%</strong> <span class="badge text-bg-@(i.Best.Passed == true ? "success" : "danger")">@L[i.Best.Passed == true ? "Passed" : "Failed"]</span></li> }
+            @if (i.Best != null) { <li>@L["Best score"]: <strong>@i.Best.Percentage.ToString("0.#")%</strong> <span class="badge text-bg-@(i.Best.Passed == true ? "success" : "danger")">@L[i.Best.Passed == true ? "Passed" : "Failed"]</span></li> }
         </ul>
         @if (i.CanStart)
         {
-            <form method="post" asp-action="Start" asp-route-id="@i.Assessment.Id"><button class="btn btn-primary">@L[i.HasInProgress ? "Continue" : (i.CompletedAttempts > 0 ? "Retry" : "Start assessment")]</button></form>
+            <form method="post" asp-action="Start" asp-route-id="@i.Assessment.Id"><button class="btn btn-primary"><i class="bi bi-play-fill"></i> @L[i.HasInProgress ? "Continue assessment" : (i.CompletedAttempts > 0 ? "Retry" : "Start assessment")]</button></form>
         }
         else { <div class="text-muted small">@L["Maximum attempts reached"]</div> }
     </div></div></div>

@@ -33,7 +33,7 @@ erDiagram
 | `ContentAttachments` | File *metadata only*: original name, `StoredPath` (relative to the storage root), MIME type, size, kind. Binary lives on disk. |
 | `UserAcknowledgments` | One row per (User, Content, ContentVersion) - **unique index** prevents duplicates. Admin "reset" deletes the row and writes an audit entry. |
 | `Assessments` | Title, optional `ContentId`, `PassingPercentage` (CHECK 0-100), `MaxAttempts` (0 = unlimited), `IsPublished`. |
-| `Questions`, `QuestionOptions` | Single choice / True-False / Multiple choice, points, order, correct flags. |
+| `Questions`, `QuestionOptions` | Single choice / True-False / Multiple choice, points, order, correct flags. True/False options are stored as the keys `True`/`False` and shown in the UI language. |
 | `AssessmentAttempts` | One row per attempt: start/finish, totals, score, percentage, `Passed`, and a **snapshot of the passing percentage**. Never overwritten; results are not stored on `Users`. |
 | `AssessmentAnswers` | Per attempt/question: selected option ids (`int[]`), correctness, points. Unique (Attempt, Question). Question deletion is restricted once answers exist (and the UI locks questions once attempts exist). |
 | `AuditLogs` | Time, admin id/username, action, entity, details, IP. |

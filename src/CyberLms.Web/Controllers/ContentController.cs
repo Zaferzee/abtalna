@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CyberLms.Web.Controllers;
 
 [Authorize]
-public class ContentController(AppDbContext db) : Controller
+public class ContentController(AppDbContext db) : AppController
 {
     private IQueryable<Content> Published => db.Contents.AsNoTracking().Where(c => c.Status == ContentStatus.Published);
 

@@ -27,9 +27,9 @@ public class ReportsController(ReportService reports, AppDbContext db, TimeDispl
         if (export != null)
         {
             var all = await reports.AssessmentResultsAllAsync(f);
-            audit.Add("REPORT_EXPORTED", "Report", "AssessmentResults", $"{all.Count} rows, {export}"); await db.SaveChangesAsync();
-            return Export(export, "assessment-results", ["Username", "Name", "Department", "Email", "Assessment", "Status", "Best score %", "Attempts", "Last attempt"],
-                all.Select(r => (IEnumerable<object?>)[r.Username, r.DisplayName, r.Department, r.Email, r.Assessment, r.Status, r.BestPercentage, r.Attempts, time.Format(r.LastAttempt)]));
+            audit.Add("REPORT_EXPORTED", "Report", "AssessmentResults", Res.Ar("{0} rows, {1}", all.Count, export)); await db.SaveChangesAsync();
+            return Export(export, L["File: assessment results"], H("Username", "Name", "Department", "Email", "Assessment", "Status", "Best score %", "Attempts", "Last attempt date"),
+                all.Select(r => (IEnumerable<object?>)[r.Username, r.DisplayName, r.Department, r.Email, r.Assessment, L[Labels.Status(r.Status)], r.BestPercentage, r.Attempts, time.Export(r.LastAttempt)]));
         }
         var vm = await Base(f, page);
         (vm.Assessments, vm.Pager.Total) = await reports.AssessmentResultsAsync(f, vm.Pager.Page, PageSize);
@@ -41,9 +41,9 @@ public class ReportsController(ReportService reports, AppDbContext db, TimeDispl
         if (export != null)
         {
             var all = await reports.AcknowledgmentsAllAsync(f);
-            audit.Add("REPORT_EXPORTED", "Report", "Acknowledgments", $"{all.Count} rows, {export}"); await db.SaveChangesAsync();
-            return Export(export, "acknowledgments", ["Username", "Name", "Department", "Email", "Content", "Status", "Acknowledged at"],
-                all.Select(r => (IEnumerable<object?>)[r.Username, r.DisplayName, r.Department, r.Email, r.Content, r.Status, time.Format(r.AcknowledgedAt)]));
+            audit.Add("REPORT_EXPORTED", "Report", "Acknowledgments", Res.Ar("{0} rows, {1}", all.Count, export)); await db.SaveChangesAsync();
+            return Export(export, L["File: acknowledgments"], H("Username", "Name", "Department", "Email", "Content", "Status", "Acknowledgment date"),
+                all.Select(r => (IEnumerable<object?>)[r.Username, r.DisplayName, r.Department, r.Email, r.Content, L[Labels.Status(r.Status)], time.Export(r.AcknowledgedAt)]));
         }
         var vm = await Base(f, page);
         (vm.Acks, vm.Pager.Total) = await reports.AcknowledgmentsAsync(f, vm.Pager.Page, PageSize);
@@ -55,9 +55,9 @@ public class ReportsController(ReportService reports, AppDbContext db, TimeDispl
         if (export != null)
         {
             var all = await reports.AttemptsAllAsync(f);
-            audit.Add("REPORT_EXPORTED", "Report", "Attempts", $"{all.Count} rows, {export}"); await db.SaveChangesAsync();
-            return Export(export, "attempts", ["Username", "Name", "Assessment", "Completed", "Correct", "Total questions", "Score %", "Result"],
-                all.Select(r => (IEnumerable<object?>)[r.Username, r.DisplayName, r.Assessment, time.Format(r.Completed), r.Correct, r.Total, r.Percentage, r.Passed == true ? "Passed" : "Failed"]));
+            audit.Add("REPORT_EXPORTED", "Report", "Attempts", Res.Ar("{0} rows, {1}", all.Count, export)); await db.SaveChangesAsync();
+            return Export(export, L["File: attempts"], H("Username", "Name", "Assessment", "Assessment date", "Correct answers", "Total questions", "Score %", "Result"),
+                all.Select(r => (IEnumerable<object?>)[r.Username, r.DisplayName, r.Assessment, time.Export(r.Completed), r.Correct, r.Total, r.Percentage, L[r.Passed == true ? "Passed" : "Failed"]]));
         }
         var vm = await Base(f, page);
         (vm.Attempts, vm.Pager.Total) = await reports.AttemptsAsync(f, vm.Pager.Page, PageSize);
@@ -77,7 +77,7 @@ public class ReportsController(ReportService reports, AppDbContext db, TimeDispl
     [HttpPost]
     public async Task<IActionResult> Remind(string kind, ReportFilter f)
     {
-        if (!notify.Ready) { TempData["Error"] = "SMTP is not configured (Settings → Email)."; return RedirectToAction(kind == "ack" ? nameof(Acknowledgments) : nameof(Assessments), f); }
+        if (!notify.Ready) { Failure("SMTP is not configured (Settings → Email)."); return RedirectToAction(kind == "ack" ? nameof(Acknowledgments) : nameof(Assessments), f); }
         int n;
         if (kind == "ack")
         {
@@ -85,7 +85,7 @@ public class ReportsController(ReportService reports, AppDbContext db, TimeDispl
             var rows = await reports.AcknowledgmentsAllAsync(f);
             n = 0;
             foreach (var g in rows.GroupBy(r => (r.Email, r.DisplayName)))
-                n += notify.Send([(g.Key.Email, g.Key.DisplayName)], "Reminder: policy acknowledgment required", $"You still need to acknowledge: {string.Join(", ", g.Select(r => r.Content))}", "/Content/Policies");
+                n += notify.Send([(g.Key.Email, g.Key.DisplayName)], "Reminder: policy acknowledgment required", "You still need to acknowledge: {0}", [string.Join(Res.Ar("List separator"), g.Select(r => r.Content))], "/Content/Policies");
         }
         else
         {
@@ -93,13 +93,15 @@ public class ReportsController(ReportService reports, AppDbContext db, TimeDispl
             var rows = await reports.AssessmentResultsAllAsync(f);
             n = 0;
             foreach (var g in rows.GroupBy(r => (r.Email, r.DisplayName)))
-                n += notify.Send([(g.Key.Email, g.Key.DisplayName)], "Reminder: assessment pending", $"You have not yet attempted: {string.Join(", ", g.Select(r => r.Assessment))}", "/Assessments");
+                n += notify.Send([(g.Key.Email, g.Key.DisplayName)], "Reminder: assessment pending", "You have not yet attempted: {0}", [string.Join(Res.Ar("List separator"), g.Select(r => r.Assessment))], "/Assessments");
         }
-        audit.Add("REMINDER_QUEUED", "Report", kind, $"{n} emails");
+        audit.Add("REMINDER_QUEUED", "Report", kind, Res.Ar("{0} emails", n));
         await db.SaveChangesAsync();
-        TempData["Success"] = $"{n} reminder email(s) queued (users without an email address are skipped).";
+        Success("{0} reminder email(s) queued (users without an email address are skipped).", n);
         return RedirectToAction(kind == "ack" ? nameof(Acknowledgments) : nameof(Assessments), new { f.AssessmentId, f.ContentId });
     }
+
+    private string[] H(params string[] keys) => keys.Select(k => L[k]).ToArray();
 
     private IActionResult Export(string format, string name, string[] header, IEnumerable<IEnumerable<object?>> rows)
     {

@@ -1,27 +1,28 @@
 @model UserFormVm
-@{ ViewData["Title"] = Model.Id == 0 ? "New user" : "Edit user"; var isNew = Model.Id == 0; }
+@{ ViewData["Title"] = Model.Id == 0 ? L["New user"] : L["Edit user"]; var isNew = Model.Id == 0; }
+<nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">@L["Users"]</a></li><li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li></ol></nav>
 <h1 class="h4 mb-3">@ViewData["Title"]</h1>
-<div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-body"><form method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="mb-3"><label class="form-label" asp-for="Username">Username (DOMAIN\user for Windows accounts)</label><input class="form-control" dir="ltr" asp-for="Username" readonly="@(!isNew)" /><span class="text-danger" asp-validation-for="Username"></span></div>
-    <div class="mb-3"><label class="form-label" asp-for="DisplayName"></label><input class="form-control bidi" asp-for="DisplayName" /><span class="text-danger" asp-validation-for="DisplayName"></span></div>
-    <div class="row"><div class="col-md-6 mb-3"><label class="form-label" asp-for="Email"></label><input class="form-control" dir="ltr" asp-for="Email" /><span class="text-danger" asp-validation-for="Email"></span></div>
-    <div class="col-md-6 mb-3"><label class="form-label" asp-for="Department"></label><input class="form-control bidi" asp-for="Department" /></div></div>
+<div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-body"><form method="post" novalidate>
+    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+    <div class="mb-3"><label class="form-label" asp-for="Username">@L["Username (DOMAIN\\user for Windows accounts)"]</label><input class="form-control" dir="ltr" asp-for="Username" readonly="@(!isNew)" /></div>
+    <div class="mb-3"><label class="form-label" asp-for="DisplayName">@L["Display name"]</label><input class="form-control bidi" asp-for="DisplayName" /></div>
+    <div class="row"><div class="col-md-6 mb-3"><label class="form-label" asp-for="Email">@L["Email"]</label><input class="form-control" dir="ltr" asp-for="Email" /></div>
+    <div class="col-md-6 mb-3"><label class="form-label" asp-for="Department">@L["Department"]</label><input class="form-control bidi" asp-for="Department" /></div></div>
     @if (isNew)
     {
-        <div class="mb-3"><label class="form-label">Sign-in type</label><select class="form-select" asp-for="AuthSource"><option value="Local">Local password</option>@if ((bool)ViewBag.Windows) { <option value="Windows">Windows / Active Directory</option> }</select></div>
-        <div class="mb-3"><label class="form-label" asp-for="Password">Initial password (Local only; user must change it)</label><input type="password" class="form-control" asp-for="Password" autocomplete="new-password" /><span class="text-danger" asp-validation-for="Password"></span></div>
+        <div class="mb-3"><label class="form-label">@L["Sign-in type"]</label><select class="form-select" asp-for="AuthSource"><option value="Local">@L["Sign-in: Local password"]</option>@if ((bool)ViewBag.Windows) { <option value="Windows">@L["Sign-in: Windows / Active Directory"]</option> }</select></div>
+        <div class="mb-3"><label class="form-label" asp-for="Password">@L["Initial password (Local only; the user must change it)"]</label><input type="password" dir="ltr" class="form-control" asp-for="Password" autocomplete="new-password" /></div>
     }
-    else { <div class="mb-3 text-muted">Sign-in type: @Model.AuthSource</div> }
-    <div class="form-check form-switch mb-2"><input class="form-check-input" type="checkbox" asp-for="IsAdmin" /><label class="form-check-label" asp-for="IsAdmin">Administrator</label></div>
-    <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" asp-for="IsActive" /><label class="form-check-label" asp-for="IsActive">Active</label></div>
-    <button class="btn btn-primary">Save</button> <a class="btn btn-link" asp-action="Index">Cancel</a>
+    else { <div class="mb-3 text-muted">@L["Sign-in type"]: @L[Labels.AuthSource(Model.AuthSource)]</div> }
+    <div class="form-check form-switch mb-2"><input class="form-check-input" type="checkbox" asp-for="IsAdmin" /><label class="form-check-label" asp-for="IsAdmin">@L["Administrator"]</label></div>
+    <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" asp-for="IsActive" /><label class="form-check-label" asp-for="IsActive">@L["Active"]</label></div>
+    <button class="btn btn-primary">@L["Save"]</button> <a class="btn btn-link" asp-action="Index">@L["Cancel"]</a>
 </form></div></div></div>
 @if (!isNew && Model.AuthSource == "Local")
 {
-    <div class="col-lg-5"><div class="card"><div class="card-header bg-white fw-semibold">Reset password</div><div class="card-body">
-        <form method="post" asp-action="ResetPassword" asp-route-id="@Model.Id">
-            <div class="mb-3"><input type="password" class="form-control" name="newPassword" autocomplete="new-password" placeholder="Temporary password" /><div class="form-text">The user must change it at next sign-in. Also clears lockout.</div></div>
-            <button class="btn btn-outline-danger">Reset password</button></form></div></div></div>
+    <div class="col-lg-5"><div class="card"><div class="card-header bg-white fw-semibold">@L["Reset password"]</div><div class="card-body">
+        <form method="post" asp-action="ResetPassword" asp-route-id="@Model.Id" novalidate>
+            <div class="mb-3"><input type="password" dir="ltr" class="form-control" name="newPassword" autocomplete="new-password" placeholder="@L["Temporary password"]" aria-label="@L["Temporary password"]" /><div class="form-text">@L["The user must change it at next sign-in. Also clears lockout."]</div></div>
+            <button class="btn btn-outline-danger">@L["Reset password"]</button></form></div></div></div>
 }
 </div>

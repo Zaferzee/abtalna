@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberLms.Web.Controllers;
 
-public class FilesController(AppDbContext db, StorageService storage, SettingsService settings) : Controller
+public class FilesController(AppDbContext db, StorageService storage, SettingsService settings) : AppController
 {
     /// <summary>Authenticated download/stream of a content attachment. Non-admins can only reach attachments of published content.</summary>
     [Authorize]
@@ -26,6 +26,19 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
         return download || a.Kind == AttachmentKind.Document && type != "application/pdf"
             ? File(stream, type, a.FileName, enableRangeProcessing: true)
             : File(stream, type, enableRangeProcessing: true);
+    }
+
+    /// <summary>Images embedded in rich-text content (uploaded through the editor). Any signed-in user may view them.</summary>
+    [Authorize, HttpGet("Files/Inline/{name}")]
+    public IActionResult Inline(string name)
+    {
+        if (!System.Text.RegularExpressions.Regex.IsMatch(name ?? "", "^[0-9a-f]{32}\\.(png|jpe?g|gif|webp)$")) return NotFound();
+        var path = storage.Resolve("inline/" + name);
+        if (path == null || !System.IO.File.Exists(path)) return NotFound();
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers["Content-Security-Policy"] = "default-src 'none'; sandbox";
+        Response.Headers.CacheControl = "private, max-age=86400";
+        return PhysicalFile(path, StorageService.ContentTypeFor(path));
     }
 
     /// <summary>Branding images are public (needed on the login page).</summary>

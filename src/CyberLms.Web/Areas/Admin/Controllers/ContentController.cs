@@ -11,7 +11,16 @@ namespace CyberLms.Web.Areas.Admin.Controllers;
 
 public class ContentController(AppDbContext db, StorageService storage, AuditService audit, NotificationService notify) : AdminController
 {
-    private static readonly HtmlSanitizer Sanitizer = new();
+    private static readonly HtmlSanitizer Sanitizer = CreateSanitizer();
+
+    private static HtmlSanitizer CreateSanitizer()
+    {
+        var s = new HtmlSanitizer();
+        // Images may only reference files uploaded through the editor (served by FilesController.Inline); no external or data: images.
+        s.FilterUrl += (_, e) => { if (string.Equals(e.Tag?.LocalName, "img", StringComparison.OrdinalIgnoreCase) && !(e.OriginalUrl ?? "").StartsWith("/Files/Inline/", StringComparison.Ordinal)) e.SanitizedUrl = null; };
+        s.AllowedAttributes.Add("dir");
+        return s;
+    }
 
     public async Task<IActionResult> Index(string? q, ContentType? type, ContentStatus? status, int page = 1)
     {
@@ -41,7 +50,7 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         if (publish && errors.Count == 0) { Publish(c); }
         await db.SaveChangesAsync();
         if (errors.Count > 0) { TempData["Error"] = string.Join(" ", errors); return RedirectToAction(nameof(Edit), new { id = c.Id }); }
-        TempData["Success"] = publish ? "Content created and published." : "Content created as draft.";
+        Success(publish ? "Content created and published." : "Content created as draft.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -69,7 +78,7 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         audit.Add("CONTENT_UPDATED", "Content", c.Id, c.Title);
         if (command == "publish" && errors.Count == 0 && c.Status != ContentStatus.Published) Publish(c);
         await db.SaveChangesAsync();
-        TempData[errors.Count > 0 ? "Error" : "Success"] = errors.Count > 0 ? string.Join(" ", errors) : "Saved.";
+        TempData[errors.Count > 0 ? "Error" : "Success"] = errors.Count > 0 ? string.Join(" ", errors) : L["Saved."];
         return errors.Count > 0 ? RedirectToAction(nameof(Edit), new { id }) : RedirectToAction(nameof(Index));
     }
 
@@ -81,7 +90,7 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         if (publish) Publish(c);
         else { c.Status = ContentStatus.Draft; audit.Add("CONTENT_UNPUBLISHED", "Content", c.Id, c.Title); }
         await db.SaveChangesAsync();
-        TempData["Success"] = publish ? "Published." : "Unpublished.";
+        Success(publish ? "Published." : "Unpublished.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -90,15 +99,15 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     {
         var c = await db.Contents.Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
         if (c == null) return NotFound();
-        if (c.Status == ContentStatus.Published) { TempData["Error"] = "Unpublish the content before deleting it."; return RedirectToAction(nameof(Index)); }
+        if (c.Status == ContentStatus.Published) { Failure("Unpublish the content before deleting it."); return RedirectToAction(nameof(Index)); }
         if (await db.UserAcknowledgments.AnyAsync(a => a.ContentId == id))
-        { TempData["Error"] = "This content has acknowledgment records and cannot be deleted (compliance evidence). Keep it unpublished."; return RedirectToAction(nameof(Index)); }
+        { Failure("This content has acknowledgment records and cannot be deleted (compliance evidence). Keep it unpublished."); return RedirectToAction(nameof(Index)); }
         var paths = c.Attachments.Select(a => a.StoredPath).ToList();
         audit.Add("CONTENT_DELETED", "Content", c.Id, c.Title);
         db.Contents.Remove(c);
         await db.SaveChangesAsync();
         paths.ForEach(storage.Delete);
-        TempData["Success"] = "Deleted.";
+        Success("Deleted.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -121,9 +130,9 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         var q = db.UserAcknowledgments.Where(a => a.ContentId == id);
         if (userId != null) q = q.Where(a => a.UserId == userId);
         var n = await q.ExecuteDeleteAsync();
-        audit.Add("ACKNOWLEDGMENTS_RESET", "Content", id, userId == null ? $"All ({n}) acknowledgments reset" : $"Reset for user {userId}");
+        audit.Add("ACKNOWLEDGMENTS_RESET", "Content", id, userId == null ? Res.Ar("All ({0}) acknowledgments reset", n) : Res.Ar("Reset for user {0}", userId));
         await db.SaveChangesAsync();
-        TempData["Success"] = $"{n} acknowledgment(s) reset.";
+        Success("{0} acknowledgment(s) reset.", n);
         return Redirect(Request.Headers.Referer.ToString() is { Length: > 0 } r && Url.IsLocalUrl(new Uri(r).PathAndQuery) ? new Uri(r).PathAndQuery : Url.Action(nameof(Index))!);
     }
 
@@ -132,18 +141,30 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     {
         var c = await db.Contents.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.Status == ContentStatus.Published);
         if (c == null) return NotFound();
-        if (!notify.Ready) { TempData["Error"] = "SMTP is not configured (Settings → Email)."; return RedirectToAction(nameof(Index)); }
+        if (!notify.Ready) { Failure("SMTP is not configured (Settings → Email)."); return RedirectToAction(nameof(Index)); }
         var users = db.Users.AsNoTracking().Where(u => u.IsActive && u.Email != null && u.UserRoles.Any(r => r.Role.Name == RoleNames.User));
         if (c.RequiresAcknowledgment)
             users = users.Where(u => !db.UserAcknowledgments.Any(a => a.UserId == u.Id && a.ContentId == id && a.ContentVersion == c.Version));
         var list = await users.Select(u => new { u.Email, u.DisplayName }).ToListAsync();
         var n = notify.Send(list.Select(u => (u.Email, u.DisplayName)),
-            c.RequiresAcknowledgment ? $"Acknowledgment required: {c.Title}" : $"New content: {c.Title}",
-            c.RequiresAcknowledgment ? $"Please read and acknowledge: {c.Title}" : $"New content has been published: {c.Title}", $"/Content/Details/{id}");
-        audit.Add("NOTIFICATION_QUEUED", "Content", id, $"{n} emails");
+            c.RequiresAcknowledgment ? "Acknowledgment required: {0}" : "New content: {0}",
+            c.RequiresAcknowledgment ? "Please read and acknowledge: {0}" : "New content has been published: {0}", [c.Title], $"/Content/Details/{id}");
+        audit.Add("NOTIFICATION_QUEUED", "Content", id, Res.Ar("{0} emails", n));
         await db.SaveChangesAsync();
-        TempData["Success"] = $"{n} email(s) queued.";
+        Success("{0} email(s) queued.", n);
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>Image upload for the rich-text editor. Returns the URL to embed.</summary>
+    [HttpPost]
+    public async Task<IActionResult> UploadImage(IFormFile file)
+    {
+        if (file == null) return BadRequest(new { error = L["The file is empty."] });
+        var (err, stored) = await storage.SaveAsync(file, "inline", [AttachmentKind.Image]);
+        if (err != null) return BadRequest(new { error = L.Format(err.Key, err.Args) });
+        audit.Add("ATTACHMENT_ADDED", "Content", null, stored!.OriginalName);
+        await db.SaveChangesAsync();
+        return Json(new { url = "/Files/Inline/" + Path.GetFileName(stored.RelativePath) });
     }
 
     private void Publish(Content c)
@@ -157,7 +178,7 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     {
         if (!string.IsNullOrWhiteSpace(vm.ExternalUrl) && !(Uri.TryCreate(vm.ExternalUrl, UriKind.RelativeOrAbsolute, out var u) &&
             (!u.IsAbsoluteUri ? vm.ExternalUrl.StartsWith('/') : u.Scheme is "http" or "https")))
-            ModelState.AddModelError(nameof(vm.ExternalUrl), "Enter an http(s) URL or a path starting with '/'.");
+            ModelState.AddModelError(nameof(vm.ExternalUrl), L["Enter an http(s) URL or a path starting with '/'."]);
     }
 
     private static void Apply(Content c, ContentFormVm vm)
@@ -174,7 +195,7 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         foreach (var f in files.Where(f => f.Length > 0))
         {
             var (err, stored) = await storage.SaveAsync(f, $"content/{c.Id}");
-            if (err != null) { errors.Add($"{f.FileName}: {err}"); continue; }
+            if (err != null) { errors.Add($"{f.FileName}: {L.Format(err.Key, err.Args)}"); continue; }
             db.ContentAttachments.Add(new ContentAttachment
             {
                 ContentId = c.Id, FileName = stored!.OriginalName, StoredPath = stored.RelativePath, ContentType = stored.ContentType, SizeBytes = stored.Size, Kind = stored.Kind,

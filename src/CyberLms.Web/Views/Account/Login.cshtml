@@ -27,11 +27,12 @@
         <div class="card"><div class="card-body p-4">
             <h2 class="h5">@b.LoginTitle</h2>
             @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <p class="text-muted bidi">@b.LoginSubtitle</p> }
-            @if (TempData["Error"] is string te) { <div class="alert alert-danger">@te</div> }
-            @if (Model.Error != null) { <div class="alert alert-danger">@L[Model.Error]</div> }
+            @if (TempData["Error"] is string te) { <div class="alert alert-danger" role="alert">@te</div> }
+            @if (Model.Error != null) { <div class="alert alert-danger" role="alert">@Model.Error</div> }
+            @if (!ViewData.ModelState.IsValid) { <div class="alert alert-danger" role="alert"><div asp-validation-summary="All"></div></div> }
             @if (auth.LocalEnabled)
             {
-                <form method="post" asp-action="Login">
+                <form method="post" asp-action="Login" novalidate>
                     <input type="hidden" asp-for="ReturnUrl" />
                     <div class="mb-3"><label class="form-label" asp-for="Username">@L["Username"]</label><input class="form-control" asp-for="Username" autocomplete="username" autofocus dir="ltr" /></div>
                     <div class="mb-3"><label class="form-label" asp-for="Password">@L["Password"]</label><input class="form-control" asp-for="Password" autocomplete="current-password" dir="ltr" /></div>
@@ -47,7 +48,7 @@
         <div class="d-flex justify-content-between align-items-center mt-2">
             <form method="post" asp-action="SetLanguage" class="m-0">
                 <input type="hidden" name="lang" value="@(L.IsRtl ? "en" : "ar")" /><input type="hidden" name="returnUrl" value="/Account/Login" />
-                <button class="btn btn-sm btn-link">@(L.IsRtl ? "English" : "العربية")</button>
+                <button class="btn btn-sm btn-link" lang="@(L.IsRtl ? "en" : "ar")">@(L.IsRtl ? "English" : "العربية")</button>
             </form>
             <span class="text-muted small">@b.FooterText</span>
         </div>

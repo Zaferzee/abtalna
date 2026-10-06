@@ -1,20 +1,21 @@
 @model TakeVm
 @{ ViewData["Title"] = Model.Assessment.Title; var n = 0; }
 <h1 class="h4 bidi">@Model.Assessment.Title</h1>
-<p class="text-muted">@L["Passing score"]: @Model.Assessment.PassingPercentage% &middot; @L["Questions"]: @Model.Questions.Count</p>
-<form method="post" asp-action="Submit" asp-route-id="@Model.Attempt.Id" data-confirm="@L["Submit answers"]?">
+@if (!string.IsNullOrWhiteSpace(Model.Assessment.Description)) { <p class="bidi">@Model.Assessment.Description</p> }
+<div class="alert alert-info py-2">@L.Format("Instructions: answer all {0} questions, then submit. The passing score is {1}%.", Model.Questions.Count, Model.Assessment.PassingPercentage)</div>
+<form method="post" asp-action="Submit" asp-route-id="@Model.Attempt.Id" data-confirm="@L["Submit your answers now? You cannot change them afterwards."]" novalidate>
 @foreach (var q in Model.Questions)
 {
     n++;
     var multi = q.Type == QuestionType.MultipleChoice;
-    <div class="card question-card mb-3"><div class="card-body">
-        <div class="fw-semibold bidi mb-1">@n. @q.Text</div>
-        <div class="small text-muted mb-2">@L[multi ? "Select all that apply" : "Select one answer"] &middot; @q.Points</div>
+    <fieldset class="card question-card mb-3"><div class="card-body">
+        <legend class="fw-semibold bidi mb-1 fs-6">@n. @q.Text</legend>
+        <div class="small text-muted mb-2">@L[multi ? "Select all that apply" : "Select one answer"] &middot; @L.Format("{0} point(s)", q.Points)</div>
         @foreach (var o in q.Options.OrderBy(o => o.SortOrder))
         {
             <div class="form-check"><input class="form-check-input" type="@(multi ? "checkbox" : "radio")" name="q_@q.Id" id="o_@o.Id" value="@o.Id" /><label class="form-check-label bidi" for="o_@o.Id">@(q.Type == QuestionType.TrueFalse ? L[o.Text] : o.Text)</label></div>
         }
-    </div></div>
+    </div></fieldset>
 }
-<button class="btn btn-primary btn-lg">@L["Submit answers"]</button>
+<button class="btn btn-primary btn-lg"><i class="bi bi-send"></i> @L["Submit answers"]</button>
 </form>

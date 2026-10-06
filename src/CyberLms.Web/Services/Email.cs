@@ -99,20 +99,31 @@ public class NotificationService(EmailQueue queue, SmtpConfigProvider smtp, Sett
 
     public string BaseUrl => (settings.Get("App.BaseUrl", cfg["App:BaseUrl"]) ?? "").TrimEnd('/');
 
-    public int Send(IEnumerable<(string? Email, string Name)> recipients, string subject, string message, string? path)
+    /// <summary>
+    /// Queues one e-mail per recipient. Subject/message are resource keys with <paramref name="args"/>; e-mails are always rendered
+    /// in the system language (Arabic, right-to-left) regardless of who triggered them.
+    /// </summary>
+    public int Send(IEnumerable<(string? Email, string Name)> recipients, string subjectKey, string messageKey, object?[] args, string? path)
     {
-        var brand = Branding.From(settings);
-        var link = string.IsNullOrEmpty(BaseUrl) ? null : BaseUrl + (path ?? "/");
         var n = 0;
+        foreach (var job in Compose(recipients, subjectKey, messageKey, args, path)) { queue.Enqueue(job); n++; }
+        return n;
+    }
+
+    public IEnumerable<MailJob> Compose(IEnumerable<(string? Email, string Name)> recipients, string subjectKey, string messageKey, object?[] args, string? path)
+    {
+        var brand = Branding.From(settings, Res.Arabic);
+        var link = string.IsNullOrEmpty(BaseUrl) ? null : BaseUrl + (path ?? "/");
+        var subject = Res.Ar(subjectKey, args);
+        var message = Res.Ar(messageKey, args);
         foreach (var (email, name) in recipients)
         {
             if (string.IsNullOrWhiteSpace(email)) continue;
-            var body = $"<div style=\"font-family:Segoe UI,Arial,sans-serif\"><p>{WebUtility.HtmlEncode(name)},</p><p>{WebUtility.HtmlEncode(message)}</p>" +
-                       (link != null ? $"<p><a href=\"{WebUtility.HtmlEncode(link)}\">{WebUtility.HtmlEncode(link)}</a></p>" : "") +
-                       $"<hr><small>{WebUtility.HtmlEncode(brand.OrgName)} - {WebUtility.HtmlEncode(brand.SystemName)}</small></div>";
-            queue.Enqueue(new MailJob(email, subject, body));
-            n++;
+            var body = $"<div dir=\"rtl\" style=\"direction:rtl;text-align:right;font-family:Segoe UI,Tahoma,Arial,sans-serif;line-height:1.7\">" +
+                       $"<p>{WebUtility.HtmlEncode(Res.Ar("Dear {0},", name))}</p><p>{WebUtility.HtmlEncode(message)}</p>" +
+                       (link != null ? $"<p>{WebUtility.HtmlEncode(Res.Ar("Open the platform"))}: <a href=\"{WebUtility.HtmlEncode(link)}\">{WebUtility.HtmlEncode(link)}</a></p>" : "") +
+                       $"<hr><small style=\"color:#666\">{WebUtility.HtmlEncode(brand.OrgName)} - {WebUtility.HtmlEncode(brand.SystemName)}</small></div>";
+            yield return new MailJob(email, subject, body);
         }
-        return n;
     }
 }

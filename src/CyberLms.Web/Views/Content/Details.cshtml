@@ -1,36 +1,39 @@
 @model ContentDetailsVm
 @{ var c = Model.Content; ViewData["Title"] = c.Title; }
-@if (Model.Preview) { <div class="alert alert-warning">Preview: this content is not published (visible to administrators only).</div> }
-<a asp-action="Index" class="small">&larr; @L["Back"]</a>
-<div class="card mt-2"><div class="card-body">
-    <div class="mb-1"><span class="badge text-bg-light">@L[Labels.Type(c.Type)]</span> <small class="text-muted">@Time.Format(c.PublishedAt ?? c.CreatedAt)</small></div>
+@if (Model.Preview) { <div class="alert alert-warning">@L["Preview: this content is not published (visible to administrators only)."]</div> }
+<nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb">
+    <li class="breadcrumb-item"><a asp-action="@(c.Type == ContentType.Policy ? "Policies" : "Index")">@L[c.Type == ContentType.Policy ? "Policies" : "Content"]</a></li>
+    <li class="breadcrumb-item active bidi" aria-current="page">@c.Title</li>
+</ol></nav>
+<div class="card"><div class="card-body">
+    <div class="mb-1"><span class="badge text-bg-light">@L[Labels.Type(c.Type)]</span> <small class="text-muted">@Time.Html(c.PublishedAt ?? c.CreatedAt)</small></div>
     <h1 class="h3 bidi">@c.Title</h1>
     @if (!string.IsNullOrWhiteSpace(c.Description)) { <p class="lead bidi">@c.Description</p> }
-    @if (!string.IsNullOrWhiteSpace(c.Body)) { <div class="content-body ql-snow"><div class="ql-editor">@Html.Raw(c.Body)</div></div> }
+    @if (!string.IsNullOrWhiteSpace(c.Body)) { <div class="content-body">@Html.Raw(c.Body)</div> }
 
     @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Video)) {
-        <div class="mt-3"><video class="w-100" style="max-height:520px" controls preload="metadata" src="@Url.Action("Attachment", "Files", new { id = a.Id })"></video><div class="small text-muted">@a.FileName</div></div> }
+        <div class="mt-3"><video class="w-100" style="max-height:520px" controls preload="metadata" src="@Url.Action("Attachment", "Files", new { id = a.Id })"></video><div class="small text-muted bidi">@a.FileName</div></div> }
     @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Image)) {
-        <figure class="mt-3"><img class="img-fluid rounded border" alt="@a.FileName" src="@Url.Action("Attachment", "Files", new { id = a.Id })" /><figcaption class="small text-muted">@a.FileName</figcaption></figure> }
+        <figure class="mt-3"><img class="img-fluid rounded border" alt="@a.FileName" src="@Url.Action("Attachment", "Files", new { id = a.Id })" /><figcaption class="small text-muted bidi">@a.FileName</figcaption></figure> }
     @if (c.Attachments.Any(a => a.Kind == AttachmentKind.Document) || !string.IsNullOrEmpty(c.ExternalUrl))
     {
         <h2 class="h6 mt-4">@L["Attachments"]</h2>
         <ul class="list-unstyled">
         @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Document)) {
-            <li><i class="bi bi-file-earmark-text"></i> <a href="@Url.Action("Attachment", "Files", new { id = a.Id })" target="_blank" rel="noopener">@a.FileName</a> <small class="text-muted">(@Labels.Size(a.SizeBytes))</small></li> }
-        @if (!string.IsNullOrEmpty(c.ExternalUrl)) { <li><i class="bi bi-link-45deg"></i> <a href="@c.ExternalUrl" target="_blank" rel="noopener noreferrer">@L["Related link"]: @c.ExternalUrl</a></li> }
+            <li><i class="bi bi-file-earmark-text"></i> <a href="@Url.Action("Attachment", "Files", new { id = a.Id })" target="_blank" rel="noopener" class="bidi">@a.FileName</a> <small class="text-muted"><bdi dir="ltr">@Labels.Size(a.SizeBytes)</bdi></small></li> }
+        @if (!string.IsNullOrEmpty(c.ExternalUrl)) { <li><i class="bi bi-link-45deg"></i> @L["Related link"]: <a href="@c.ExternalUrl" target="_blank" rel="noopener noreferrer" dir="ltr">@c.ExternalUrl</a></li> }
         </ul>
     }
 </div></div>
 @if (c.RequiresAcknowledgment && !Model.Preview)
 {
     <div class="card mt-3 border-@(Model.Ack != null ? "success" : "warning")"><div class="card-body">
-    @if (Model.Ack != null) { <i class="bi bi-check-circle-fill text-success"></i> <strong>@L["Acknowledged"]</strong> <span class="text-muted">@L["Acknowledged on"] @Time.Format(Model.Ack.AcknowledgedAt)</span> }
+    @if (Model.Ack != null) { <i class="bi bi-check-circle-fill text-success"></i> <strong>@L["Acknowledged"]</strong> <span class="text-muted">- @L["Acknowledged on"] @Time.Html(Model.Ack.AcknowledgedAt)</span> }
     else
     {
         <form method="post" asp-action="Acknowledge" asp-route-id="@c.Id" class="d-flex flex-wrap align-items-center gap-3">
             <span>@L["I acknowledge that I have read and understood this policy."]</span>
-            <button class="btn btn-primary">@L["Acknowledge"]</button>
+            <button class="btn btn-primary"><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
         </form>
     }
     </div></div>

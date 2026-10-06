@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CyberLms.Web.Controllers;
 
 [Authorize]
-public class MyResultsController(AppDbContext db) : Controller
+public class MyResultsController(AppDbContext db) : AppController
 {
     public async Task<IActionResult> Index()
     {

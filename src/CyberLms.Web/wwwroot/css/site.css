@@ -27,10 +27,24 @@ body { background: #f6f8fb; }
 .content-body p, .content-body li, .content-body h1, .content-body h2, .content-body h3, .content-body blockquote, .ql-editor p, .ql-editor li, .ql-editor h1, .ql-editor h2, .ql-editor h3, .bidi { unicode-bidi: plaintext; text-align: start; }
 .content-body .ql-editor { padding: 0; height: auto; overflow: visible; }
 .content-body img { max-width: 100%; height: auto; }
-.ql-container { min-height: 260px; background: #fff; }
-.ql-editor { min-height: 260px; }
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--brand-login-bg) center/cover no-repeat; padding: 1rem; }
 .login-card { width: 100%; max-width: 420px; }
 .option-row .form-check-input { margin-top: .6rem; }
 table td, table th { vertical-align: middle; }
 .question-card { border-inline-start: 4px solid var(--brand-accent); }
+
+/* ---- Arabic-first typography and RTL refinements ---- */
+body { font-family: "Segoe UI", Tahoma, "Noto Sans Arabic", "Noto Naskh Arabic", Arial, sans-serif; }
+[dir=rtl] .breadcrumb-item + .breadcrumb-item::before { content: "‹"; float: right; padding-left: .5rem; padding-right: 0; }
+[dir=ltr] .breadcrumb-item + .breadcrumb-item::before { content: "›"; }
+.file-picker .form-control { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bi { vertical-align: -.125em; }
+.text-end[dir=ltr] { text-align: left !important; }
+[dir=rtl] .text-end[dir=ltr] { text-align: right !important; }
+.content-body ol, .content-body ul { padding-inline-start: 1.6rem; }
+.content-body .ql-align-center { text-align: center; } .content-body .ql-align-right { text-align: right; }
+.content-body .ql-align-left { text-align: left; } .content-body .ql-align-justify { text-align: justify; }
+.content-body .ql-direction-rtl { direction: rtl; } .content-body .ql-direction-ltr { direction: ltr; }
+.content-body blockquote { border-inline-start: 4px solid #ccc; padding-inline-start: 1rem; margin: 1rem 0; color: #555; }
+/* Image-only paragraphs have no text to detect a direction from: follow the page direction */
+.content-body p:has(img), .ql-editor p:has(img) { unicode-bidi: normal; direction: inherit; text-align: start; }

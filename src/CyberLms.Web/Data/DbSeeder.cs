@@ -35,14 +35,14 @@ public static class DbSeeder
                 var u = new User
                 {
                     Username = adminName.Trim(), NormalizedUsername = adminName.Trim().ToLowerInvariant(),
-                    DisplayName = cfg["Seed:AdminDisplayName"] ?? "Administrator", Email = cfg["Seed:AdminEmail"],
+                    DisplayName = cfg["Seed:AdminDisplayName"] ?? Res.Ar("Administrator"), Email = cfg["Seed:AdminEmail"],
                     AuthSource = "Local", MustChangePassword = true,
                 };
                 u.PasswordHash = hasher.Hash(u, adminPass);
                 var role = await db.Roles.FirstAsync(r => r.Name == RoleNames.Admin);
                 u.UserRoles.Add(new UserRole { Role = role });
                 db.Users.Add(u);
-                db.AuditLogs.Add(new AuditLog { Username = "system", Action = "USER_CREATED", EntityType = "User", Details = $"Initial administrator '{u.Username}' seeded" });
+                db.AuditLogs.Add(new AuditLog { Username = Res.Ar("System"), Action = "USER_CREATED", EntityType = "User", Details = Res.Ar("Initial administrator '{0}' created", u.Username) });
                 await db.SaveChangesAsync();
                 log.LogInformation("Initial administrator '{User}' created (password change required at first login).", u.Username);
             }

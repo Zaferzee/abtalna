@@ -20,7 +20,7 @@ public class AuditService(AppDbContext db, IHttpContextAccessor http)
         db.AuditLogs.Add(new AuditLog
         {
             UserId = ctx?.User.UserId() is > 0 and var id ? id : null,
-            Username = ctx?.User.Identity?.Name ?? "system",
+            Username = ctx?.User.Identity?.Name ?? Res.Ar("System"),
             Action = action,
             EntityType = entityType,
             EntityId = entityId?.ToString(),
@@ -72,11 +72,18 @@ public static class Csv
 
 public class TimeDisplay(IConfiguration cfg)
 {
+    /// <summary>Date/time for Arabic readers: dd/MM/yyyy HH:mm (Gregorian, Western digits), wrapped so it never reorders inside RTL text.</summary>
+    public Microsoft.AspNetCore.Html.IHtmlContent Html(DateTime? utc) =>
+        utc == null ? new Microsoft.AspNetCore.Html.HtmlString("-") : new Microsoft.AspNetCore.Html.HtmlString($"<bdi dir=\"ltr\">{Format(utc)}</bdi>");
+
     private readonly TimeZoneInfo _tz = Resolve(cfg["App:DisplayTimeZone"]);
     private static TimeZoneInfo Resolve(string? id)
     {
         try { return string.IsNullOrWhiteSpace(id) ? TimeZoneInfo.Local : TimeZoneInfo.FindSystemTimeZoneById(id); }
         catch { return TimeZoneInfo.Local; }
     }
-    public string Format(DateTime? utc) => utc == null ? "-" : TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc), _tz).ToString("yyyy-MM-dd HH:mm");
+    /// <summary>For exports: empty (not "-") when there is no value.</summary>
+    public string Export(DateTime? utc) => utc == null ? "" : Format(utc);
+
+    public string Format(DateTime? utc) => utc == null ? "-" : TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc), _tz).ToString("dd/MM/yyyy HH:mm", System.Globalization.CultureInfo.CurrentCulture);
 }

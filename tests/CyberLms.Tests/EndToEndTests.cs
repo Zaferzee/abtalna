@@ -137,7 +137,7 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
 
         // 14. Alice acknowledges (twice => one record)
         var ackUrl = $"/Content/Acknowledge/{content.Id}";
-        Assert.Contains("Acknowledge", await alice.GetStringAsync($"/Content/Details/{content.Id}"));
+        Assert.Contains("أقرّ بأنني قرأت هذه السياسة وفهمتها", await alice.GetStringAsync($"/Content/Details/{content.Id}"));
         (await alice.PostForm($"/Content/Details/{content.Id}", ackUrl, [])).EnsureRedirect();
         (await alice.PostForm($"/Content/Details/{content.Id}", ackUrl, [])).EnsureRedirect();
         Assert.Equal(1, await app.Db(d => d.UserAcknowledgments.CountAsync(a => a.ContentId == content.Id)));
@@ -151,14 +151,16 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         var csv = await admin.GetAsync($"/Admin/Reports/Assessments?assessmentId={asm.Id}&export=csv");
         Assert.Equal("text/csv", csv.Content.Headers.ContentType!.MediaType);
         var csvText = Encoding.UTF8.GetString(await csv.Content.ReadAsByteArrayAsync());
-        Assert.Contains("alice", csvText); Assert.Contains("Passed", csvText); Assert.Contains("NotAttempted", csvText);
+        Assert.Contains("alice", csvText); Assert.Contains("مجتاز", csvText); Assert.Contains("لم يختبر", csvText);
+        Assert.Contains("اسم المستخدم", csvText); Assert.Contains("البريد الإلكتروني", csvText); Assert.Contains("تاريخ آخر محاولة", csvText); Assert.DoesNotContain("Username", csvText);
+        Assert.Contains("filename*=UTF-8''", string.Join(";", csv.Content.Headers.ContentDisposition!.ToString()) + csv.Content.Headers.ContentDisposition!.FileNameStar);
         var xlsx = await admin.GetAsync($"/Admin/Reports/Acknowledgments?export=xlsx");
         Assert.Equal(HttpStatusCode.OK, xlsx.StatusCode);
         Assert.Equal((byte)'P', (await xlsx.Content.ReadAsByteArrayAsync())[0]); // zip container
 
         // dashboard + audit
         var dash = await admin.GetStringAsync("/Admin/Dashboard");
-        Assert.Contains("Total users", dash);
+        Assert.Contains("إجمالي المستخدمين", dash);
         var audit = await app.Db(d => d.AuditLogs.Select(a => a.Action).Distinct().ToListAsync());
         Assert.Contains("CONTENT_CREATED", audit); Assert.Contains("CONTENT_PUBLISHED", audit); Assert.Contains("ASSESSMENT_CREATED", audit); Assert.Contains("USER_CREATED", audit); Assert.Contains("REPORT_EXPORTED", audit);
 
@@ -225,7 +227,7 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         var admin = await AdminAsync();
         var anon = app.NewClient();
         var before = await anon.GetStringAsync("/Account/Login");
-        Assert.Contains("Your Organization", before); // default, nothing hard-coded to a customer
+        Assert.Contains("منصة التوعية بالأمن السيبراني", before); // default (Arabic), nothing hard-coded to a customer
 
         var save = await admin.PostMultipart("/Admin/Settings", "/Admin/Settings/SaveBranding", mp =>
         {
@@ -271,12 +273,57 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
 
         // reset
         (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
-        Assert.Contains("Your Organization", await anon.GetStringAsync("/Account/Login"));
+        Assert.Contains("منصة التوعية بالأمن السيبراني", await anon.GetStringAsync("/Account/Login"));
         Assert.Equal(HttpStatusCode.NotFound, (await anon.GetAsync("/Files/Brand?kind=logo")).StatusCode);
 
         async Task<string> LoginViaNewClient() => await admin.GetStringAsync("/");
     }
+
+    [Fact]
+    public async Task English_remains_available_as_future_compatibility()
+    {
+        var c = app.NewClient();
+        c.DefaultRequestHeaders.Add("Cookie", "CyberLms.Culture=c%3Den-US%7Cuic%3Den-US");
+        var html = await c.GetStringAsync("/Account/Login");
+        Assert.Contains("lang=\"en\"", html); Assert.Contains("dir=\"ltr\"", html); Assert.Contains("Username", html); Assert.DoesNotContain("bootstrap.rtl", html);
+    }
+
+    [Fact]
+    public async Task Portal_is_Arabic_and_RTL_by_default()
+    {
+        var anon = app.NewClient();
+        var login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("lang=\"ar\"", login); Assert.Contains("dir=\"rtl\"", login); Assert.Contains("bootstrap.rtl.min.css", login);
+        Assert.Contains("تسجيل الدخول", login); Assert.Contains("اسم المستخدم", login); Assert.Contains("كلمة المرور", login);
+
+        // validation messages are Arabic
+        var r = await anon.PostForm("/Account/Login", "/Account/Login", [F("Username", ""), F("Password", "")]);
+        var html = await r.Content.ReadAsStringAsync();
+        Assert.Contains("حقل اسم المستخدم مطلوب", html); Assert.Contains("حقل كلمة المرور مطلوب", html);
+        // wrong credentials message is Arabic
+        var bad = await (await anon.PostForm("/Account/Login", "/Account/Login", [F("Username", "nobody"), F("Password", "x")])).Content.ReadAsStringAsync();
+        Assert.Contains("اسم المستخدم أو كلمة المرور غير صحيحة", bad);
+
+        // status pages are Arabic (404 and CSRF 400)
+        var admin = await AdminAsync();
+        var nf = await admin.GetAsync("/Content/Details/999999");
+        Assert.Equal(HttpStatusCode.NotFound, nf.StatusCode);
+        Assert.Contains("الصفحة غير موجودة", await nf.Content.ReadAsStringAsync());
+        var csrf = await admin.PostAsync("/Admin/Users/Create", new FormUrlEncodedContent([F("Username", "z")]));
+        Assert.Equal(HttpStatusCode.BadRequest, csrf.StatusCode);
+        Assert.Contains("طلب غير صالح", await csrf.Content.ReadAsStringAsync());
+
+        // admin pages are Arabic
+        foreach (var (url, text) in new[] { ("/Admin/Dashboard", "لوحة التحكم"), ("/Admin/Content", "إدارة المحتوى"), ("/Admin/Assessments", "اختبار جديد"), ("/Admin/Users", "مستخدم جديد"),
+                     ("/Admin/Reports/Assessments", "نتائج الاختبارات"), ("/Admin/Settings", "الهوية البصرية"), ("/Admin/Audit", "سجل التدقيق"), ("/Admin/Content/Create", "حفظ ونشر") })
+            Assert.Contains(text, await admin.GetStringAsync(url));
+
+        // admin-side validation error in Arabic (empty content title)
+        var vr = await admin.PostMultipart("/Admin/Content/Create", "/Admin/Content/Create", mp => { mp.Add(new StringContent(""), "Title"); mp.Add(new StringContent("1"), "Type"); });
+        Assert.Contains("حقل العنوان مطلوب", await vr.Content.ReadAsStringAsync());
+    }
 }
+
 
 static class RespExt
 {

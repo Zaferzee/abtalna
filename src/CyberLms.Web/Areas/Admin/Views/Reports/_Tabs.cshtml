@@ -1,6 +1,6 @@
 @{ var a = (string?)ViewContext.RouteData.Values["action"]; }
 <ul class="nav nav-tabs mb-3">
-    <li class="nav-item"><a class="nav-link @(a == "Assessments" ? "active" : "")" asp-action="Assessments">Assessment results</a></li>
-    <li class="nav-item"><a class="nav-link @(a == "Attempts" ? "active" : "")" asp-action="Attempts">Attempts &amp; scores</a></li>
-    <li class="nav-item"><a class="nav-link @(a == "Acknowledgments" ? "active" : "")" asp-action="Acknowledgments">Acknowledgments</a></li>
+    <li class="nav-item"><a class="nav-link @(a == "Assessments" ? "active" : "")" asp-action="Assessments">@L["Assessment results"]</a></li>
+    <li class="nav-item"><a class="nav-link @(a == "Attempts" ? "active" : "")" asp-action="Attempts">@L["Attempts and scores"]</a></li>
+    <li class="nav-item"><a class="nav-link @(a == "Acknowledgments" ? "active" : "")" asp-action="Acknowledgments">@L["Acknowledgments"]</a></li>
 </ul>

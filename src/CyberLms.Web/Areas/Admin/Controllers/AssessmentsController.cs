@@ -55,7 +55,7 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
         a.PassingPercentage = vm.PassingPercentage; a.MaxAttempts = vm.MaxAttempts; a.UpdatedAt = DateTime.UtcNow;
         audit.Add("ASSESSMENT_UPDATED", "Assessment", a.Id, a.Title);
         await db.SaveChangesAsync();
-        TempData["Success"] = "Saved. (Completed attempts keep the passing percentage they were taken with.)";
+        Success("Saved. (Completed attempts keep the passing percentage they were taken with.)");
         return RedirectToAction(nameof(Index));
     }
 
@@ -66,13 +66,13 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
         if (a == null) return NotFound();
         if (publish)
         {
-            if (a.Questions.Count == 0) { TempData["Error"] = "Add at least one question before publishing."; return RedirectToAction(nameof(Index)); }
+            if (a.Questions.Count == 0) { Failure("Add at least one question before publishing."); return RedirectToAction(nameof(Index)); }
             a.IsPublished = true;
             audit.Add("ASSESSMENT_PUBLISHED", "Assessment", a.Id, a.Title);
         }
         else { a.IsPublished = false; audit.Add("ASSESSMENT_UNPUBLISHED", "Assessment", a.Id, a.Title); }
         await db.SaveChangesAsync();
-        TempData["Success"] = publish ? "Published." : "Unpublished.";
+        Success(publish ? "Published." : "Unpublished.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -81,11 +81,11 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
     {
         var a = await db.Assessments.FindAsync(id);
         if (a == null) return NotFound();
-        if (await db.AssessmentAttempts.AnyAsync(t => t.AssessmentId == id)) { TempData["Error"] = "This assessment has attempts and cannot be deleted. Unpublish it instead."; return RedirectToAction(nameof(Index)); }
+        if (await db.AssessmentAttempts.AnyAsync(t => t.AssessmentId == id)) { Failure("This assessment has attempts and cannot be deleted. Unpublish it instead."); return RedirectToAction(nameof(Index)); }
         audit.Add("ASSESSMENT_DELETED", "Assessment", a.Id, a.Title);
         db.Assessments.Remove(a);
         await db.SaveChangesAsync();
-        TempData["Success"] = "Deleted.";
+        Success("Deleted.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -99,7 +99,7 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
             copy.Questions.Add(new Question { Text = q.Text, Type = q.Type, Points = q.Points, SortOrder = q.SortOrder, Options = q.Options.OrderBy(o => o.SortOrder).Select(o => new QuestionOption { Text = o.Text, IsCorrect = o.IsCorrect, SortOrder = o.SortOrder }).ToList() });
         db.Assessments.Add(copy);
         await db.SaveChangesAsync();
-        audit.Add("ASSESSMENT_CREATED", "Assessment", copy.Id, $"Duplicate of {id}");
+        audit.Add("ASSESSMENT_CREATED", "Assessment", copy.Id, Res.Ar("Duplicate of {0}", id));
         await db.SaveChangesAsync();
         return RedirectToAction(nameof(Questions), new { id = copy.Id });
     }
@@ -109,13 +109,13 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
     {
         var a = await db.Assessments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.IsPublished);
         if (a == null) return NotFound();
-        if (!notify.Ready) { TempData["Error"] = "SMTP is not configured (Settings → Email)."; return RedirectToAction(nameof(Index)); }
+        if (!notify.Ready) { Failure("SMTP is not configured (Settings → Email)."); return RedirectToAction(nameof(Index)); }
         var users = await db.Users.AsNoTracking().Where(u => u.IsActive && u.Email != null && u.UserRoles.Any(r => r.Role.Name == RoleNames.User) &&
             !db.AssessmentAttempts.Any(t => t.UserId == u.Id && t.AssessmentId == id && t.Status == AttemptStatus.Completed)).Select(u => new { u.Email, u.DisplayName }).ToListAsync();
-        var n = notify.Send(users.Select(u => (u.Email, u.DisplayName)), $"Assessment available: {a.Title}", $"Please complete the assessment: {a.Title}", "/Assessments");
-        audit.Add("NOTIFICATION_QUEUED", "Assessment", id, $"{n} emails");
+        var n = notify.Send(users.Select(u => (u.Email, u.DisplayName)), "Assessment available: {0}", "Please complete the assessment: {0}", [a.Title], "/Assessments");
+        audit.Add("NOTIFICATION_QUEUED", "Assessment", id, Res.Ar("{0} emails", n));
         await db.SaveChangesAsync();
-        TempData["Success"] = $"{n} email(s) queued (users who have not completed it yet).";
+        Success("{0} email(s) queued (users who have not completed it yet).", n);
         return RedirectToAction(nameof(Index));
     }
 
@@ -132,7 +132,7 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
 
     public async Task<IActionResult> AddQuestion(int id)
     {
-        if (await Locked(id)) { TempData["Error"] = "This assessment already has attempts; its questions are locked. Duplicate it to change questions."; return RedirectToAction(nameof(Questions), new { id }); }
+        if (await Locked(id)) { Failure("This assessment already has attempts; its questions are locked. Duplicate it to change questions."); return RedirectToAction(nameof(Questions), new { id }); }
         var max = await db.Questions.Where(q => q.AssessmentId == id).MaxAsync(q => (int?)q.SortOrder) ?? 0;
         return View("QuestionForm", new QuestionFormVm { AssessmentId = id, SortOrder = max + 1 });
     }
@@ -155,7 +155,7 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
     {
         var q = await db.Questions.AsNoTracking().Include(x => x.Options).FirstOrDefaultAsync(x => x.Id == id);
         if (q == null) return NotFound();
-        if (await Locked(q.AssessmentId)) { TempData["Error"] = "Questions are locked because attempts exist. Duplicate the assessment instead."; return RedirectToAction(nameof(Questions), new { id = q.AssessmentId }); }
+        if (await Locked(q.AssessmentId)) { Failure("Questions are locked because attempts exist. Duplicate the assessment instead."); return RedirectToAction(nameof(Questions), new { id = q.AssessmentId }); }
         var opts = q.Options.OrderBy(o => o.SortOrder).ToList();
         var vm = new QuestionFormVm { Id = q.Id, AssessmentId = q.AssessmentId, Text = q.Text, Type = q.Type, Points = q.Points, SortOrder = q.SortOrder };
         if (q.Type == QuestionType.TrueFalse) vm.TrueIsCorrect = opts.FirstOrDefault()?.IsCorrect ?? true;
@@ -176,7 +176,7 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
         db.QuestionOptions.RemoveRange(q.Options);
         q.Options.Clear();
         if (!Apply(q, vm)) { db.ChangeTracker.Clear(); return View("QuestionForm", vm); }
-        audit.Add("QUESTION_UPDATED", "Assessment", q.AssessmentId, $"Question {q.Id}");
+        audit.Add("QUESTION_UPDATED", "Assessment", q.AssessmentId, Res.Ar("Question {0}", q.Id));
         await db.SaveChangesAsync();
         return RedirectToAction(nameof(Questions), new { id = q.AssessmentId });
     }
@@ -186,8 +186,8 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
     {
         var q = await db.Questions.FindAsync(id);
         if (q == null) return NotFound();
-        if (await Locked(q.AssessmentId)) { TempData["Error"] = "Questions are locked because attempts exist."; return RedirectToAction(nameof(Questions), new { id = q.AssessmentId }); }
-        audit.Add("QUESTION_DELETED", "Assessment", q.AssessmentId, $"Question {q.Id}");
+        if (await Locked(q.AssessmentId)) { Failure("Questions are locked because attempts exist."); return RedirectToAction(nameof(Questions), new { id = q.AssessmentId }); }
+        audit.Add("QUESTION_DELETED", "Assessment", q.AssessmentId, Res.Ar("Question {0}", q.Id));
         db.Questions.Remove(q);
         await db.SaveChangesAsync();
         return RedirectToAction(nameof(Questions), new { id = q.AssessmentId });
@@ -212,10 +212,10 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
             if (string.IsNullOrEmpty(t)) continue;
             q.Options.Add(new QuestionOption { Text = t.Length > 1000 ? t[..1000] : t, IsCorrect = vm.Correct.Contains(i), SortOrder = ++order });
         }
-        if (q.Options.Count < 2) ModelState.AddModelError("", "Provide at least two answer options.");
+        if (q.Options.Count < 2) ModelState.AddModelError("", L["Provide at least two answer options."]);
         var correct = q.Options.Count(o => o.IsCorrect);
-        if (correct == 0) ModelState.AddModelError("", "Mark at least one correct answer.");
-        if (vm.Type == QuestionType.SingleChoice && correct > 1) ModelState.AddModelError("", "Single choice questions must have exactly one correct answer.");
+        if (correct == 0) ModelState.AddModelError("", L["Mark at least one correct answer."]);
+        if (vm.Type == QuestionType.SingleChoice && correct > 1) ModelState.AddModelError("", L["Single choice questions must have exactly one correct answer."]);
         return ModelState.IsValid;
     }
 }

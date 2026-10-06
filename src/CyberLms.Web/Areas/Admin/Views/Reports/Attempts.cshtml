@@ -1,14 +1,14 @@
 @model ReportVm
-@{ ViewData["Title"] = "Reports"; }
-<h1 class="h4 mb-3">Reports</h1>
+@{ ViewData["Title"] = L["Reports"]; }
+<h1 class="h4 mb-3">@L["Reports"]</h1>
 <partial name="_Tabs" /><partial name="_Filter" model="Model" />
 <div class="card"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
-<thead><tr><th>User</th><th>Name</th><th>Assessment</th><th>Completed</th><th>Correct</th><th>Score</th><th>Result</th><th></th></tr></thead><tbody>
+<thead><tr><th>@L["Username"]</th><th>@L["Name"]</th><th>@L["Assessment"]</th><th>@L["Assessment date"]</th><th>@L["Correct answers"]</th><th>@L["Score"]</th><th>@L["Result"]</th><th><span class="visually-hidden">@L["Actions"]</span></th></tr></thead><tbody>
 @foreach (var r in Model.Attempts)
 {
-    <tr><td dir="ltr">@r.Username</td><td class="bidi">@r.DisplayName</td><td class="bidi">@r.Assessment</td><td>@Time.Format(r.Completed)</td><td>@r.Correct / @r.Total</td><td>@r.Percentage.ToString("0.#")%</td>
-        <td><span class="badge text-bg-@(r.Passed == true ? "success" : "danger")">@(r.Passed == true ? "Passed" : "Failed")</span></td><td><a asp-action="Attempt" asp-route-id="@r.AttemptId">Details</a></td></tr>
+    <tr><td dir="ltr" class="text-end">@r.Username</td><td class="bidi">@r.DisplayName</td><td class="bidi">@r.Assessment</td><td>@Time.Html(r.Completed)</td><td>@r.Correct / @r.Total</td><td>@r.Percentage.ToString("0.#")%</td>
+        <td><span class="badge text-bg-@(r.Passed == true ? "success" : "danger")">@L[r.Passed == true ? "Passed" : "Failed"]</span></td><td><a asp-action="Attempt" asp-route-id="@r.AttemptId">@L["View details"]</a></td></tr>
 }
-@if (Model.Attempts.Count == 0) { <tr><td colspan="8" class="text-muted text-center py-4">No attempts.</td></tr> }
+@if (Model.Attempts.Count == 0) { <tr><td colspan="8" class="text-muted text-center py-4">@L["No attempts found."]</td></tr> }
 </tbody></table></div></div>
 <partial name="_Pager" model="Model.Pager" />

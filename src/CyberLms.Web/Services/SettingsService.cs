@@ -76,10 +76,10 @@ public class Branding
             Version = "Branding.Version";
     }
 
-    public static Branding From(SettingsService s) => new()
+    public static Branding From(SettingsService s, System.Globalization.CultureInfo? culture = null) => new()
     {
-        OrgName = s.Get(Keys.OrgName, "Your Organization")!,
-        SystemName = s.Get(Keys.SystemName, "Cybersecurity Awareness Portal")!,
+        OrgName = s.Get(Keys.OrgName, Res.Get("Default organization name", culture))!,
+        SystemName = s.Get(Keys.SystemName, Res.Get("Default system name", culture))!,
         PrimaryColor = s.Get(Keys.Primary, "#0d47a1")!,
         SecondaryColor = s.Get(Keys.Secondary, "#546e7a")!,
         AccentColor = s.Get(Keys.Accent, "#00897b")!,
@@ -87,7 +87,7 @@ public class Branding
         HeaderTextColor = s.Get(Keys.HeaderText, "#ffffff")!,
         SidebarColor = s.Get(Keys.Sidebar, "#f1f4f9")!,
         SidebarTextColor = s.Get(Keys.SidebarText, "#1f2d3d")!,
-        LoginTitle = s.Get(Keys.LoginTitle, "Sign in")!,
+        LoginTitle = s.Get(Keys.LoginTitle, Res.Get("Sign in", culture))!,
         LoginSubtitle = s.Get(Keys.LoginSubtitle, "")!,
         LoginBackgroundColor = s.Get(Keys.LoginBg, "#e8eef7")!,
         WelcomeText = s.Get(Keys.Welcome, "")!,

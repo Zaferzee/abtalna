@@ -12,6 +12,9 @@ public class StorageOptions
     public int MaxVideoMB { get; set; } = 500;
 }
 
+/// <summary>Upload rejection: a resource key plus format arguments (translated by the caller).</summary>
+public record UploadError(string Key, params object?[] Args);
+
 public record StoredFile(string RelativePath, string ContentType, long Size, AttachmentKind Kind, string OriginalName);
 
 /// <summary>Validates and stores uploads under a configurable root. Binary data never goes into PostgreSQL.</summary>
@@ -50,20 +53,20 @@ public class StorageService
 
     public static string AcceptList => string.Join(",", Rules.Keys);
 
-    /// <summary>Validates extension, size and magic bytes. Returns an error message or null.</summary>
-    public async Task<(string? Error, StoredFile? Result)> SaveAsync(IFormFile file, string subFolder, AttachmentKind[]? allowedKinds = null)
+    /// <summary>Validates extension, size and magic bytes. Returns an error (resource key + args) or null.</summary>
+    public async Task<(UploadError? Error, StoredFile? Result)> SaveAsync(IFormFile file, string subFolder, AttachmentKind[]? allowedKinds = null)
     {
-        if (file.Length == 0) return ("The file is empty.", null);
+        if (file.Length == 0) return (new UploadError("The file is empty."), null);
         var original = Path.GetFileName(file.FileName);
         var ext = Path.GetExtension(original);
-        if (!Rules.TryGetValue(ext, out var rule)) return ($"File type '{ext}' is not allowed.", null);
-        if (allowedKinds != null && !allowedKinds.Contains(rule.Kind)) return ($"File type '{ext}' is not allowed here.", null);
-        if (file.Length > Max(rule.Kind)) return ($"File is too large (max {Max(rule.Kind) / 1024 / 1024} MB for this type).", null);
+        if (!Rules.TryGetValue(ext, out var rule)) return (new UploadError("File type '{0}' is not allowed.", ext), null);
+        if (allowedKinds != null && !allowedKinds.Contains(rule.Kind)) return (new UploadError("File type '{0}' is not allowed here.", ext), null);
+        if (file.Length > Max(rule.Kind)) return (new UploadError("File is too large (max {0} MB for this type).", Max(rule.Kind) / 1024 / 1024), null);
 
         var header = new byte[16];
         int read;
         await using (var s = file.OpenReadStream()) read = await s.ReadAsync(header);
-        if (!SignatureMatches(ext.ToLowerInvariant(), header.AsSpan(0, read))) return ("File content does not match its extension.", null);
+        if (!SignatureMatches(ext.ToLowerInvariant(), header.AsSpan(0, read))) return (new UploadError("File content does not match its extension."), null);
 
         // Server-generated name: user input never reaches the path (no traversal).
         var safeSub = string.Concat(subFolder.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_' or '/'));

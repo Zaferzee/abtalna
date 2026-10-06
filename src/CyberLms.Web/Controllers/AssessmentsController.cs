@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CyberLms.Web.Controllers;
 
 [Authorize]
-public class AssessmentsController(AppDbContext db) : Controller
+public class AssessmentsController(AppDbContext db) : AppController
 {
     public async Task<IActionResult> Index()
     {
@@ -41,7 +41,7 @@ public class AssessmentsController(AppDbContext db) : Controller
         var existing = await db.AssessmentAttempts.FirstOrDefaultAsync(t => t.UserId == uid && t.AssessmentId == id && t.Status == AttemptStatus.InProgress);
         if (existing != null) return RedirectToAction(nameof(Take), new { id = existing.Id });
         var done = await db.AssessmentAttempts.CountAsync(t => t.UserId == uid && t.AssessmentId == id && t.Status == AttemptStatus.Completed);
-        if (a.MaxAttempts != 0 && done >= a.MaxAttempts) { TempData["Error"] = "Maximum attempts reached"; return RedirectToAction(nameof(Index)); }
+        if (a.MaxAttempts != 0 && done >= a.MaxAttempts) { Failure("Maximum attempts reached"); return RedirectToAction(nameof(Index)); }
         var attempt = new AssessmentAttempt { UserId = uid, AssessmentId = id, PassingPercentageSnapshot = a.PassingPercentage };
         db.AssessmentAttempts.Add(attempt);
         await db.SaveChangesAsync();

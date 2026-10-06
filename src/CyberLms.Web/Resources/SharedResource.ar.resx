@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Arabic (ar / ar-SA) texts. The name attribute is the English source text used as the key in code and views. -->
+  <data name="(set it in the server configuration or the Smtp__Password environment variable; it is never stored in the database)." xml:space="preserve"><value>(تُضبط في إعدادات الخادم أو متغير البيئة Smtp__Password، ولا تُخزَّن في قاعدة البيانات).</value></data>
+  <data name="- none -" xml:space="preserve"><value>- بدون -</value></data>
+  <data name="A value for the {0} parameter is required." xml:space="preserve"><value>القيمة مطلوبة للمعامل {0}.</value></data>
+  <data name="A value is required." xml:space="preserve"><value>القيمة مطلوبة.</value></data>
+  <data name="Accent color" xml:space="preserve"><value>لون التمييز</value></data>
+  <data name="Access denied" xml:space="preserve"><value>تم رفض الوصول</value></data>
+  <data name="Account created automatically from Windows identity {0}" xml:space="preserve"><value>تم إنشاء الحساب تلقائياً من هوية Windows ‏{0}</value></data>
+  <data name="Account temporarily locked. Try again later." xml:space="preserve"><value>تم قفل الحساب مؤقتاً بسبب كثرة المحاولات. حاول لاحقاً.</value></data>
+  <data name="Acknowledge" xml:space="preserve"><value>إقرار</value></data>
+  <data name="Acknowledged" xml:space="preserve"><value>تم الإقرار</value></data>
+  <data name="Acknowledged on" xml:space="preserve"><value>تاريخ الإقرار</value></data>
+  <data name="Acknowledgment date" xml:space="preserve"><value>تاريخ الإقرار</value></data>
+  <data name="Acknowledgment required: {0}" xml:space="preserve"><value>مطلوب الإقرار: {0}</value></data>
+  <data name="Acknowledgments" xml:space="preserve"><value>الإقرارات</value></data>
+  <data name="Acknowledgments (users x policies requiring acknowledgment)" xml:space="preserve"><value>الإقرارات (المستخدمون × السياسات المطلوب الإقرار عليها)</value></data>
+  <data name="ACKNOWLEDGMENTS_RESET" xml:space="preserve"><value>إعادة تعيين إقرارات</value></data>
+  <data name="Action" xml:space="preserve"><value>الإجراء</value></data>
+  <data name="Actions" xml:space="preserve"><value>الإجراءات</value></data>
+  <data name="Active" xml:space="preserve"><value>نشط</value></data>
+  <data name="Add at least one question before publishing." xml:space="preserve"><value>أضف سؤالاً واحداً على الأقل قبل النشر.</value></data>
+  <data name="Add question" xml:space="preserve"><value>إضافة سؤال</value></data>
+  <data name="Administration" xml:space="preserve"><value>الإدارة</value></data>
+  <data name="Administrator" xml:space="preserve"><value>مدير النظام</value></data>
+  <data name="All ({0}) acknowledgments reset" xml:space="preserve"><value>تمت إعادة تعيين جميع الإقرارات ({0})</value></data>
+  <data name="All actions" xml:space="preserve"><value>جميع الإجراءات</value></data>
+  <data name="All assessments" xml:space="preserve"><value>كل الاختبارات</value></data>
+  <data name="All content" xml:space="preserve"><value>كل المحتوى</value></data>
+  <data name="All roles" xml:space="preserve"><value>جميع الأدوار</value></data>
+  <data name="All statuses" xml:space="preserve"><value>جميع الحالات</value></data>
+  <data name="All types" xml:space="preserve"><value>جميع الأنواع</value></data>
+  <data name="An unexpected error occurred. Please try again or contact the administrator." xml:space="preserve"><value>حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو التواصل مع مدير النظام.</value></data>
+  <data name="Answer options (leave unused rows empty; tick the correct answer(s))" xml:space="preserve"><value>خيارات الإجابة (اترك الخانات غير المستخدمة فارغة، وحدّد الإجابة أو الإجابات الصحيحة)</value></data>
+  <data name="Any status" xml:space="preserve"><value>أي حالة</value></data>
+  <data name="Arabic (right-to-left)" xml:space="preserve"><value>العربية (من اليمين إلى اليسار)</value></data>
+  <data name="Assessment" xml:space="preserve"><value>الاختبار</value></data>
+  <data name="Assessment available: {0}" xml:space="preserve"><value>اختبار متاح: {0}</value></data>
+  <data name="Assessment date" xml:space="preserve"><value>تاريخ الاختبار</value></data>
+  <data name="Assessment results" xml:space="preserve"><value>نتائج الاختبارات</value></data>
+  <data name="ASSESSMENT_CREATED" xml:space="preserve"><value>إنشاء اختبار</value></data>
+  <data name="ASSESSMENT_DELETED" xml:space="preserve"><value>حذف اختبار</value></data>
+  <data name="ASSESSMENT_PUBLISHED" xml:space="preserve"><value>نشر اختبار</value></data>
+  <data name="ASSESSMENT_UNPUBLISHED" xml:space="preserve"><value>إلغاء نشر اختبار</value></data>
+  <data name="ASSESSMENT_UPDATED" xml:space="preserve"><value>تعديل اختبار</value></data>
+  <data name="Assessments" xml:space="preserve"><value>الاختبارات</value></data>
+  <data name="Assessments (users x published assessments)" xml:space="preserve"><value>الاختبارات (المستخدمون × الاختبارات المنشورة)</value></data>
+  <data name="ATTACHMENT_ADDED" xml:space="preserve"><value>إضافة مرفق</value></data>
+  <data name="ATTACHMENT_DELETED" xml:space="preserve"><value>حذف مرفق</value></data>
+  <data name="Attachments" xml:space="preserve"><value>المرفقات</value></data>
+  <data name="Attachments and links" xml:space="preserve"><value>المرفقات والروابط</value></data>
+  <data name="Attempt details" xml:space="preserve"><value>تفاصيل المحاولة</value></data>
+  <data name="Attempts" xml:space="preserve"><value>المحاولات</value></data>
+  <data name="Attempts allowed" xml:space="preserve"><value>المحاولات المسموحة</value></data>
+  <data name="Attempts and scores" xml:space="preserve"><value>المحاولات والنتائج</value></data>
+  <data name="Audit log" xml:space="preserve"><value>سجل التدقيق</value></data>
+  <data name="Automatic" xml:space="preserve"><value>تلقائي</value></data>
+  <data name="Available assessments" xml:space="preserve"><value>الاختبارات المتاحة</value></data>
+  <data name="Available content" xml:space="preserve"><value>المحتوى المتاح</value></data>
+  <data name="Awareness Content" xml:space="preserve"><value>محتوى توعوي</value></data>
+  <data name="Back to assessments" xml:space="preserve"><value>العودة إلى الاختبارات</value></data>
+  <data name="Back to home" xml:space="preserve"><value>العودة إلى الصفحة الرئيسية</value></data>
+  <data name="Base URL must be an http(s) URL." xml:space="preserve"><value>عنوان الموقع يجب أن يبدأ بـ http أو https.</value></data>
+  <data name="Best score" xml:space="preserve"><value>أفضل نتيجة</value></data>
+  <data name="Best score %" xml:space="preserve"><value>أفضل نتيجة %</value></data>
+  <data name="Branding" xml:space="preserve"><value>الهوية البصرية</value></data>
+  <data name="Branding reset to defaults." xml:space="preserve"><value>تمت استعادة الهوية البصرية الافتراضية.</value></data>
+  <data name="Branding saved and applied." xml:space="preserve"><value>تم حفظ الهوية البصرية وتطبيقها.</value></data>
+  <data name="BRANDING_RESET" xml:space="preserve"><value>استعادة الهوية الافتراضية</value></data>
+  <data name="BRANDING_UPDATED" xml:space="preserve"><value>تعديل الهوية البصرية</value></data>
+  <data name="Breadcrumb trail" xml:space="preserve"><value>مسار التنقل</value></data>
+  <data name="Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Change password" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="Choose a CSV file (max 5 MB)." xml:space="preserve"><value>اختر ملف CSV (الحد الأقصى 5 ميغابايت).</value></data>
+  <data name="Choose file" xml:space="preserve"><value>اختيار ملف</value></data>
+  <data name="Choose files" xml:space="preserve"><value>اختيار ملفات</value></data>
+  <data name="Clear filters" xml:space="preserve"><value>مسح التصفية</value></data>
+  <data name="Close" xml:space="preserve"><value>إغلاق</value></data>
+  <data name="Colors" xml:space="preserve"><value>الألوان</value></data>
+  <data name="Completed assessments" xml:space="preserve"><value>الاختبارات المكتملة</value></data>
+  <data name="Completed attempts" xml:space="preserve"><value>المحاولات المكتملة</value></data>
+  <data name="Configure host and sender first." xml:space="preserve"><value>اضبط الخادم والمرسل أولاً.</value></data>
+  <data name="configured on the server" xml:space="preserve"><value>مهيأة على الخادم</value></data>
+  <data name="Confirm" xml:space="preserve"><value>تأكيد</value></data>
+  <data name="Confirm new password" xml:space="preserve"><value>تأكيد كلمة المرور الجديدة</value></data>
+  <data name="Confirmation" xml:space="preserve"><value>تأكيد الإجراء</value></data>
+  <data name="Congratulations, you passed this assessment." xml:space="preserve"><value>تهانينا، لقد اجتزت هذا الاختبار.</value></data>
+  <data name="Connection security" xml:space="preserve"><value>أمان الاتصال</value></data>
+  <data name="Content" xml:space="preserve"><value>المحتوى</value></data>
+  <data name="Content body" xml:space="preserve"><value>نص المحتوى</value></data>
+  <data name="Content created and published." xml:space="preserve"><value>تم إنشاء المحتوى ونشره.</value></data>
+  <data name="Content created as draft." xml:space="preserve"><value>تم إنشاء المحتوى كمسودة.</value></data>
+  <data name="Content Management" xml:space="preserve"><value>إدارة المحتوى</value></data>
+  <data name="Content type" xml:space="preserve"><value>نوع المحتوى</value></data>
+  <data name="CONTENT_CREATED" xml:space="preserve"><value>إنشاء محتوى</value></data>
+  <data name="CONTENT_DELETED" xml:space="preserve"><value>حذف محتوى</value></data>
+  <data name="CONTENT_PUBLISHED" xml:space="preserve"><value>نشر محتوى</value></data>
+  <data name="CONTENT_UNPUBLISHED" xml:space="preserve"><value>إلغاء نشر محتوى</value></data>
+  <data name="CONTENT_UPDATED" xml:space="preserve"><value>تعديل محتوى</value></data>
+  <data name="Continue assessment" xml:space="preserve"><value>متابعة الاختبار</value></data>
+  <data name="Correct" xml:space="preserve"><value>صحيحة</value></data>
+  <data name="Correct answer" xml:space="preserve"><value>الإجابة الصحيحة</value></data>
+  <data name="Correct answers" xml:space="preserve"><value>الإجابات الصحيحة</value></data>
+  <data name="Created on" xml:space="preserve"><value>تاريخ الإنشاء</value></data>
+  <data name="CSV file (header: username,displayname,email,department)" xml:space="preserve"><value>ملف CSV (الصف الأول: username,displayname,email,department)</value></data>
+  <data name="CSV must have a header row with at least 'username'." xml:space="preserve"><value>يجب أن يحتوي ملف CSV على صف عناوين يتضمن الحقل 'username' على الأقل.</value></data>
+  <data name="Current password" xml:space="preserve"><value>كلمة المرور الحالية</value></data>
+  <data name="Current password is incorrect." xml:space="preserve"><value>كلمة المرور الحالية غير صحيحة.</value></data>
+  <data name="Cybersecurity Control" xml:space="preserve"><value>ضوابط الأمن السيبراني</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
+  <data name="Dear {0}," xml:space="preserve"><value>الأخ/الأخت {0}،</value></data>
+  <data name="Default interface language" xml:space="preserve"><value>لغة الواجهة الافتراضية</value></data>
+  <data name="Default organization name" xml:space="preserve"><value>اسم المؤسسة</value></data>
+  <data name="Default system name" xml:space="preserve"><value>منصة التوعية بالأمن السيبراني</value></data>
+  <data name="Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="Delete this assessment and its questions?" xml:space="preserve"><value>هل تريد حذف هذا الاختبار وأسئلته؟</value></data>
+  <data name="Delete this content and its files permanently?" xml:space="preserve"><value>هل تريد حذف هذا المحتوى وملفاته نهائياً؟</value></data>
+  <data name="Delete this question?" xml:space="preserve"><value>هل تريد حذف هذا السؤال؟</value></data>
+  <data name="Deleted." xml:space="preserve"><value>تم الحذف.</value></data>
+  <data name="Department" xml:space="preserve"><value>الإدارة / القسم</value></data>
+  <data name="Description" xml:space="preserve"><value>الوصف</value></data>
+  <data name="Description / instructions" xml:space="preserve"><value>الوصف / التعليمات</value></data>
+  <data name="Details" xml:space="preserve"><value>التفاصيل</value></data>
+  <data name="Disabled" xml:space="preserve"><value>معطّل</value></data>
+  <data name="Display name" xml:space="preserve"><value>الاسم المعروض</value></data>
+  <data name="Draft" xml:space="preserve"><value>مسودة</value></data>
+  <data name="Duplicate" xml:space="preserve"><value>نسخ</value></data>
+  <data name="Duplicate of {0}" xml:space="preserve"><value>نسخة من الاختبار {0}</value></data>
+  <data name="Edit" xml:space="preserve"><value>تعديل</value></data>
+  <data name="Edit assessment" xml:space="preserve"><value>تعديل الاختبار</value></data>
+  <data name="Edit content" xml:space="preserve"><value>تعديل المحتوى</value></data>
+  <data name="Edit question" xml:space="preserve"><value>تعديل السؤال</value></data>
+  <data name="Edit user" xml:space="preserve"><value>تعديل المستخدم</value></data>
+  <data name="Editor toolbar" xml:space="preserve"><value>شريط أدوات المحرر</value></data>
+  <data name="Editor: Bold" xml:space="preserve"><value>غامق</value></data>
+  <data name="Editor: Bulleted list" xml:space="preserve"><value>قائمة نقطية</value></data>
+  <data name="Editor: Clear formatting" xml:space="preserve"><value>مسح التنسيق</value></data>
+  <data name="Editor: Enter link:" xml:space="preserve"><value>أدخل الرابط:</value></data>
+  <data name="Editor: Image" xml:space="preserve"><value>صورة</value></data>
+  <data name="Editor: Italic" xml:space="preserve"><value>مائل</value></data>
+  <data name="Editor: Link" xml:space="preserve"><value>رابط</value></data>
+  <data name="Editor: Main heading" xml:space="preserve"><value>عنوان رئيسي</value></data>
+  <data name="Editor: Normal text" xml:space="preserve"><value>نص عادي</value></data>
+  <data name="Editor: Numbered list" xml:space="preserve"><value>قائمة مرقّمة</value></data>
+  <data name="Editor: Quote" xml:space="preserve"><value>اقتباس</value></data>
+  <data name="Editor: Right-to-left text" xml:space="preserve"><value>اتجاه النص من اليمين إلى اليسار</value></data>
+  <data name="Editor: Sub heading" xml:space="preserve"><value>عنوان فرعي</value></data>
+  <data name="Editor: Underline" xml:space="preserve"><value>تسطير</value></data>
+  <data name="Editor: Visit link:" xml:space="preserve"><value>الرابط:</value></data>
+  <data name="Email" xml:space="preserve"><value>البريد الإلكتروني</value></data>
+  <data name="Email a reminder to every user who has not acknowledged (for the current content filter)?" xml:space="preserve"><value>هل تريد إرسال تذكير بالبريد لكل مستخدم لم يُقرّ (وفق تصفية المحتوى الحالية)؟</value></data>
+  <data name="Email a reminder to every user who has not attempted (for the current assessment filter)?" xml:space="preserve"><value>هل تريد إرسال تذكير بالبريد لكل مستخدم لم يختبر (وفق تصفية الاختبار الحالية)؟</value></data>
+  <data name="Email a reminder to users who have not acknowledged" xml:space="preserve"><value>إرسال تذكير بالبريد للمستخدمين الذين لم يُقرّوا</value></data>
+  <data name="Email a reminder to users who have not attempted" xml:space="preserve"><value>إرسال تذكير بالبريد للمستخدمين الذين لم يختبروا</value></data>
+  <data name="Email employees" xml:space="preserve"><value>إرسال بريد إلى الموظفين</value></data>
+  <data name="Email everyone who has not completed this assessment?" xml:space="preserve"><value>هل تريد إرسال بريد إلى كل من لم يكمل هذا الاختبار؟</value></data>
+  <data name="Email settings (SMTP)" xml:space="preserve"><value>إعدادات البريد الإلكتروني (SMTP)</value></data>
+  <data name="Email settings saved. (The SMTP password is read from server configuration, not from this page.)" xml:space="preserve"><value>تم حفظ إعدادات البريد. (تُقرأ كلمة مرور SMTP من إعدادات الخادم وليس من هذه الصفحة.)</value></data>
+  <data name="Employee portal" xml:space="preserve"><value>بوابة الموظفين</value></data>
+  <data name="English" xml:space="preserve"><value>English</value></data>
+  <data name="Enter a valid e-mail address." xml:space="preserve"><value>أدخل بريداً إلكترونياً صحيحاً.</value></data>
+  <data name="Enter an http(s) URL or a path starting with '/'." xml:space="preserve"><value>أدخل رابطاً يبدأ بـ http أو https، أو مساراً يبدأ بـ '/'.</value></data>
+  <data name="Entity" xml:space="preserve"><value>الكيان</value></data>
+  <data name="Entity: Assessment" xml:space="preserve"><value>اختبار</value></data>
+  <data name="Entity: Content" xml:space="preserve"><value>محتوى</value></data>
+  <data name="Entity: Question" xml:space="preserve"><value>سؤال</value></data>
+  <data name="Entity: Report" xml:space="preserve"><value>تقرير</value></data>
+  <data name="Entity: Settings" xml:space="preserve"><value>إعدادات</value></data>
+  <data name="Entity: User" xml:space="preserve"><value>مستخدم</value></data>
+  <data name="Error" xml:space="preserve"><value>خطأ</value></data>
+  <data name="Export CSV" xml:space="preserve"><value>تصدير CSV</value></data>
+  <data name="Export Excel" xml:space="preserve"><value>تصدير Excel</value></data>
+  <data name="Failed" xml:space="preserve"><value>غير مجتاز</value></data>
+  <data name="False" xml:space="preserve"><value>خطأ</value></data>
+  <data name="Favicon" xml:space="preserve"><value>أيقونة المتصفح</value></data>
+  <data name="Favicon (ICO/PNG)" xml:space="preserve"><value>أيقونة المتصفح (ICO/PNG)</value></data>
+  <data name="File content does not match its extension." xml:space="preserve"><value>محتوى الملف لا يطابق امتداده.</value></data>
+  <data name="File is too large (max {0} MB for this type)." xml:space="preserve"><value>حجم الملف كبير جداً (الحد الأقصى {0} ميغابايت لهذا النوع).</value></data>
+  <data name="File type '{0}' is not allowed here." xml:space="preserve"><value>نوع الملف '{0}' غير مسموح به هنا.</value></data>
+  <data name="File type '{0}' is not allowed." xml:space="preserve"><value>نوع الملف '{0}' غير مسموح به.</value></data>
+  <data name="File: acknowledgments" xml:space="preserve"><value>الإقرارات</value></data>
+  <data name="File: assessment results" xml:space="preserve"><value>نتائج-الاختبارات</value></data>
+  <data name="File: attempts" xml:space="preserve"><value>المحاولات</value></data>
+  <data name="Filter" xml:space="preserve"><value>تصفية</value></data>
+  <data name="Footer text (copyright, contact, etc.)" xml:space="preserve"><value>نص التذييل (حقوق النشر، التواصل، إلخ)</value></data>
+  <data name="General" xml:space="preserve"><value>عام</value></data>
+  <data name="General Content" xml:space="preserve"><value>محتوى عام</value></data>
+  <data name="General settings saved." xml:space="preserve"><value>تم حفظ الإعدادات العامة.</value></data>
+  <data name="Header background" xml:space="preserve"><value>خلفية الترويسة</value></data>
+  <data name="Header text" xml:space="preserve"><value>نص الترويسة</value></data>
+  <data name="I acknowledge that I have read and understood this policy." xml:space="preserve"><value>أقرّ بأنني قرأت هذه السياسة وفهمتها.</value></data>
+  <data name="Identity" xml:space="preserve"><value>الهوية</value></data>
+  <data name="Image upload failed." xml:space="preserve"><value>فشل رفع الصورة.</value></data>
+  <data name="Import" xml:space="preserve"><value>استيراد</value></data>
+  <data name="Import finished: {0} created, {1} skipped (duplicates/invalid)." xml:space="preserve"><value>اكتمل الاستيراد: تم إنشاء {0} وتخطي {1} (مكرر أو غير صالح).</value></data>
+  <data name="Import from CSV" xml:space="preserve"><value>استيراد من ملف CSV</value></data>
+  <data name="Incorrect" xml:space="preserve"><value>خاطئة</value></data>
+  <data name="Initial administrator '{0}' created" xml:space="preserve"><value>تم إنشاء مدير النظام الأول '{0}'</value></data>
+  <data name="Initial password (Local only)" xml:space="preserve"><value>كلمة المرور الأولية (للحساب المحلي فقط)</value></data>
+  <data name="Initial password (Local only; the user must change it)" xml:space="preserve"><value>كلمة المرور الأولية (للحساب المحلي فقط، وعلى المستخدم تغييرها)</value></data>
+  <data name="Initial password: {0}" xml:space="preserve"><value>كلمة المرور الأولية: {0}</value></data>
+  <data name="Instructions: answer all {0} questions, then submit. The passing score is {1}%." xml:space="preserve"><value>التعليمات: أجب عن جميع الأسئلة وعددها {0} ثم أرسل إجاباتك. درجة النجاح {1}%.</value></data>
+  <data name="Internal link / video URL" xml:space="preserve"><value>رابط داخلي / رابط فيديو</value></data>
+  <data name="Invalid authentication source." xml:space="preserve"><value>طريقة المصادقة غير صالحة.</value></data>
+  <data name="Invalid color for: {0} (use #RRGGBB)." xml:space="preserve"><value>لون غير صالح في: {0} (استخدم الصيغة #RRGGBB).</value></data>
+  <data name="Invalid request" xml:space="preserve"><value>طلب غير صالح</value></data>
+  <data name="Invalid username or password." xml:space="preserve"><value>اسم المستخدم أو كلمة المرور غير صحيحة.</value></data>
+  <data name="IP address" xml:space="preserve"><value>عنوان IP</value></data>
+  <data name="Language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Last attempt date" xml:space="preserve"><value>تاريخ آخر محاولة</value></data>
+  <data name="Last sign-in" xml:space="preserve"><value>آخر دخول</value></data>
+  <data name="Linked content" xml:space="preserve"><value>المحتوى المرتبط</value></data>
+  <data name="Linked content (optional)" xml:space="preserve"><value>المحتوى المرتبط (اختياري)</value></data>
+  <data name="List separator" xml:space="preserve"><value>، </value></data>
+  <data name="Local (initial password)" xml:space="preserve"><value>محلي (بكلمة مرور أولية)</value></data>
+  <data name="Local sign-in is disabled." xml:space="preserve"><value>تسجيل الدخول المحلي معطّل.</value></data>
+  <data name="Login background image" xml:space="preserve"><value>صورة خلفية صفحة الدخول</value></data>
+  <data name="Login background image (optional)" xml:space="preserve"><value>صورة خلفية صفحة الدخول (اختيارية)</value></data>
+  <data name="Login page background" xml:space="preserve"><value>خلفية صفحة الدخول</value></data>
+  <data name="Login page notice" xml:space="preserve"><value>تنبيه صفحة الدخول</value></data>
+  <data name="Login page title" xml:space="preserve"><value>عنوان صفحة الدخول</value></data>
+  <data name="Login page, welcome text and footer" xml:space="preserve"><value>صفحة الدخول ونص الترحيب والتذييل</value></data>
+  <data name="LOGIN_FAILED" xml:space="preserve"><value>محاولة دخول فاشلة</value></data>
+  <data name="Logo" xml:space="preserve"><value>الشعار</value></data>
+  <data name="Logo (PNG/JPG/WebP/GIF)" xml:space="preserve"><value>الشعار (PNG/JPG/WebP/GIF)</value></data>
+  <data name="Main menu" xml:space="preserve"><value>القائمة الرئيسية</value></data>
+  <data name="Mark at least one correct answer." xml:space="preserve"><value>حدّد إجابة صحيحة واحدة على الأقل.</value></data>
+  <data name="Max attempts (0 = unlimited)" xml:space="preserve"><value>الحد الأقصى للمحاولات (0 = غير محدود)</value></data>
+  <data name="Maximum attempts reached" xml:space="preserve"><value>تم استنفاد عدد المحاولات المسموح بها</value></data>
+  <data name="Menu" xml:space="preserve"><value>القائمة</value></data>
+  <data name="Minimum 10 characters, with upper-case, lower-case and a digit." xml:space="preserve"><value>10 خانات على الأقل، وتشمل حرفاً كبيراً وحرفاً صغيراً ورقماً.</value></data>
+  <data name="Multiple choice" xml:space="preserve"><value>اختيار متعدد</value></data>
+  <data name="My acknowledgments" xml:space="preserve"><value>إقراراتي</value></data>
+  <data name="My Results" xml:space="preserve"><value>نتائجي</value></data>
+  <data name="Name" xml:space="preserve"><value>الاسم</value></data>
+  <data name="New assessment" xml:space="preserve"><value>اختبار جديد</value></data>
+  <data name="New content" xml:space="preserve"><value>محتوى جديد</value></data>
+  <data name="New content has been published: {0}" xml:space="preserve"><value>تم نشر محتوى جديد: {0}</value></data>
+  <data name="New content: {0}" xml:space="preserve"><value>محتوى جديد: {0}</value></data>
+  <data name="New password" xml:space="preserve"><value>كلمة المرور الجديدة</value></data>
+  <data name="New user" xml:space="preserve"><value>مستخدم جديد</value></data>
+  <data name="Next" xml:space="preserve"><value>التالي</value></data>
+  <data name="No activity recorded yet." xml:space="preserve"><value>لا توجد أنشطة مسجّلة بعد.</value></data>
+  <data name="No answer" xml:space="preserve"><value>لم تتم الإجابة</value></data>
+  <data name="No assessments available." xml:space="preserve"><value>لا توجد اختبارات متاحة حالياً.</value></data>
+  <data name="No assessments yet." xml:space="preserve"><value>لا توجد اختبارات بعد.</value></data>
+  <data name="No attempts found." xml:space="preserve"><value>لا توجد محاولات.</value></data>
+  <data name="No completed assessments yet." xml:space="preserve"><value>لا توجد اختبارات مكتملة بعد.</value></data>
+  <data name="No content found." xml:space="preserve"><value>لا يوجد محتوى.</value></data>
+  <data name="No content has been published yet." xml:space="preserve"><value>لم يتم نشر أي محتوى بعد.</value></data>
+  <data name="No file chosen" xml:space="preserve"><value>لم يتم اختيار ملف</value></data>
+  <data name="No questions yet." xml:space="preserve"><value>لا توجد أسئلة بعد.</value></data>
+  <data name="No results. Only published assessments and active employees are included." xml:space="preserve"><value>لا توجد نتائج. يشمل التقرير الاختبارات المنشورة والموظفين النشطين فقط.</value></data>
+  <data name="No results. Only published content that requires acknowledgment is included." xml:space="preserve"><value>لا توجد نتائج. يشمل التقرير المحتوى المنشور المطلوب الإقرار عليه فقط.</value></data>
+  <data name="No users found." xml:space="preserve"><value>لا يوجد مستخدمون.</value></data>
+  <data name="None" xml:space="preserve"><value>بدون</value></data>
+  <data name="Not acknowledged" xml:space="preserve"><value>لم يتم الإقرار</value></data>
+  <data name="Not attempted" xml:space="preserve"><value>لم يختبر</value></data>
+  <data name="not configured" xml:space="preserve"><value>غير مهيأة</value></data>
+  <data name="Nothing pending." xml:space="preserve"><value>لا يوجد شيء معلّق.</value></data>
+  <data name="NOTIFICATION_QUEUED" xml:space="preserve"><value>جدولة إشعارات بالبريد</value></data>
+  <data name="Number of questions" xml:space="preserve"><value>عدد الأسئلة</value></data>
+  <data name="Open" xml:space="preserve"><value>فتح</value></data>
+  <data name="Open the platform" xml:space="preserve"><value>فتح المنصة</value></data>
+  <data name="Option {0}" xml:space="preserve"><value>الخيار {0}</value></data>
+  <data name="Order" xml:space="preserve"><value>الترتيب</value></data>
+  <data name="Organization name" xml:space="preserve"><value>اسم المؤسسة</value></data>
+  <data name="Organization name and system name are required." xml:space="preserve"><value>اسم المؤسسة واسم النظام مطلوبان.</value></data>
+  <data name="Page not found" xml:space="preserve"><value>الصفحة غير موجودة</value></data>
+  <data name="Page {0} of {1}" xml:space="preserve"><value>صفحة {0} من {1}</value></data>
+  <data name="Pagination" xml:space="preserve"><value>ترقيم الصفحات</value></data>
+  <data name="Passed" xml:space="preserve"><value>مجتاز</value></data>
+  <data name="Passing percentage" xml:space="preserve"><value>نسبة النجاح</value></data>
+  <data name="Passing score" xml:space="preserve"><value>درجة النجاح</value></data>
+  <data name="Password" xml:space="preserve"><value>كلمة المرور</value></data>
+  <data name="Password changed." xml:space="preserve"><value>تم تغيير كلمة المرور.</value></data>
+  <data name="Password must be at least 10 characters." xml:space="preserve"><value>يجب ألا تقل كلمة المرور عن 10 خانات.</value></data>
+  <data name="Password must contain upper-case, lower-case letters and a digit." xml:space="preserve"><value>يجب أن تحتوي كلمة المرور على حرف كبير وحرف صغير ورقم.</value></data>
+  <data name="Password reset; the user must change it at next sign-in." xml:space="preserve"><value>تمت إعادة تعيين كلمة المرور، وعلى المستخدم تغييرها عند الدخول التالي.</value></data>
+  <data name="PASSWORD_CHANGED" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="Pending acknowledgments" xml:space="preserve"><value>إقرارات بانتظارك</value></data>
+  <data name="Please complete the assessment: {0}" xml:space="preserve"><value>يرجى إكمال الاختبار: {0}</value></data>
+  <data name="Please read and acknowledge: {0}" xml:space="preserve"><value>يرجى قراءة المحتوى التالي والإقرار عليه: {0}</value></data>
+  <data name="Please sign in to continue." xml:space="preserve"><value>يرجى تسجيل الدخول للمتابعة.</value></data>
+  <data name="Points" xml:space="preserve"><value>الدرجة</value></data>
+  <data name="Policies" xml:space="preserve"><value>السياسات</value></data>
+  <data name="Policy" xml:space="preserve"><value>سياسة</value></data>
+  <data name="Port" xml:space="preserve"><value>المنفذ</value></data>
+  <data name="Preview" xml:space="preserve"><value>معاينة</value></data>
+  <data name="Preview: this content is not published (visible to administrators only)." xml:space="preserve"><value>معاينة: هذا المحتوى غير منشور (يظهر لمديري النظام فقط).</value></data>
+  <data name="Previous" xml:space="preserve"><value>السابق</value></data>
+  <data name="Primary color" xml:space="preserve"><value>اللون الرئيسي</value></data>
+  <data name="Procedure / Instruction" xml:space="preserve"><value>إجراء / تعليمات</value></data>
+  <data name="Provide at least two answer options." xml:space="preserve"><value>أدخل خيارين للإجابة على الأقل.</value></data>
+  <data name="Public base URL (used for links in emails)" xml:space="preserve"><value>عنوان الموقع العام (يُستخدم في روابط رسائل البريد)</value></data>
+  <data name="Publish" xml:space="preserve"><value>نشر</value></data>
+  <data name="Published" xml:space="preserve"><value>منشور</value></data>
+  <data name="Published assessments" xml:space="preserve"><value>الاختبارات المنشورة</value></data>
+  <data name="Published content" xml:space="preserve"><value>المحتوى المنشور</value></data>
+  <data name="Published." xml:space="preserve"><value>تم النشر.</value></data>
+  <data name="Question text" xml:space="preserve"><value>نص السؤال</value></data>
+  <data name="Question type" xml:space="preserve"><value>نوع السؤال</value></data>
+  <data name="Question {0}" xml:space="preserve"><value>السؤال {0}</value></data>
+  <data name="QUESTION_ADDED" xml:space="preserve"><value>إضافة سؤال</value></data>
+  <data name="QUESTION_DELETED" xml:space="preserve"><value>حذف سؤال</value></data>
+  <data name="QUESTION_UPDATED" xml:space="preserve"><value>تعديل سؤال</value></data>
+  <data name="Questions" xml:space="preserve"><value>الأسئلة</value></data>
+  <data name="Questions are locked because attempts exist." xml:space="preserve"><value>الأسئلة مقفلة لوجود محاولات.</value></data>
+  <data name="Questions are locked because attempts exist. Duplicate the assessment instead." xml:space="preserve"><value>الأسئلة مقفلة لوجود محاولات. انسخ الاختبار بدلاً من ذلك.</value></data>
+  <data name="Recent activity" xml:space="preserve"><value>آخر الأنشطة</value></data>
+  <data name="Reference" xml:space="preserve"><value>المرجع</value></data>
+  <data name="Related assessment" xml:space="preserve"><value>اختبار مرتبط</value></data>
+  <data name="Related link" xml:space="preserve"><value>رابط ذو صلة</value></data>
+  <data name="Reminder: assessment pending" xml:space="preserve"><value>تذكير: اختبار لم يُنجز</value></data>
+  <data name="Reminder: policy acknowledgment required" xml:space="preserve"><value>تذكير: مطلوب الإقرار على السياسات</value></data>
+  <data name="REMINDER_QUEUED" xml:space="preserve"><value>جدولة تذكيرات بالبريد</value></data>
+  <data name="Remove" xml:space="preserve"><value>إزالة</value></data>
+  <data name="Remove current image" xml:space="preserve"><value>إزالة الصورة الحالية</value></data>
+  <data name="Remove this file?" xml:space="preserve"><value>هل تريد إزالة هذا الملف؟</value></data>
+  <data name="REPORT_EXPORTED" xml:space="preserve"><value>تصدير تقرير</value></data>
+  <data name="Reports" xml:space="preserve"><value>التقارير</value></data>
+  <data name="Required acknowledgments" xml:space="preserve"><value>الإقرارات المطلوبة</value></data>
+  <data name="Requires acknowledgment" xml:space="preserve"><value>يتطلب إقراراً</value></data>
+  <data name="Reset" xml:space="preserve"><value>إعادة تعيين</value></data>
+  <data name="Reset all" xml:space="preserve"><value>إعادة تعيين الكل</value></data>
+  <data name="Reset ALL acknowledgments for this content? Users will have to acknowledge again." xml:space="preserve"><value>هل تريد إعادة تعيين جميع الإقرارات على هذا المحتوى؟ سيحتاج المستخدمون إلى الإقرار مجدداً.</value></data>
+  <data name="Reset all branding to defaults and remove uploaded images?" xml:space="preserve"><value>هل تريد استعادة الهوية البصرية الافتراضية وحذف الصور المرفوعة؟</value></data>
+  <data name="Reset for user {0}" xml:space="preserve"><value>إعادة تعيين للمستخدم {0}</value></data>
+  <data name="Reset password" xml:space="preserve"><value>إعادة تعيين كلمة المرور</value></data>
+  <data name="Reset this user's acknowledgment?" xml:space="preserve"><value>هل تريد إعادة تعيين إقرار هذا المستخدم؟</value></data>
+  <data name="Restore defaults" xml:space="preserve"><value>استعادة الإعدادات الافتراضية</value></data>
+  <data name="Result" xml:space="preserve"><value>الحالة</value></data>
+  <data name="Retry" xml:space="preserve"><value>إعادة المحاولة</value></data>
+  <data name="Role" xml:space="preserve"><value>الدور</value></data>
+  <data name="Role: Administrator" xml:space="preserve"><value>مدير النظام</value></data>
+  <data name="Role: Employee" xml:space="preserve"><value>موظف</value></data>
+  <data name="Save" xml:space="preserve"><value>حفظ</value></data>
+  <data name="Save and publish" xml:space="preserve"><value>حفظ ونشر</value></data>
+  <data name="Save as draft" xml:space="preserve"><value>حفظ كمسودة</value></data>
+  <data name="Save branding" xml:space="preserve"><value>حفظ الهوية البصرية</value></data>
+  <data name="Save question" xml:space="preserve"><value>حفظ السؤال</value></data>
+  <data name="Saved, but: {0}" xml:space="preserve"><value>تم الحفظ، ولكن: {0}</value></data>
+  <data name="Saved." xml:space="preserve"><value>تم الحفظ.</value></data>
+  <data name="Saved. (Completed attempts keep the passing percentage they were taken with.)" xml:space="preserve"><value>تم الحفظ. (تحتفظ المحاولات المكتملة بنسبة النجاح التي أُجريت بها.)</value></data>
+  <data name="Score" xml:space="preserve"><value>النتيجة</value></data>
+  <data name="Score %" xml:space="preserve"><value>النتيجة %</value></data>
+  <data name="Search" xml:space="preserve"><value>بحث</value></data>
+  <data name="Search by administrator or details" xml:space="preserve"><value>ابحث باسم المدير أو التفاصيل</value></data>
+  <data name="Search by title" xml:space="preserve"><value>ابحث بالعنوان</value></data>
+  <data name="Search by title or description" xml:space="preserve"><value>ابحث بالعنوان أو الوصف</value></data>
+  <data name="Search by username, name or email" xml:space="preserve"><value>ابحث باسم المستخدم أو الاسم أو البريد</value></data>
+  <data name="Search for a user" xml:space="preserve"><value>ابحث عن مستخدم</value></data>
+  <data name="Secondary color" xml:space="preserve"><value>اللون الثانوي</value></data>
+  <data name="Select all that apply" xml:space="preserve"><value>اختر كل ما ينطبق</value></data>
+  <data name="Select one answer" xml:space="preserve"><value>اختر إجابة واحدة</value></data>
+  <data name="Send" xml:space="preserve"><value>إرسال</value></data>
+  <data name="Send an email to all employees (only those who still need to acknowledge, if acknowledgment is required)?" xml:space="preserve"><value>هل تريد إرسال بريد إلكتروني إلى الموظفين (وإذا كان الإقرار مطلوباً فيُرسل لمن لم يُقرّ فقط)؟</value></data>
+  <data name="Send test email" xml:space="preserve"><value>إرسال بريد تجريبي</value></data>
+  <data name="Sender address" xml:space="preserve"><value>عنوان المرسل</value></data>
+  <data name="Sender name" xml:space="preserve"><value>اسم المرسل</value></data>
+  <data name="Settings" xml:space="preserve"><value>الإعدادات</value></data>
+  <data name="SETTINGS_UPDATED" xml:space="preserve"><value>تعديل الإعدادات</value></data>
+  <data name="Sidebar background" xml:space="preserve"><value>خلفية القائمة الجانبية</value></data>
+  <data name="Sidebar text" xml:space="preserve"><value>نص القائمة الجانبية</value></data>
+  <data name="Sign in" xml:space="preserve"><value>تسجيل الدخول</value></data>
+  <data name="Sign in with Windows account" xml:space="preserve"><value>الدخول بحساب Windows</value></data>
+  <data name="Sign out" xml:space="preserve"><value>تسجيل الخروج</value></data>
+  <data name="Sign-in required" xml:space="preserve"><value>يلزم تسجيل الدخول</value></data>
+  <data name="Sign-in type" xml:space="preserve"><value>طريقة الدخول</value></data>
+  <data name="Sign-in: Local password" xml:space="preserve"><value>كلمة مرور محلية</value></data>
+  <data name="Sign-in: Windows / Active Directory" xml:space="preserve"><value>حساب Windows / Active Directory</value></data>
+  <data name="Single choice" xml:space="preserve"><value>اختيار واحد</value></data>
+  <data name="Single choice questions must have exactly one correct answer." xml:space="preserve"><value>أسئلة الاختيار الواحد يجب أن تحتوي على إجابة صحيحة واحدة فقط.</value></data>
+  <data name="SMTP is not configured (Settings → Email)." xml:space="preserve"><value>لم تتم تهيئة خادم البريد (الإعدادات ← إعدادات البريد الإلكتروني).</value></data>
+  <data name="SMTP password" xml:space="preserve"><value>كلمة مرور SMTP</value></data>
+  <data name="SMTP server" xml:space="preserve"><value>خادم SMTP</value></data>
+  <data name="SMTP settings are working." xml:space="preserve"><value>إعدادات البريد تعمل بنجاح.</value></data>
+  <data name="SMTP username (if required)" xml:space="preserve"><value>اسم مستخدم SMTP (إن لزم)</value></data>
+  <data name="Start assessment" xml:space="preserve"><value>بدء الاختبار</value></data>
+  <data name="Status" xml:space="preserve"><value>الحالة</value></data>
+  <data name="Submit answers" xml:space="preserve"><value>إرسال الإجابات</value></data>
+  <data name="Submit your answers now? You cannot change them afterwards." xml:space="preserve"><value>هل تريد إرسال إجاباتك الآن؟ لا يمكن تعديلها بعد الإرسال.</value></data>
+  <data name="System" xml:space="preserve"><value>النظام</value></data>
+  <data name="System name" xml:space="preserve"><value>اسم النظام</value></data>
+  <data name="Temporary password" xml:space="preserve"><value>كلمة مرور مؤقتة</value></data>
+  <data name="Test email" xml:space="preserve"><value>رسالة تجريبية</value></data>
+  <data name="Test email sent to {0}." xml:space="preserve"><value>تم إرسال رسالة تجريبية إلى {0}.</value></data>
+  <data name="Test failed: {0}" xml:space="preserve"><value>فشل الاختبار: {0}</value></data>
+  <data name="The field must be a number." xml:space="preserve"><value>يجب أن يكون الحقل رقماً.</value></data>
+  <data name="The field {0} is not a valid e-mail address." xml:space="preserve"><value>الحقل {0} لا يحتوي على بريد إلكتروني صحيح.</value></data>
+  <data name="The field {0} must be a number." xml:space="preserve"><value>يجب أن يكون الحقل {0} رقماً.</value></data>
+  <data name="The field {0} must be at most {1} characters." xml:space="preserve"><value>يجب ألا يزيد حقل {0} عن {1} حرفاً.</value></data>
+  <data name="The field {0} must be between {1} and {2}." xml:space="preserve"><value>يجب أن تكون قيمة الحقل {0} بين {1} و{2}.</value></data>
+  <data name="The file is empty." xml:space="preserve"><value>الملف فارغ.</value></data>
+  <data name="The page you requested does not exist or is not available to you." xml:space="preserve"><value>الصفحة المطلوبة غير موجودة أو غير متاحة لك.</value></data>
+  <data name="The request could not be processed. Your session may have expired; please reload the page and try again." xml:space="preserve"><value>تعذّر تنفيذ الطلب. قد تكون الجلسة انتهت، يرجى إعادة تحميل الصفحة والمحاولة من جديد.</value></data>
+  <data name="The saved theme is shown. Changes apply to all users immediately after saving - no rebuild or restart needed." xml:space="preserve"><value>تظهر الهوية المحفوظة. تُطبّق التغييرات على جميع المستخدمين فور الحفظ دون إعادة بناء أو إعادة تشغيل.</value></data>
+  <data name="The user must change it at next sign-in. Also clears lockout." xml:space="preserve"><value>سيُطلب من المستخدم تغييرها عند الدخول التالي، كما يتم رفع القفل عن الحساب.</value></data>
+  <data name="The value '{0}' is invalid." xml:space="preserve"><value>القيمة '{0}' غير صالحة.</value></data>
+  <data name="The value '{0}' is not valid for {1}." xml:space="preserve"><value>القيمة '{0}' غير صالحة للحقل {1}.</value></data>
+  <data name="The value is required." xml:space="preserve"><value>القيمة مطلوبة.</value></data>
+  <data name="The value provided for {0} is invalid." xml:space="preserve"><value>القيمة المدخلة للحقل {0} غير صالحة.</value></data>
+  <data name="The {0} field is required." xml:space="preserve"><value>حقل {0} مطلوب.</value></data>
+  <data name="This account signs in with Windows; no password to change." xml:space="preserve"><value>هذا الحساب يسجّل الدخول عبر Windows، ولا توجد كلمة مرور لتغييرها.</value></data>
+  <data name="This account uses Windows authentication." xml:space="preserve"><value>هذا الحساب يستخدم مصادقة Windows.</value></data>
+  <data name="This assessment already has attempts; its questions are locked. Duplicate it to change questions." xml:space="preserve"><value>لهذا الاختبار محاولات سابقة وأسئلته مقفلة. انسخه لتعديل الأسئلة.</value></data>
+  <data name="This assessment has attempts and cannot be deleted. Unpublish it instead." xml:space="preserve"><value>لهذا الاختبار محاولات ولا يمكن حذفه. ألغِ نشره بدلاً من ذلك.</value></data>
+  <data name="This assessment has attempts, so questions are locked to protect historical results. Use Duplicate on the assessments list to create an editable copy." xml:space="preserve"><value>لهذا الاختبار محاولات سابقة، لذلك الأسئلة مقفلة حفاظاً على النتائج السابقة. استخدم «نسخ» في قائمة الاختبارات لإنشاء نسخة قابلة للتعديل.</value></data>
+  <data name="This content has acknowledgment records and cannot be deleted (compliance evidence). Keep it unpublished." xml:space="preserve"><value>لهذا المحتوى سجلات إقرار ولا يمكن حذفه (أدلة امتثال). أبقِه غير منشور.</value></data>
+  <data name="Time" xml:space="preserve"><value>الوقت</value></data>
+  <data name="Title" xml:space="preserve"><value>العنوان</value></data>
+  <data name="Total questions" xml:space="preserve"><value>عدد الأسئلة</value></data>
+  <data name="Total users" xml:space="preserve"><value>إجمالي المستخدمين</value></data>
+  <data name="Total: {0}" xml:space="preserve"><value>الإجمالي: {0}</value></data>
+  <data name="Training Content" xml:space="preserve"><value>محتوى تدريبي</value></data>
+  <data name="True" xml:space="preserve"><value>صح</value></data>
+  <data name="True / False" xml:space="preserve"><value>صح / خطأ</value></data>
+  <data name="Unexpected error" xml:space="preserve"><value>خطأ غير متوقع</value></data>
+  <data name="Unlimited" xml:space="preserve"><value>غير محدود</value></data>
+  <data name="Unlimited attempts" xml:space="preserve"><value>محاولات غير محدودة</value></data>
+  <data name="Unpublish" xml:space="preserve"><value>إلغاء النشر</value></data>
+  <data name="Unpublish the content before deleting it." xml:space="preserve"><value>ألغِ نشر المحتوى قبل حذفه.</value></data>
+  <data name="Unpublished." xml:space="preserve"><value>تم إلغاء النشر.</value></data>
+  <data name="Upload files (images, PDF/Office documents, MP4/WebM video)" xml:space="preserve"><value>رفع ملفات (صور، مستندات PDF/Office، فيديو MP4/WebM)</value></data>
+  <data name="Use the toolbar for headings, lists, links, images and right-to-left paragraphs." xml:space="preserve"><value>استخدم شريط الأدوات للعناوين والقوائم والروابط والصور والفقرات من اليمين إلى اليسار.</value></data>
+  <data name="User" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="User created." xml:space="preserve"><value>تم إنشاء المستخدم.</value></data>
+  <data name="USER_CREATED" xml:space="preserve"><value>إنشاء مستخدم</value></data>
+  <data name="USER_PASSWORD_RESET" xml:space="preserve"><value>إعادة تعيين كلمة مرور</value></data>
+  <data name="USER_UPDATED" xml:space="preserve"><value>تعديل مستخدم</value></data>
+  <data name="Username" xml:space="preserve"><value>اسم المستخدم</value></data>
+  <data name="Username (DOMAIN\user for Windows accounts)" xml:space="preserve"><value>اسم المستخدم (DOMAIN\user لحسابات Windows)</value></data>
+  <data name="Username already exists." xml:space="preserve"><value>اسم المستخدم موجود مسبقاً.</value></data>
+  <data name="Username: {0}" xml:space="preserve"><value>اسم المستخدم: {0}</value></data>
+  <data name="Users" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="Users can switch language from the header at any time." xml:space="preserve"><value>يمكن للمستخدمين تغيير اللغة من الترويسة في أي وقت.</value></data>
+  <data name="USERS_IMPORTED" xml:space="preserve"><value>استيراد مستخدمين</value></data>
+  <data name="View" xml:space="preserve"><value>عرض</value></data>
+  <data name="View all" xml:space="preserve"><value>عرض الكل</value></data>
+  <data name="View details" xml:space="preserve"><value>عرض التفاصيل</value></data>
+  <data name="View report" xml:space="preserve"><value>عرض التقرير</value></data>
+  <data name="Welcome" xml:space="preserve"><value>مرحباً</value></data>
+  <data name="Welcome text (employee dashboard)" xml:space="preserve"><value>نص الترحيب (لوحة الموظف)</value></data>
+  <data name="Welcome, {0}" xml:space="preserve"><value>مرحباً بك، {0}</value></data>
+  <data name="Windows / AD (no password)" xml:space="preserve"><value>Windows / AD (بدون كلمة مرور)</value></data>
+  <data name="You cannot remove your own admin role or deactivate yourself." xml:space="preserve"><value>لا يمكنك إزالة صلاحية المدير عن نفسك أو تعطيل حسابك.</value></data>
+  <data name="You did not reach the passing score. Review the material and try again if attempts remain." xml:space="preserve"><value>لم تبلغ درجة النجاح. راجع المحتوى وأعد المحاولة إن كانت لديك محاولات متبقية.</value></data>
+  <data name="You do not have permission to view this page." xml:space="preserve"><value>ليست لديك صلاحية لعرض هذه الصفحة.</value></data>
+  <data name="You have not acknowledged any policy yet." xml:space="preserve"><value>لم تقم بالإقرار على أي سياسة بعد.</value></data>
+  <data name="You have not yet attempted: {0}" xml:space="preserve"><value>لم تقم بعد بأداء الاختبار: {0}</value></data>
+  <data name="You must change your password before continuing." xml:space="preserve"><value>يجب تغيير كلمة المرور قبل المتابعة.</value></data>
+  <data name="You still need to acknowledge: {0}" xml:space="preserve"><value>لا يزال مطلوباً منك الإقرار على: {0}</value></data>
+  <data name="Your account has not been enabled in this system." xml:space="preserve"><value>حسابك غير مفعّل في هذا النظام.</value></data>
+  <data name="Your account is disabled." xml:space="preserve"><value>حسابك معطّل.</value></data>
+  <data name="Your answer" xml:space="preserve"><value>إجابتك</value></data>
+  <data name="Your result" xml:space="preserve"><value>نتيجتك</value></data>
+  <data name="{0} acknowledged" xml:space="preserve"><value>{0} تم الإقرار</value></data>
+  <data name="{0} acknowledgment(s) reset." xml:space="preserve"><value>تمت إعادة تعيين {0} إقرار.</value></data>
+  <data name="{0} and {1} do not match." xml:space="preserve"><value>الحقلان {0} و{1} غير متطابقين.</value></data>
+  <data name="{0} attempt(s)" xml:space="preserve"><value>{0} محاولة</value></data>
+  <data name="{0} created, {1} skipped" xml:space="preserve"><value>تم إنشاء {0} وتخطي {1}</value></data>
+  <data name="{0} email(s) queued (users who have not completed it yet)." xml:space="preserve"><value>تمت جدولة {0} رسالة بريد إلكتروني (للمستخدمين الذين لم يكملوا الاختبار بعد).</value></data>
+  <data name="{0} email(s) queued." xml:space="preserve"><value>تمت جدولة {0} رسالة بريد إلكتروني للإرسال.</value></data>
+  <data name="{0} emails" xml:space="preserve"><value>{0} رسالة بريد</value></data>
+  <data name="{0} files selected" xml:space="preserve"><value>تم اختيار {0} ملفات</value></data>
+  <data name="{0} point(s)" xml:space="preserve"><value>{0} درجة</value></data>
+  <data name="{0} reminder email(s) queued (users without an email address are skipped)." xml:space="preserve"><value>تمت جدولة {0} رسالة تذكير (يتم تخطي المستخدمين الذين لا يملكون بريداً إلكترونياً).</value></data>
+  <data name="{0} rows, {1}" xml:space="preserve"><value>{0} صف، الصيغة {1}</value></data>
+</root>

@@ -1,8 +1,12 @@
+using System.Globalization;
 using System.Security.Claims;
+using CyberLms.Web;
 using CyberLms.Web.Data;
 using CyberLms.Web.Domain;
 using CyberLms.Web.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Features;
@@ -26,7 +30,9 @@ builder.Services.AddSingleton<SmtpConfigProvider>();
 builder.Services.AddSingleton<NotificationService>();
 builder.Services.AddHostedService<EmailSenderService>();
 builder.Services.AddScoped<BrandingAccessor>();
+builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 builder.Services.AddScoped<Localizer>();
+builder.Services.AddSingleton<IPostConfigureOptions<MvcOptions>, LocalizedMvcSetup>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddSingleton<PasswordService>();
@@ -79,7 +85,9 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("Admin", p => p.RequireRole(RoleNames.Admin));
 
 builder.Services.AddAntiforgery(o => { o.Cookie.Name = "CyberLms.Csrf"; o.Cookie.HttpOnly = true; o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; });
-builder.Services.AddControllersWithViews(o => { o.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()); o.Filters.Add<MustChangePasswordFilter>(); });
+builder.Services.AddControllersWithViews(o => { o.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()); o.Filters.Add<MustChangePasswordFilter>(); })
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization(o => o.DataAnnotationLocalizerProvider = (_, f) => f.Create(typeof(SharedResource)));
 builder.Services.AddRouting(o => o.LowercaseUrls = false);
 
 // Persist data-protection keys (cookies/antiforgery) so sign-ins survive restarts and app-pool recycles.
@@ -119,6 +127,15 @@ app.Use(async (ctx, next) =>
 });
 
 app.UseStaticFiles();
+
+// Arabic (ar-SA) is the default UI culture; formatting uses Gregorian dates and Western digits (see CultureSetup).
+app.UseRequestLocalization(o => CultureSetup.Configure(o, app.Services.GetRequiredService<SettingsService>()));
+app.Use(async (ctx, next) =>
+{
+    CultureInfo.CurrentCulture = CultureSetup.FormattingCulture(CultureInfo.CurrentUICulture);
+    await next();
+});
+app.UseStatusCodePagesWithReExecute("/Home/Status", "?code={0}");
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

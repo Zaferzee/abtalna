@@ -29,9 +29,9 @@ public class UsersController(AppDbContext db, PasswordService passwords, AuditSe
     {
         ViewBag.Windows = auth.WindowsEnabled;
         var n = vm.Username?.Trim().ToLowerInvariant() ?? "";
-        if (await db.Users.AnyAsync(u => u.NormalizedUsername == n)) ModelState.AddModelError(nameof(vm.Username), "Username already exists.");
-        if (vm.AuthSource == "Local") { if (PasswordService.Validate(vm.Password) is { } e) ModelState.AddModelError(nameof(vm.Password), e); }
-        else if (vm.AuthSource != "Windows") ModelState.AddModelError("", "Invalid authentication source.");
+        if (await db.Users.AnyAsync(u => u.NormalizedUsername == n)) ModelState.AddModelError(nameof(vm.Username), L["Username already exists."]);
+        if (vm.AuthSource == "Local") { if (PasswordService.Validate(vm.Password) is { } e) ModelState.AddModelError(nameof(vm.Password), L[e]); }
+        else if (vm.AuthSource != "Windows") ModelState.AddModelError("", L["Invalid authentication source."]);
         if (!ModelState.IsValid) return View("Form", vm);
         var u = new User { Username = vm.Username!.Trim(), NormalizedUsername = n, DisplayName = vm.DisplayName.Trim(), Email = vm.Email?.Trim(), Department = vm.Department?.Trim(), IsActive = vm.IsActive, AuthSource = vm.AuthSource };
         if (vm.AuthSource == "Local") { u.PasswordHash = passwords.Hash(u, vm.Password!); u.MustChangePassword = true; }
@@ -41,7 +41,7 @@ public class UsersController(AppDbContext db, PasswordService passwords, AuditSe
         await db.SaveChangesAsync();
         audit.Add("USER_CREATED", "User", u.Id, u.Username);
         await db.SaveChangesAsync();
-        TempData["Success"] = "User created.";
+        Success("User created.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -59,13 +59,13 @@ public class UsersController(AppDbContext db, PasswordService passwords, AuditSe
         if (u == null) return NotFound();
         ModelState.Remove(nameof(vm.Username)); ModelState.Remove(nameof(vm.Password));
         if (!ModelState.IsValid) { vm.Id = id; vm.Username = u.Username; vm.AuthSource = u.AuthSource; return View("Form", vm); }
-        if (u.Id == User.UserId() && (!vm.IsAdmin || !vm.IsActive)) { TempData["Error"] = "You cannot remove your own admin role or deactivate yourself."; return RedirectToAction(nameof(Edit), new { id }); }
+        if (u.Id == User.UserId() && (!vm.IsAdmin || !vm.IsActive)) { Failure("You cannot remove your own admin role or deactivate yourself."); return RedirectToAction(nameof(Edit), new { id }); }
         u.DisplayName = vm.DisplayName.Trim(); u.Email = vm.Email?.Trim(); u.Department = vm.Department?.Trim(); u.IsActive = vm.IsActive;
         await SetRoles(u, vm.IsAdmin);
         audit.Add("USER_UPDATED", "User", u.Id, u.Username);
         await db.SaveChangesAsync();
         cache.Remove($"userstate.{u.Id}");
-        TempData["Success"] = "Saved.";
+        Success("Saved.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -74,12 +74,12 @@ public class UsersController(AppDbContext db, PasswordService passwords, AuditSe
     {
         var u = await db.Users.FindAsync(id);
         if (u == null) return NotFound();
-        if (u.AuthSource != "Local") { TempData["Error"] = "This account uses Windows authentication."; return RedirectToAction(nameof(Index)); }
-        if (PasswordService.Validate(newPassword) is { } e) { TempData["Error"] = e; return RedirectToAction(nameof(Edit), new { id }); }
+        if (u.AuthSource != "Local") { Failure("This account uses Windows authentication."); return RedirectToAction(nameof(Index)); }
+        if (PasswordService.Validate(newPassword) is { } e) { Failure(e); return RedirectToAction(nameof(Edit), new { id }); }
         u.PasswordHash = passwords.Hash(u, newPassword); u.MustChangePassword = true; u.FailedLoginCount = 0; u.LockoutUntil = null;
         audit.Add("USER_PASSWORD_RESET", "User", u.Id, u.Username);
         await db.SaveChangesAsync();
-        TempData["Success"] = "Password reset; the user must change it at next sign-in.";
+        Success("Password reset; the user must change it at next sign-in.");
         return RedirectToAction(nameof(Index));
     }
 
@@ -87,15 +87,15 @@ public class UsersController(AppDbContext db, PasswordService passwords, AuditSe
     [HttpPost]
     public async Task<IActionResult> Import(IFormFile file, string authSource, string? initialPassword)
     {
-        if (file == null || file.Length == 0 || file.Length > 5_000_000) { TempData["Error"] = "Choose a CSV file (max 5 MB)."; return RedirectToAction(nameof(Index)); }
-        if (authSource == "Local" && PasswordService.Validate(initialPassword) is { } pe) { TempData["Error"] = "Initial password: " + pe; return RedirectToAction(nameof(Index)); }
+        if (file == null || file.Length == 0 || file.Length > 5_000_000) { Failure("Choose a CSV file (max 5 MB)."); return RedirectToAction(nameof(Index)); }
+        if (authSource == "Local" && PasswordService.Validate(initialPassword) is { } pe) { Failure("Initial password: {0}", L[pe]); return RedirectToAction(nameof(Index)); }
         if (authSource is not ("Local" or "Windows")) return BadRequest();
         var role = await db.Roles.FirstAsync(r => r.Name == RoleNames.User);
         var existing = (await db.Users.Select(u => u.NormalizedUsername).ToListAsync()).ToHashSet();
         int created = 0, skipped = 0;
         using var reader = new StreamReader(file.OpenReadStream());
         var header = (await reader.ReadLineAsync())?.Split(',').Select(h => h.Trim().Trim('"').ToLowerInvariant()).ToList();
-        if (header == null || !header.Contains("username")) { TempData["Error"] = "CSV must have a header row with at least 'username'."; return RedirectToAction(nameof(Index)); }
+        if (header == null || !header.Contains("username")) { Failure("CSV must have a header row with at least 'username'."); return RedirectToAction(nameof(Index)); }
         string? Col(string[] f, string name) { var i = header.IndexOf(name); return i >= 0 && i < f.Length ? f[i].Trim().Trim('"') : null; }
         string? line;
         while ((line = await reader.ReadLineAsync()) != null)
@@ -109,9 +109,9 @@ public class UsersController(AppDbContext db, PasswordService passwords, AuditSe
             u.UserRoles.Add(new UserRole { Role = role });
             db.Users.Add(u); created++;
         }
-        audit.Add("USERS_IMPORTED", "User", null, $"{created} created, {skipped} skipped");
+        audit.Add("USERS_IMPORTED", "User", null, Res.Ar("{0} created, {1} skipped", created, skipped));
         await db.SaveChangesAsync();
-        TempData["Success"] = $"Import finished: {created} created, {skipped} skipped (duplicates/invalid).";
+        Success("Import finished: {0} created, {1} skipped (duplicates/invalid).", created, skipped);
         return RedirectToAction(nameof(Index));
     }
 

@@ -53,7 +53,7 @@ public class AuthService(AppDbContext db, PasswordService passwords, IConfigurat
             user.UserRoles.Add(new UserRole { Role = role });
             db.Users.Add(user);
             await db.SaveChangesAsync();
-            audit.Add("USER_CREATED", "User", user.Id, $"Auto-provisioned from Windows identity {windowsName}");
+            audit.Add("USER_CREATED", "User", user.Id, Res.Ar("Account created automatically from Windows identity {0}", windowsName));
         }
         if (!user.IsActive) return (null, "Your account is disabled.");
         return (user, null);

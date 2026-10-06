@@ -8,7 +8,8 @@
 * Assessments (single / true-false / multiple choice, passing %, attempt limit, automatic scoring, immutable attempt history, duplicate-to-edit).
 * Employee dashboard, admin dashboard with drill-down, reports with filters, CSV and Excel export.
 * **Branding & Appearance** from the Admin UI (org/system name, logo, favicon, colors, header/sidebar, login page, welcome text, footer) applied live without rebuild.
-* SMTP email (manual/event-based notifications and reminders), basic audit log, Arabic/English UI with RTL, CSV user import.
+* SMTP email (manual/event-based notifications and reminders; Arabic RTL templates), basic audit log, CSV user import.
+* **Arabic-first UI (core requirement):** the entire employee and administrator interface, validation/error messages, e-mails and report exports are Arabic with full RTL (`ar-SA` default); English kept as future compatibility. See `LOCALIZATION.md` and `PRODUCTION_ACCEPTANCE.md`.
 * Security: CSRF, XSS sanitization + CSP, upload validation (extension, size, magic bytes, generated file names), secure cookies, HSTS, no secrets in source.
 
 ## FUTURE TARGET STATE (not implemented - do not assume it exists)
@@ -28,14 +29,14 @@
 | Notifications | Scheduler for automatic reminders/escalations, templates, per-user preferences, Teams/SMS |
 | Compliance evidence | Immutable/hash-chained audit, evidence packs, retention policies, SIEM (syslog/CEF) forwarding |
 | Certificates | Completion certificates |
-| Multilingual content | Per-item Arabic/English content, full translation resources (the MVP localizes the UI chrome and employee pages only; admin screens are English) |
+| Multilingual content | Per-item Arabic/English content, English UI resources (`SharedResource.en.resx`), per-user language preference |
 | RBAC | Granular permissions, custom roles, content owners, delegated admins |
 | Enterprise compliance | Mapping to NCA-ECC / ISO 27001 / NIST controls with coverage reports |
 | Platform | Background job runner, caching, horizontal scale (only if measured need) |
 
 ## Known MVP limitations
 * Windows Authentication and IIS hosting steps could not be executed in the build environment; verify with DEPLOYMENT.md section 10.
-* Admin screens are English-only (employee UI is Arabic/English).
+* English UI wording is not separately reviewed (English keys are used as source text); Arabic is the supported language.
 * "Passed/Failed/Not attempted" dashboard figures count user x published-assessment pairs.
 * Question edits are locked once an assessment has attempts (duplicate it instead) to keep history trustworthy.
 * Uploaded videos are served as-is (no transcoding); use MP4 (H.264) or WebM.
