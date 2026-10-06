@@ -3,6 +3,9 @@
     Layout = null;
     var b = Brand.Current;
     var auth = (AuthService)ViewBag.Auth;
+    var monogram = b.SystemName.Trim().Length > 0 ? b.SystemName.Trim()[0].ToString() : "•";
+    var hasErrors = !ViewData.ModelState.IsValid;
+    string? heroStyle = b.HasLoginBackground ? $"--hero-image:url('/Files/Brand?kind=loginbg&v={b.Version}')" : null;
 }
 <!DOCTYPE html>
 <html lang="@L.Lang" dir="@L.Dir">
@@ -12,48 +15,76 @@
     @if (b.HasFavicon) { <link rel="icon" href="~/Files/Brand?kind=favicon&v=@b.Version" /> }
     <link rel="stylesheet" href="~/lib/bootstrap/@(L.IsRtl ? "bootstrap.rtl.min.css" : "bootstrap.min.css")" />
     <link rel="stylesheet" href="~/lib/icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ds.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/branding/theme.css?v=@b.Version" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    @if (b.HasLoginBackground) { <style>.login-wrap{background-image:url('/Files/Brand?kind=loginbg&v=@b.Version')}</style> }
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
-<body>
-<div class="login-wrap">
-    <div class="login-card">
-        <div class="text-center mb-3">
-            @if (b.HasLogo) { <img src="~/Files/Brand?kind=logo&v=@b.Version" alt="@b.OrgName" style="max-height:80px;max-width:240px" class="mb-2" /> }
-            <h1 class="h4 mb-0">@b.SystemName</h1>
-            <div class="text-muted">@b.OrgName</div>
+<body class="auth-body">
+<a class="skip-link" href="#login-form">@L["Skip to content"]</a>
+<div class="auth">
+    <section class="auth-hero @(b.HasLoginBackground ? "has-image" : "")" style="@heroStyle">
+        <span class="auth-orb o1" aria-hidden="true"></span><span class="auth-orb o2" aria-hidden="true"></span>
+        <svg class="auth-shield" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 4 112 24v40c0 34-22 60-52 72C30 124 8 98 8 64V24Z" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="m38 70 15 15 30-32" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="auth-brand reveal">
+            @if (b.HasLogo) { <span class="sb-logo"><img src="~/Files/Brand?kind=logo&v=@b.Version" alt="@b.OrgName" /></span> }
+            else { <span class="sb-mono" aria-hidden="true">@monogram</span> }
+            <span class="auth-brand-names"><strong class="bidi">@b.SystemName</strong><small class="bidi">@b.OrgName</small></span>
         </div>
-        <div class="card"><div class="card-body p-4">
-            <h2 class="h5">@b.LoginTitle</h2>
-            @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <p class="text-muted bidi">@b.LoginSubtitle</p> }
-            @if (ViewBag.SignedOut == true) { <div class="alert alert-success" role="status">@L["You have been signed out."]</div> }
-            @if (TempData["Error"] is string te) { <div class="alert alert-danger" role="alert">@te</div> }
-            @if (Model.Error != null) { <div class="alert alert-danger" role="alert">@Model.Error</div> }
-            @if (!ViewData.ModelState.IsValid) { <div class="alert alert-danger" role="alert"><div asp-validation-summary="All"></div></div> }
+        <div class="auth-hero-inner">
+            <span class="auth-kicker reveal" style="--i:1"><i class="bi bi-shield-lock"></i> @L["Cybersecurity awareness"]</span>
+            <h1 class="auth-title reveal bidi" style="--i:2">@b.SystemName</h1>
+            <p class="auth-lead reveal" style="--i:3">@L["Learn the policies, controls and safe practices that protect our organization - in short, clear lessons."]</p>
+            <ul class="auth-points">
+                <li class="reveal" style="--i:4"><i class="bi bi-journal-check"></i><span>@L["Policies and controls in one place"]</span></li>
+                <li class="reveal" style="--i:5"><i class="bi bi-ui-checks-grid"></i><span>@L["Short interactive assessments"]</span></li>
+                <li class="reveal" style="--i:6"><i class="bi bi-graph-up-arrow"></i><span>@L["Track your progress and acknowledgments"]</span></li>
+            </ul>
+        </div>
+        <div class="auth-hero-foot bidi">@b.OrgName</div>
+    </section>
+
+    <section class="auth-panel">
+        <div class="auth-card reveal" style="--i:2">
+            <h2 class="bidi">@b.LoginTitle</h2>
+            <p class="auth-sub">@L["Welcome back. Sign in to continue your learning."]</p>
+            @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <div class="alert alert-info bidi"><i class="bi bi-info-circle-fill"></i><span>@b.LoginSubtitle</span></div> }
+            @if (ViewBag.SignedOut == true) { <div class="alert alert-success" role="status"><i class="bi bi-check-circle-fill"></i><span>@L["You have been signed out."]</span></div> }
+            @if (TempData["Error"] is string te) { <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-octagon-fill"></i><span>@te</span></div> }
+            @if (Model.Error != null) { <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-octagon-fill"></i><span>@Model.Error</span></div> }
+            @if (hasErrors) { <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-octagon-fill"></i><div asp-validation-summary="All"></div></div> }
             @if (auth.LocalEnabled)
             {
-                <form method="post" asp-action="Login" novalidate>
+                <form method="post" asp-action="Login" id="login-form" data-busy novalidate>
                     <input type="hidden" asp-for="ReturnUrl" />
-                    <div class="mb-3"><label class="form-label" asp-for="Username">@L["Username"]</label><input class="form-control" asp-for="Username" autocomplete="username" autofocus dir="ltr" /></div>
-                    <div class="mb-3"><label class="form-label" asp-for="Password">@L["Password"]</label><input class="form-control" asp-for="Password" autocomplete="current-password" dir="ltr" /></div>
-                    <button class="btn btn-primary w-100">@L["Sign in"]</button>
+                    <div class="mb-3">
+                        <label class="form-label" asp-for="Username">@L["Username"]</label>
+                        <div class="field-icon"><i class="bi bi-person"></i><input class="form-control" asp-for="Username" autocomplete="username" autofocus dir="ltr" /></div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label" asp-for="Password">@L["Password"]</label>
+                        <div class="field-icon"><i class="bi bi-lock"></i><input class="form-control" asp-for="Password" autocomplete="current-password" dir="ltr" />
+                            <button type="button" class="pw-toggle" data-pw-toggle="Password" aria-pressed="false" aria-label="@L["Show password"]" data-show="@L["Show password"]" data-hide="@L["Hide password"]"><i class="bi bi-eye"></i></button></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">@L["Sign in"] <i class="bi bi-arrow-left-short flip-rtl"></i></button>
                 </form>
             }
             @if (auth.WindowsEnabled)
             {
-                @if (auth.LocalEnabled) { <hr /> }
-                <a class="btn btn-outline-primary w-100" asp-action="WindowsLogin" asp-route-returnUrl="@Model.ReturnUrl"><i class="bi bi-windows"></i> @L["Sign in with Windows account"]</a>
+                @if (auth.LocalEnabled) { <div class="auth-or">@L["or"]</div> }
+                <a class="btn btn-outline-primary btn-lg w-100" asp-action="WindowsLogin" asp-route-returnUrl="@Model.ReturnUrl"><i class="bi bi-windows"></i> @L["Sign in with Windows account"]</a>
             }
-        </div></div>
-        <div class="d-flex justify-content-between align-items-center mt-2">
+            <div class="auth-secure"><i class="bi bi-shield-check"></i> @L["Protected connection - for authorized users only"]</div>
+        </div>
+        <div class="auth-foot">
             <form method="post" asp-action="SetLanguage" class="m-0">
                 <input type="hidden" name="lang" value="@(L.IsRtl ? "en" : "ar")" /><input type="hidden" name="returnUrl" value="/Account/Login" />
-                <button class="btn btn-sm btn-link" lang="@(L.IsRtl ? "en" : "ar")">@(L.IsRtl ? "English" : "العربية")</button>
+                <button class="btn btn-ghost btn-sm" lang="@(L.IsRtl ? "en" : "ar")"><i class="bi bi-translate"></i> @(L.IsRtl ? "English" : "العربية")</button>
             </form>
-            <span class="text-muted small">@b.FooterText</span>
+            <span class="bidi">@b.FooterText</span>
         </div>
-    </div>
+    </section>
 </div>
+<script src="~/js/ui.js" asp-append-version="true"></script>
 </body>
 </html>

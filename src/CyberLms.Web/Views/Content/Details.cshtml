@@ -1,46 +1,114 @@
 @model ContentDetailsVm
-@{ var c = Model.Content; ViewData["Title"] = c.Title; }
-@if (Model.Preview) { <div class="alert alert-warning">@L["Preview: this content is not published (visible to administrators only)."]</div> }
+@{
+    var c = Model.Content; ViewData["Title"] = c.Title; if (c.Type == ContentType.Policy) { ViewData["Nav"] = "Policies"; }
+    var docs = c.Attachments.Where(a => a.Kind == AttachmentKind.Document).ToList();
+    var needsAck = c.RequiresAcknowledgment && !Model.Preview;
+    var words = System.Text.RegularExpressions.Regex.Replace(c.Body ?? "", "<[^>]+>", " ").Split((char[])null!, StringSplitOptions.RemoveEmptyEntries).Length;
+    var minutes = Math.Max(1, (int)Math.Ceiling(words / 180.0));
+}
+<div class="read-progress" aria-hidden="true"></div>
+@if (Model.Preview) { <div class="alert alert-warning"><i class="bi bi-eye"></i><span>@L["Preview: this content is not published (visible to administrators only)."]</span></div> }
 <nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb">
     <li class="breadcrumb-item"><a asp-action="@(c.Type == ContentType.Policy ? "Policies" : "Index")">@L[c.Type == ContentType.Policy ? "Policies" : "Content"]</a></li>
     <li class="breadcrumb-item active bidi" aria-current="page">@c.Title</li>
 </ol></nav>
-<div class="card"><div class="card-body">
-    <div class="mb-1"><span class="badge text-bg-light">@L[Labels.Type(c.Type)]</span> <small class="text-muted">@Time.Html(c.PublishedAt ?? c.CreatedAt)</small></div>
-    <h1 class="h3 bidi">@c.Title</h1>
-    @if (!string.IsNullOrWhiteSpace(c.Description)) { <p class="lead bidi">@c.Description</p> }
-    @if (!string.IsNullOrWhiteSpace(c.Body)) { <div class="content-body">@Html.Raw(c.Body)</div> }
 
-    @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Video)) {
-        <div class="mt-3"><video class="w-100" style="max-height:520px" controls preload="metadata" src="@Url.Action("Attachment", "Files", new { id = a.Id })"></video><div class="small text-muted bidi">@a.FileName</div></div> }
-    @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Image)) {
-        <figure class="mt-3"><img class="img-fluid rounded border" alt="@a.FileName" src="@Url.Action("Attachment", "Files", new { id = a.Id })" /><figcaption class="small text-muted bidi">@a.FileName</figcaption></figure> }
-    @if (c.Attachments.Any(a => a.Kind == AttachmentKind.Document) || !string.IsNullOrEmpty(c.ExternalUrl))
-    {
-        <h2 class="h6 mt-4">@L["Attachments"]</h2>
-        <ul class="list-unstyled">
-        @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Document)) {
-            <li><i class="bi bi-file-earmark-text"></i> <a href="@Url.Action("Attachment", "Files", new { id = a.Id })" target="_blank" rel="noopener" class="bidi">@a.FileName</a> <small class="text-muted"><bdi dir="ltr">@Labels.Size(a.SizeBytes)</bdi></small></li> }
-        @if (!string.IsNullOrEmpty(c.ExternalUrl)) { <li><i class="bi bi-link-45deg"></i> @L["Related link"]: <a href="@c.ExternalUrl" target="_blank" rel="noopener noreferrer" dir="ltr">@c.ExternalUrl</a></li> }
-        </ul>
-    }
-</div></div>
-@if (c.RequiresAcknowledgment && !Model.Preview)
-{
-    <div class="card mt-3 border-@(Model.Ack != null ? "success" : "warning")"><div class="card-body">
-    @if (Model.Ack != null) { <i class="bi bi-check-circle-fill text-success"></i> <strong>@L["Acknowledged"]</strong> <span class="text-muted">- @L["Acknowledged on"] @Time.Html(Model.Ack.AcknowledgedAt)</span> }
-    else
-    {
-        <form method="post" asp-action="Acknowledge" asp-route-id="@c.Id" class="d-flex flex-wrap align-items-center gap-3">
-            <span>@L["I acknowledge that I have read and understood this policy."]</span>
-            <button class="btn btn-primary"><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
-        </form>
-    }
-    </div></div>
-}
-@if (Model.RelatedAssessments.Count > 0)
-{
-    <div class="card mt-3"><div class="card-header bg-white">@L["Related assessment"]</div><ul class="list-group list-group-flush">
-    @foreach (var a in Model.RelatedAssessments) { <li class="list-group-item d-flex justify-content-between align-items-center"><span class="bidi">@a.Title</span><a class="btn btn-sm btn-primary" asp-controller="Assessments" asp-action="Index">@L["Open"]</a></li> }
-    </ul></div>
-}
+<header class="doc-hero reveal">
+    <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
+    <h1 class="bidi">@c.Title</h1>
+    @if (!string.IsNullOrWhiteSpace(c.Description)) { <p class="doc-lead bidi">@c.Description</p> }
+    <div class="doc-meta">
+        <span class="chip"><i class="bi bi-calendar3"></i> @Time.Html(c.PublishedAt ?? c.CreatedAt)</span>
+        <span class="chip"><i class="bi bi-clock"></i> @L.Format("{0} min read", minutes)</span>
+        @if (c.Attachments.Count > 0) { <span class="chip"><i class="bi bi-paperclip"></i> @L.Format("{0} attachment(s)", c.Attachments.Count)</span> }
+        @if (needsAck)
+        {
+            if (Model.Ack != null) { <span class="chip chip-success"><i class="bi bi-check-circle-fill"></i> @L["Acknowledged"]</span> }
+            else { <span class="chip chip-warning"><i class="bi bi-pen"></i> @L["Requires your acknowledgment"]</span> }
+        }
+    </div>
+</header>
+
+<div class="reader">
+    <div class="stack" style="--gap:1.5rem">
+        <article class="doc-card reveal" style="--i:1">
+            @if (!string.IsNullOrWhiteSpace(c.Body)) { <div class="doc-body content-body" data-toc-source>@Html.Raw(c.Body)</div> }
+            else { <p class="text-muted mb-0">@L["This item has no text body. See the attachments below."]</p> }
+        </article>
+
+        @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Video))
+        {
+            <figure class="figure-card reveal-scroll"><video controls preload="metadata" src="@Url.Action("Attachment", "Files", new { id = a.Id })"></video><figcaption class="bidi"><i class="bi bi-play-circle"></i> @a.FileName</figcaption></figure>
+        }
+        @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Image))
+        {
+            <figure class="figure-card reveal-scroll"><img alt="@a.FileName" src="@Url.Action("Attachment", "Files", new { id = a.Id })" /><figcaption class="bidi"><i class="bi bi-image"></i> @a.FileName</figcaption></figure>
+        }
+        @if (docs.Count > 0 || !string.IsNullOrEmpty(c.ExternalUrl))
+        {
+            <section class="reveal-scroll">
+                <div class="section-title mt-0"><h2><i class="bi bi-paperclip"></i> @L["Attachments"]</h2></div>
+                <div class="attach-grid">
+                    @foreach (var a in docs)
+                    {
+                        <a class="attach" href="@Url.Action("Attachment", "Files", new { id = a.Id })" target="_blank" rel="noopener">
+                            <span class="icon-chip"><i class="bi @Ui.AttachmentIcon(a)"></i></span>
+                            <span class="min-w-0"><span class="a-name bidi">@a.FileName</span><small><bdi dir="ltr">@Labels.Size(a.SizeBytes)</bdi></small></span>
+                            <i class="bi bi-download a-go"></i>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(c.ExternalUrl))
+                    {
+                        <a class="attach" href="@c.ExternalUrl" target="_blank" rel="noopener noreferrer">
+                            <span class="icon-chip accent"><i class="bi bi-link-45deg"></i></span>
+                            <span class="min-w-0"><span class="a-name">@L["Related link"]</span><small class="d-block text-truncate" dir="ltr">@c.ExternalUrl</small></span>
+                            <i class="bi bi-box-arrow-up-left a-go flip-rtl"></i>
+                        </a>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (needsAck)
+        {
+            @if (Model.Ack != null)
+            {
+                <section class="ack-panel is-done" aria-live="polite">
+                    <span class="ack-icon"><i class="bi bi-patch-check-fill"></i></span>
+                    <div><h2>@L["Acknowledged"]</h2><p>@L["Acknowledged on"] @Time.Html(Model.Ack.AcknowledgedAt)</p></div>
+                </section>
+            }
+            else
+            {
+                <form method="post" asp-action="Acknowledge" asp-route-id="@c.Id" class="ack-panel reveal-scroll">
+                    <span class="ack-icon"><i class="bi bi-pen"></i></span>
+                    <div>
+                        <h2>@L["Your acknowledgment is required"]</h2>
+                        <p>@L["Please read the full content above, then confirm below."]</p>
+                        <label class="ack-check"><input type="checkbox" data-ack-check /> <span>@L["I acknowledge that I have read and understood this policy."]</span></label>
+                    </div>
+                    <button class="btn btn-primary btn-lg" data-ack-submit><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
+                </form>
+            }
+        }
+    </div>
+
+    <aside class="doc-aside">
+        <nav class="panel toc" data-toc hidden aria-label="@L["On this page"]"><h2><i class="bi bi-list-ul"></i> @L["On this page"]</h2><ol></ol></nav>
+        @if (Model.RelatedAssessments.Count > 0)
+        {
+            <div class="panel p-3">
+                <div class="d-flex align-items-center gap-2 mb-2"><span class="icon-chip accent"><i class="bi bi-patch-question"></i></span><strong>@L["Related assessment"]</strong></div>
+                @foreach (var a in Model.RelatedAssessments)
+                {
+                    <p class="bidi mb-2 small">@a.Title</p>
+                }
+                <a class="btn btn-accent btn-sm w-100" asp-controller="Assessments" asp-action="Index">@L["Test your knowledge"] <i class="bi bi-arrow-left-short flip-rtl"></i></a>
+            </div>
+        }
+        @if (needsAck && Model.Ack == null)
+        {
+            <div class="panel p-3 small text-muted"><i class="bi bi-info-circle text-primary"></i> @L["Acknowledgment is recorded with the date and time, and is visible to administrators in reports."]</div>
+        }
+    </aside>
+</div>

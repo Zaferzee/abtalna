@@ -1,26 +1,146 @@
 @model DashboardVm
-@{ ViewData["Title"] = L["Dashboard"]; var s = Model.S; }
-<h1 class="h4 mb-3">@L["Dashboard"]</h1>
-<div class="row g-3 mb-3">
-    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Users" asp-action="Index" asp-route-role="User"><div class="card-body"><div class="text-muted small">@L["Total users"]</div><div class="stat-num">@s.Users</div></div></a></div>
-    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Content" asp-action="Index" asp-route-status="Published"><div class="card-body"><div class="text-muted small">@L["Published content"]</div><div class="stat-num">@s.Content</div></div></a></div>
-    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Assessments" asp-action="Index"><div class="card-body"><div class="text-muted small">@L["Published assessments"]</div><div class="stat-num">@s.Assessments</div></div></a></div>
-    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Reports" asp-action="Attempts"><div class="card-body"><div class="text-muted small">@L["Attempts and scores"]</div><div class="stat-num"><i class="bi bi-list-check"></i></div></div></a></div>
+@{
+    ViewData["Title"] = L["Dashboard"];
+    var s = Model.S;
+    var pairs = s.Passed + s.Failed + s.NotAttempted;
+    var ackPairs = s.Acknowledged + s.NotAcknowledged;
+    var completion = Ui.Percent(s.Passed + s.Failed, pairs);
+    var ackRate = Ui.Percent(s.Acknowledged, ackPairs);
+    var passRate = Ui.Percent(s.Passed, s.Passed + s.Failed);
+    double P(int v, int t) => t == 0 ? 0 : v * 100.0 / t;
+    var segs = new[] { (Val: s.Passed, Cls: "var(--color-success)"), (Val: s.Failed, Cls: "var(--color-danger)"), (Val: s.NotAttempted, Cls: "var(--color-border-strong)") };
+    double offset = 0;
+    var ackOf = L.Format("{0} of {1}", s.Acknowledged, ackPairs);
+}
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-grid-1x2"></i> @L["Overview"]</div>
+        <h1>@L["Dashboard"]</h1>
+        <p class="lead">@L["Awareness, acknowledgment and assessment status across the organization."]</p>
+    </div>
+    <div class="page-actions cluster">
+        <a class="btn btn-outline-primary" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line"></i> @L["Reports"]</a>
+        <a class="btn btn-primary" asp-controller="Content" asp-action="Create"><i class="bi bi-plus-lg"></i> @L["New content"]</a>
+    </div>
 </div>
-<h2 class="h6 text-muted">@L["Assessments (users x published assessments)"]</h2>
-<div class="row g-3 mb-3">
-    <div class="col-4"><a class="card stat-card border-success" asp-controller="Reports" asp-action="Assessments" asp-route-status="Passed"><div class="card-body"><div class="text-muted small">@L["Passed"]</div><div class="stat-num text-success">@s.Passed</div></div></a></div>
-    <div class="col-4"><a class="card stat-card border-danger" asp-controller="Reports" asp-action="Assessments" asp-route-status="Failed"><div class="card-body"><div class="text-muted small">@L["Failed"]</div><div class="stat-num text-danger">@s.Failed</div></div></a></div>
-    <div class="col-4"><a class="card stat-card" asp-controller="Reports" asp-action="Assessments" asp-route-status="NotAttempted"><div class="card-body"><div class="text-muted small">@L["Not attempted"]</div><div class="stat-num">@s.NotAttempted</div></div></a></div>
+
+<div class="kpi-grid">
+    <a class="kpi reveal" style="--i:0" asp-controller="Users" asp-action="Index" asp-route-role="User">
+        <div class="kpi-top"><span class="icon-chip"><i class="bi bi-people"></i></span><i class="bi bi-arrow-left kpi-go flip-rtl"></i></div>
+        <div class="kpi-value"><span data-count="@s.Users">@s.Users</span></div>
+        <div class="kpi-label">@L["Total users"]</div>
+    </a>
+    <a class="kpi k-accent reveal" style="--i:1" asp-controller="Content" asp-action="Index" asp-route-status="Published">
+        <div class="kpi-top"><span class="icon-chip accent"><i class="bi bi-journal-richtext"></i></span><i class="bi bi-arrow-left kpi-go flip-rtl"></i></div>
+        <div class="kpi-value"><span data-count="@s.Content">@s.Content</span></div>
+        <div class="kpi-label">@L["Published content"]</div>
+    </a>
+    <a class="kpi k-accent reveal" style="--i:2" asp-controller="Assessments" asp-action="Index">
+        <div class="kpi-top"><span class="icon-chip accent"><i class="bi bi-patch-question"></i></span><i class="bi bi-arrow-left kpi-go flip-rtl"></i></div>
+        <div class="kpi-value"><span data-count="@s.Assessments">@s.Assessments</span></div>
+        <div class="kpi-label">@L["Published assessments"]</div>
+    </a>
+    <a class="kpi k-success reveal" style="--i:3" asp-controller="Reports" asp-action="Attempts">
+        <div class="kpi-top"><span class="icon-chip success"><i class="bi bi-clipboard-check"></i></span><i class="bi bi-arrow-left kpi-go flip-rtl"></i></div>
+        <div class="kpi-value"><bdi class="pct" dir="ltr"><span data-count="@completion">@completion</span>%</bdi></div>
+        <div class="kpi-label">@L["Assessment completion"]</div>
+        <div class="kpi-sub">@L["Pass rate"]: @Ui.Pct(passRate)</div>
+    </a>
+    <a class="kpi k-success reveal" style="--i:4" asp-controller="Reports" asp-action="Acknowledgments" asp-route-status="Acknowledged">
+        <div class="kpi-top"><span class="icon-chip success"><i class="bi bi-check2-square"></i></span><i class="bi bi-arrow-left kpi-go flip-rtl"></i></div>
+        <div class="kpi-value"><bdi class="pct" dir="ltr"><span data-count="@ackRate">@ackRate</span>%</bdi></div>
+        <div class="kpi-label">@L["Acknowledgment rate"]</div>
+        <div class="kpi-sub">@ackOf</div>
+    </a>
+    <a class="kpi k-warning reveal" style="--i:5" asp-controller="Reports" asp-action="Acknowledgments" asp-route-status="NotAcknowledged">
+        <div class="kpi-top"><span class="icon-chip warning"><i class="bi bi-hourglass-split"></i></span><i class="bi bi-arrow-left kpi-go flip-rtl"></i></div>
+        <div class="kpi-value"><span data-count="@s.NotAcknowledged">@s.NotAcknowledged</span></div>
+        <div class="kpi-label">@L["Pending acknowledgments"]</div>
+    </a>
 </div>
-<h2 class="h6 text-muted">@L["Acknowledgments (users x policies requiring acknowledgment)"]</h2>
-<div class="row g-3 mb-4">
-    <div class="col-6"><a class="card stat-card border-success" asp-controller="Reports" asp-action="Acknowledgments" asp-route-status="Acknowledged"><div class="card-body"><div class="text-muted small">@L["Acknowledged"]</div><div class="stat-num text-success">@s.Acknowledged</div></div></a></div>
-    <div class="col-6"><a class="card stat-card border-warning" asp-controller="Reports" asp-action="Acknowledgments" asp-route-status="NotAcknowledged"><div class="card-body"><div class="text-muted small">@L["Not acknowledged"]</div><div class="stat-num text-warning">@s.NotAcknowledged</div></div></a></div>
+
+<div class="dash-grid mt-4">
+    <section class="panel reveal" style="--i:3">
+        <div class="panel-head"><h2><i class="bi bi-pie-chart"></i> @L["Assessment status"]</h2><a class="small fw-semibold text-decoration-none" asp-controller="Reports" asp-action="Assessments">@L["Details"]</a></div>
+        <div class="panel-body">
+            <div class="donut-wrap">
+                <span class="ring-wrap" style="--size:168px">
+                    <svg class="ring donut" viewBox="0 0 120 120" role="img" aria-label="@L["Assessment status"]">
+                        <g class="ring-g"><circle class="ring-bg" cx="60" cy="60" r="52" />
+                        @foreach (var g in segs)
+                        {
+                            var pct = P(g.Val, pairs);
+                            if (pct > 0)
+                            {
+                                <circle class="seg" cx="60" cy="60" r="52" pathLength="100" style="stroke:@g.Cls;stroke-dashoffset:@((-offset).ToString(System.Globalization.CultureInfo.InvariantCulture))" data-seg="@Math.Max(0, pct - (pct >= 100 ? 0 : 0.8)).ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                            }
+                            offset += pct;
+                        }
+                        </g>
+                    </svg>
+                    <span class="ring-label"><strong><span data-count="@pairs">@pairs</span></strong><small>@L["Assignments"]</small></span>
+                </span>
+                <ul class="legend">
+                    <li><span class="sw sw-ok"></span><a class="text-reset text-decoration-none" asp-controller="Reports" asp-action="Assessments" asp-route-status="Passed">@L["Passed"]</a><span class="lv">@s.Passed <small>@Ui.Pct(P(s.Passed, pairs), "0")</small></span></li>
+                    <li><span class="sw sw-bad"></span><a class="text-reset text-decoration-none" asp-controller="Reports" asp-action="Assessments" asp-route-status="Failed">@L["Failed"]</a><span class="lv">@s.Failed <small>@Ui.Pct(P(s.Failed, pairs), "0")</small></span></li>
+                    <li><span class="sw sw-none"></span><a class="text-reset text-decoration-none" asp-controller="Reports" asp-action="Assessments" asp-route-status="NotAttempted">@L["Not attempted"]</a><span class="lv">@s.NotAttempted <small>@Ui.Pct(P(s.NotAttempted, pairs), "0")</small></span></li>
+                </ul>
+            </div>
+            <p class="small text-muted mt-3 mb-0">@L["Assessments (users x published assessments)"]</p>
+        </div>
+    </section>
+
+    <section class="panel reveal" style="--i:4">
+        <div class="panel-head"><h2><i class="bi bi-shield-check"></i> @L["Policy acknowledgments"]</h2><a class="small fw-semibold text-decoration-none" asp-controller="Reports" asp-action="Acknowledgments">@L["Details"]</a></div>
+        <div class="panel-body">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <span style="--ring-color:var(--color-success)">@Ui.Ring(ackRate, L["Acknowledged"], size: 112, stroke: 12)</span>
+                <div class="small text-muted">@L["Acknowledgments (users x policies requiring acknowledgment)"]</div>
+            </div>
+            <div class="stack-bar" role="presentation">
+                <span class="sw-ok" data-w="@P(s.Acknowledged, ackPairs).ToString(System.Globalization.CultureInfo.InvariantCulture)"></span>
+                <span class="sw-warn" data-w="@P(s.NotAcknowledged, ackPairs).ToString(System.Globalization.CultureInfo.InvariantCulture)"></span>
+            </div>
+            <ul class="legend">
+                <li><span class="sw sw-ok"></span>@L["Acknowledged"]<span class="lv">@s.Acknowledged</span></li>
+                <li><span class="sw sw-warn"></span>@L["Not acknowledged"]<span class="lv">@s.NotAcknowledged</span></li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="panel reveal" style="--i:5">
+        <div class="panel-head"><h2><i class="bi bi-lightning-charge"></i> @L["Quick actions"]</h2></div>
+        <div class="panel-body qa-grid">
+            <a class="qa" asp-controller="Content" asp-action="Create"><span class="icon-chip"><i class="bi bi-file-earmark-plus"></i></span>@L["New content"]</a>
+            <a class="qa" asp-controller="Assessments" asp-action="Create"><span class="icon-chip accent"><i class="bi bi-patch-plus"></i></span>@L["New assessment"]</a>
+            <a class="qa" asp-controller="Users" asp-action="Create"><span class="icon-chip"><i class="bi bi-person-plus"></i></span>@L["New user"]</a>
+            <a class="qa" asp-controller="Reports" asp-action="Assessments"><span class="icon-chip success"><i class="bi bi-bar-chart-line"></i></span>@L["Assessment results"]</a>
+            <a class="qa" asp-controller="Settings" asp-action="Index"><span class="icon-chip warning"><i class="bi bi-palette2"></i></span>@L["Branding"]</a>
+            <a class="qa" asp-controller="Audit" asp-action="Index"><span class="icon-chip neutral"><i class="bi bi-clock-history"></i></span>@L["Audit log"]</a>
+        </div>
+    </section>
 </div>
-<div class="card"><div class="card-header bg-white fw-semibold d-flex justify-content-between">@L["Recent activity"] <a asp-controller="Audit" asp-action="Index" class="small">@L["View all"]</a></div>
-@if (Model.Recent.Count == 0) { <div class="card-body text-muted">@L["No activity recorded yet."]</div> }
-else { <div class="table-responsive"><table class="table table-sm mb-0"><tbody>
-@foreach (var a in Model.Recent) { <tr><td class="text-nowrap">@Time.Html(a.Timestamp)</td><td dir="ltr" class="text-end">@a.Username</td><td>@L[a.Action]</td><td class="bidi">@a.Details</td></tr> }
-</tbody></table></div> }
-</div>
+
+<section class="panel mt-4 reveal-scroll">
+    <div class="panel-head"><h2><i class="bi bi-activity"></i> @L["Recent activity"]</h2><a class="small fw-semibold text-decoration-none" asp-controller="Audit" asp-action="Index">@L["View all"]</a></div>
+    <div class="panel-body">
+    @if (Model.Recent.Count == 0)
+    {
+        <div class="empty py-3"><div class="empty-icon"><i class="bi bi-activity"></i></div><p>@L["No activity recorded yet."]</p></div>
+    }
+    else
+    {
+        <ol class="timeline">
+        @foreach (var a in Model.Recent)
+        {
+            var detail = !string.IsNullOrWhiteSpace(a.Details) ? a.Details : (L["Entity: " + a.EntityType] + (string.IsNullOrEmpty(a.EntityId) ? "" : " \u2066#" + a.EntityId + "\u2069"));
+            <li>
+                <span class="t-dot"><i class="bi @Ui.AuditIcon(a.Action)"></i></span>
+                <div class="t-main"><strong>@L[a.Action]</strong><span><bdi dir="ltr">@a.Username</bdi>@if (!string.IsNullOrWhiteSpace(detail)) { <text> · </text><bdi>@detail</bdi> }</span></div>
+                <span class="t-time">@Time.Html(a.Timestamp)</span>
+            </li>
+        }
+        </ol>
+    }
+    </div>
+</section>

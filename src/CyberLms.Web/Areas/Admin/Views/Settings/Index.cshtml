@@ -1,75 +1,220 @@
 @model SettingsVm
-@{ ViewData["Title"] = L["Settings"]; }
-<h1 class="h4 mb-3">@L["Settings"]</h1>
-<ul class="nav nav-tabs mb-3" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-brand" type="button" role="tab">@L["Branding"]</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-general" type="button" role="tab">@L["General"]</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-mail" type="button" role="tab">@L["Email settings (SMTP)"]</button></li>
-</ul>
-@functions {
-    Microsoft.AspNetCore.Html.IHtmlContent Color(string label, string name, string value) => Html.Raw(
-        $"<div class=\"col-6 col-md-4 mb-3\"><label class=\"form-label\" for=\"{name}\">{System.Net.WebUtility.HtmlEncode(label)}</label><div class=\"input-group\" dir=\"ltr\">" +
-        $"<input type=\"color\" class=\"form-control form-control-color\" value=\"{value}\" data-hex-for=\"{name}\" aria-label=\"{System.Net.WebUtility.HtmlEncode(label)}\">" +
-        $"<input class=\"form-control\" dir=\"ltr\" id=\"{name}\" name=\"{name}\" value=\"{value}\" maxlength=\"7\"></div></div>");
+@using CyberLms.Web.Controllers
+@{
+    ViewData["Title"] = L["Settings"];
+    var v = Brand.Current.Version;
+    var mono = Model.SystemName.Trim().Length > 0 ? Model.SystemName.Trim()[0].ToString() : "•";
+    string Hex(string s) => Branding.ColorRegex.IsMatch(s ?? "") ? s! : "#000000";
+    var pvStyle = $"--color-primary:{Hex(Model.PrimaryColor)};--color-secondary:{Hex(Model.SecondaryColor)};--color-accent:{Hex(Model.AccentColor)};" +
+                  $"--color-on-primary:{FilesController.OnColor(Hex(Model.PrimaryColor))};--color-on-accent:{FilesController.OnColor(Hex(Model.AccentColor))};" +
+                  $"--color-header:{Hex(Model.HeaderColor)};--color-on-header:{Hex(Model.HeaderTextColor)};--color-sidebar:{Hex(Model.SidebarColor)};" +
+                  $"--color-on-sidebar:{Hex(Model.SidebarTextColor)};--color-login-bg:{Hex(Model.LoginBackgroundColor)}";
+    var presets = new (string Name, string Json, string[] Dots)[]
+    {
+        ("Classic blue", "{\"PrimaryColor\":\"#1f4fd8\",\"SecondaryColor\":\"#5b6b86\",\"AccentColor\":\"#0f9d8a\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#14213d\",\"SidebarColor\":\"#0c1f4a\",\"SidebarTextColor\":\"#e9eefc\",\"LoginBackgroundColor\":\"#eaf0fb\"}", new[] { "#1f4fd8", "#0f9d8a", "#0c1f4a" }),
+        ("Emerald", "{\"PrimaryColor\":\"#0b7a5c\",\"SecondaryColor\":\"#4f6b63\",\"AccentColor\":\"#b8860b\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#10302a\",\"SidebarColor\":\"#0b2e26\",\"SidebarTextColor\":\"#e6f4ef\",\"LoginBackgroundColor\":\"#e8f3ef\"}", new[] { "#0b7a5c", "#b8860b", "#0b2e26" }),
+        ("Royal purple", "{\"PrimaryColor\":\"#5b3cc4\",\"SecondaryColor\":\"#6b6585\",\"AccentColor\":\"#d6336c\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#1f1640\",\"SidebarColor\":\"#1d1240\",\"SidebarTextColor\":\"#ece8fb\",\"LoginBackgroundColor\":\"#efecfa\"}", new[] { "#5b3cc4", "#d6336c", "#1d1240" }),
+        ("Graphite", "{\"PrimaryColor\":\"#2d3a4f\",\"SecondaryColor\":\"#64748b\",\"AccentColor\":\"#d9730d\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#1e2633\",\"SidebarColor\":\"#151b26\",\"SidebarTextColor\":\"#e5e9f0\",\"LoginBackgroundColor\":\"#eceff3\"}", new[] { "#2d3a4f", "#d9730d", "#151b26" }),
+        ("Crimson", "{\"PrimaryColor\":\"#b4233c\",\"SecondaryColor\":\"#6b5b60\",\"AccentColor\":\"#1f6feb\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#2a1418\",\"SidebarColor\":\"#2b0f16\",\"SidebarTextColor\":\"#f7e9ec\",\"LoginBackgroundColor\":\"#f8ecee\"}", new[] { "#b4233c", "#1f6feb", "#2b0f16" }),
+    };
 }
+@functions {
+    Microsoft.AspNetCore.Html.IHtmlContent Swatch(string label, string name, string value, string cssVar, string? contrast = null) => Html.Raw(
+        $"<div class=\"swatch\"><input type=\"color\" value=\"{value}\" data-hex-for=\"{name}\" aria-label=\"{System.Net.WebUtility.HtmlEncode(label)}\">" +
+        $"<div class=\"sw-text\"><label for=\"{name}\">{System.Net.WebUtility.HtmlEncode(label)}</label>" +
+        $"<input class=\"sw-hex\" dir=\"ltr\" id=\"{name}\" name=\"{name}\" value=\"{value}\" maxlength=\"7\" spellcheck=\"false\" autocomplete=\"off\" data-var=\"{cssVar}\"></div></div>");
+}
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-gear"></i> @L["System"]</div>
+        <h1>@L["Settings"]</h1>
+        <p class="lead">@L["Brand the platform for your organization. Changes apply to all users immediately after saving - no rebuild or restart needed."]</p>
+    </div>
+</div>
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-brand" type="button" role="tab"><i class="bi bi-palette2"></i> @L["Branding"]</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-general" type="button" role="tab"><i class="bi bi-sliders"></i> @L["General"]</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-mail" type="button" role="tab"><i class="bi bi-envelope-at"></i> @L["Email settings (SMTP)"]</button></li>
+</ul>
+
 <div class="tab-content">
-<div class="tab-pane fade show active" id="t-brand">
-<form method="post" asp-action="SaveBranding" enctype="multipart/form-data" novalidate>
-<div class="row g-3">
-<div class="col-lg-8">
-    <div class="card mb-3"><div class="card-header bg-white fw-semibold">@L["Identity"]</div><div class="card-body row">
-        <div class="col-md-6 mb-3"><label class="form-label">@L["Organization name"]</label><input class="form-control bidi" name="OrgName" value="@Model.OrgName" maxlength="150" /></div>
-        <div class="col-md-6 mb-3"><label class="form-label">@L["System name"]</label><input class="form-control bidi" name="SystemName" value="@Model.SystemName" maxlength="150" /></div>
-        <div class="col-md-6 mb-3"><label class="form-label">@L["Logo (PNG/JPG/WebP/GIF)"]</label><input type="file" class="form-control" name="logo" accept=".png,.jpg,.jpeg,.webp,.gif" />
-            @if (Model.HasLogo) { <div class="mt-2 d-flex align-items-center gap-3"><img src="~/Files/Brand?kind=logo&v=@Brand.Current.Version" style="max-height:48px;max-width:160px" alt="@L["Logo"]" /><div class="form-check"><input class="form-check-input" type="checkbox" name="removeLogo" value="true" id="rl" /><label class="form-check-label" for="rl">@L["Remove"]</label></div></div> }</div>
-        <div class="col-md-6 mb-3"><label class="form-label">@L["Favicon (ICO/PNG)"]</label><input type="file" class="form-control" name="favicon" accept=".ico,.png" />
-            @if (Model.HasFavicon) { <div class="mt-2 d-flex align-items-center gap-3"><img src="~/Files/Brand?kind=favicon&v=@Brand.Current.Version" style="max-height:32px" alt="@L["Favicon"]" /><div class="form-check"><input class="form-check-input" type="checkbox" name="removeFavicon" value="true" id="rf" /><label class="form-check-label" for="rf">@L["Remove"]</label></div></div> }</div>
-    </div></div>
-    <div class="card mb-3"><div class="card-header bg-white fw-semibold">@L["Colors"]</div><div class="card-body row">
-        @Color(L["Primary color"], "PrimaryColor", Model.PrimaryColor) @Color(L["Secondary color"], "SecondaryColor", Model.SecondaryColor) @Color(L["Accent color"], "AccentColor", Model.AccentColor)
-        @Color(L["Header background"], "HeaderColor", Model.HeaderColor) @Color(L["Header text"], "HeaderTextColor", Model.HeaderTextColor) <div class="col-md-4"></div>
-        @Color(L["Sidebar background"], "SidebarColor", Model.SidebarColor) @Color(L["Sidebar text"], "SidebarTextColor", Model.SidebarTextColor) @Color(L["Login page background"], "LoginBackgroundColor", Model.LoginBackgroundColor)
-    </div></div>
-    <div class="card mb-3"><div class="card-header bg-white fw-semibold">@L["Login page, welcome text and footer"]</div><div class="card-body row">
-        <div class="col-md-6 mb-3"><label class="form-label">@L["Login page title"]</label><input class="form-control bidi" name="LoginTitle" value="@Model.LoginTitle" maxlength="150" /></div>
-        <div class="col-md-6 mb-3"><label class="form-label">@L["Login background image (optional)"]</label><input type="file" class="form-control" name="loginBackground" accept=".png,.jpg,.jpeg,.webp" />
-            @if (Model.HasLoginBackground) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeLoginBackground" value="true" id="rb" /><label class="form-check-label" for="rb">@L["Remove current image"]</label></div> }</div>
-        <div class="col-12 mb-3"><label class="form-label">@L["Login page notice"]</label><textarea class="form-control bidi" name="LoginSubtitle" rows="2" maxlength="500">@Model.LoginSubtitle</textarea></div>
-        <div class="col-12 mb-3"><label class="form-label">@L["Welcome text (employee dashboard)"]</label><textarea class="form-control bidi" name="WelcomeText" rows="2" maxlength="1000">@Model.WelcomeText</textarea></div>
-        <div class="col-12 mb-0"><label class="form-label">@L["Footer text (copyright, contact, etc.)"]</label><input class="form-control bidi" name="FooterText" value="@Model.FooterText" maxlength="500" /></div>
-    </div></div>
-    <button class="btn btn-primary"><i class="bi bi-check2"></i> @L["Save branding"]</button>
-    <button class="btn btn-outline-danger" formaction="@Url.Action("ResetBranding")" formnovalidate data-confirm-click="@L["Reset all branding to defaults and remove uploaded images?"]">@L["Restore defaults"]</button>
+<div class="tab-pane fade show active" id="t-brand" role="tabpanel">
+<form method="post" asp-action="SaveBranding" enctype="multipart/form-data" data-brand-form novalidate>
+<div class="brand-layout">
+    <div class="stack" style="--gap:1.2rem">
+        <section class="panel">
+            <div class="panel-head"><h2><i class="bi bi-building"></i> @L["Identity"]</h2></div>
+            <div class="panel-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6"><label class="form-label" for="OrgName">@L["Organization name"]</label><input class="form-control bidi" id="OrgName" name="OrgName" value="@Model.OrgName" maxlength="150" data-bind="OrgName" /></div>
+                    <div class="col-md-6"><label class="form-label" for="SystemName">@L["System name"]</label><input class="form-control bidi" id="SystemName" name="SystemName" value="@Model.SystemName" maxlength="150" data-bind="SystemName" /></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="upload-tile">
+                            <div class="ut-thumb" data-thumb-for="logo">@if (Model.HasLogo) { <img src="~/Files/Brand?kind=logo&v=@v" alt="@L["Logo"]" /> } else { <i class="bi bi-image"></i> }</div>
+                            <div class="ut-main"><strong>@L["Logo (PNG/JPG/WebP/GIF)"]</strong><small>@L["Shown in the sidebar and on the login page."]</small>
+                                <div class="mt-2"><input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp,.gif" data-preview-image="logo" aria-label="@L["Logo"]" /></div>
+                                @if (Model.HasLogo) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeLogo" value="true" id="rl" data-remove-image="logo" /><label class="form-check-label" for="rl">@L["Remove"]</label></div> }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="upload-tile">
+                            <div class="ut-thumb" data-thumb-for="favicon">@if (Model.HasFavicon) { <img src="~/Files/Brand?kind=favicon&v=@v" alt="@L["Favicon"]" /> } else { <i class="bi bi-app"></i> }</div>
+                            <div class="ut-main"><strong>@L["Favicon (ICO/PNG)"]</strong><small>@L["The small icon in the browser tab."]</small>
+                                <div class="mt-2"><input type="file" name="favicon" accept=".ico,.png" data-preview-image="favicon" aria-label="@L["Favicon"]" /></div>
+                                @if (Model.HasFavicon) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeFavicon" value="true" id="rf" /><label class="form-check-label" for="rf">@L["Remove"]</label></div> }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head"><h2><i class="bi bi-droplet-half"></i> @L["Colors"]</h2></div>
+            <div class="panel-body">
+                <div class="form-label">@L["Start from a palette"]</div>
+                <div class="presets mb-4">
+                    @foreach (var p in presets)
+                    {
+                        <button type="button" class="preset" data-preset="@p.Json"><span class="dots" aria-hidden="true">@foreach (var d in p.Dots) { <i style="background:@d"></i> }</span>@L[p.Name]</button>
+                    }
+                </div>
+                <h3 class="h6 text-muted mb-2">@L["Brand"]</h3>
+                <div class="swatch-grid mb-4">
+                    @Swatch(L["Primary color"], "PrimaryColor", Model.PrimaryColor, "--color-primary")
+                    @Swatch(L["Secondary color"], "SecondaryColor", Model.SecondaryColor, "--color-secondary")
+                    @Swatch(L["Accent color"], "AccentColor", Model.AccentColor, "--color-accent")
+                </div>
+                <h3 class="h6 text-muted mb-2">@L["Header and sidebar"]</h3>
+                <div class="swatch-grid">
+                    @Swatch(L["Header background"], "HeaderColor", Model.HeaderColor, "--color-header")
+                    @Swatch(L["Header text"], "HeaderTextColor", Model.HeaderTextColor, "--color-on-header")
+                    @Swatch(L["Sidebar background"], "SidebarColor", Model.SidebarColor, "--color-sidebar")
+                    @Swatch(L["Sidebar text"], "SidebarTextColor", Model.SidebarTextColor, "--color-on-sidebar")
+                </div>
+                <div class="d-flex flex-column gap-1 mt-3">
+                    <div class="contrast-note" data-contrast="HeaderColor,HeaderTextColor" data-ok="@L["Header: good text contrast"]" data-bad="@L["Header: low text contrast - hard to read"]"></div>
+                    <div class="contrast-note" data-contrast="SidebarColor,SidebarTextColor" data-ok="@L["Sidebar: good text contrast"]" data-bad="@L["Sidebar: low text contrast - hard to read"]"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head"><h2><i class="bi bi-door-open"></i> @L["Login page, welcome text and footer"]</h2></div>
+            <div class="panel-body">
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label" for="LoginTitle">@L["Login page title"]</label><input class="form-control bidi" id="LoginTitle" name="LoginTitle" value="@Model.LoginTitle" maxlength="150" data-bind="LoginTitle" /></div>
+                    <div class="col-md-6">@Swatch(L["Login page background"], "LoginBackgroundColor", Model.LoginBackgroundColor, "--color-login-bg")</div>
+                    <div class="col-12"><label class="form-label" for="LoginSubtitle">@L["Login page notice"]</label><textarea class="form-control bidi" id="LoginSubtitle" name="LoginSubtitle" rows="2" maxlength="500" data-bind="LoginSubtitle">@Model.LoginSubtitle</textarea></div>
+                    <div class="col-12">
+                        <div class="upload-tile">
+                            <div class="ut-thumb" data-thumb-for="loginBackground">@if (Model.HasLoginBackground) { <img src="~/Files/Brand?kind=loginbg&v=@v" alt="" /> } else { <i class="bi bi-card-image"></i> }</div>
+                            <div class="ut-main"><strong>@L["Login background image (optional)"]</strong><small>@L["Shown behind the welcome panel of the login page."]</small>
+                                <div class="mt-2"><input type="file" name="loginBackground" accept=".png,.jpg,.jpeg,.webp" data-preview-image="loginbg" aria-label="@L["Login background image (optional)"]" /></div>
+                                @if (Model.HasLoginBackground) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeLoginBackground" value="true" id="rb" /><label class="form-check-label" for="rb">@L["Remove current image"]</label></div> }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12"><label class="form-label" for="WelcomeText">@L["Welcome text (employee dashboard)"]</label><textarea class="form-control bidi" id="WelcomeText" name="WelcomeText" rows="2" maxlength="1000" data-bind="WelcomeText">@Model.WelcomeText</textarea></div>
+                    <div class="col-12"><label class="form-label" for="FooterText">@L["Footer text (copyright, contact, etc.)"]</label><input class="form-control bidi" id="FooterText" name="FooterText" value="@Model.FooterText" maxlength="500" data-bind="FooterText" /></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="panel p-3 d-flex flex-wrap align-items-center gap-2">
+            <button class="btn btn-primary btn-lg"><i class="bi bi-check2"></i> @L["Save branding"]</button>
+            <button class="btn btn-outline-danger" formaction="@Url.Action("ResetBranding")" formnovalidate data-confirm-click="@L["Reset all branding to defaults and remove uploaded images?"]"><i class="bi bi-arrow-counterclockwise"></i> @L["Restore defaults"]</button>
+            <span class="small text-muted ms-auto">@L["The preview updates as you type. Nothing is published until you save."]</span>
+        </div>
+    </div>
+
+    <aside class="preview-sticky" aria-label="@L["Preview"]">
+        <div class="panel">
+            <div class="panel-head">
+                <h2><i class="bi bi-eye"></i> @L["Live preview"]</h2>
+                <span class="badge text-bg-warning badge-live">@L["Not saved yet"]</span>
+            </div>
+            <div class="panel-body">
+                <ul class="nav nav-tabs pv-tabs" role="tablist">
+                    <li class="nav-item" role="presentation"><button class="nav-link active" type="button" data-bs-toggle="tab" data-bs-target="#pv-app" role="tab"><i class="bi bi-window-sidebar"></i> @L["Application"]</button></li>
+                    <li class="nav-item" role="presentation"><button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#pv-login" role="tab"><i class="bi bi-box-arrow-in-left"></i> @L["Login page"]</button></li>
+                </ul>
+                <div class="pv-frame theme-scope" data-preview style="@pvStyle">
+                    <div class="pv-chrome" aria-hidden="true"><i></i><i></i><i></i><span>@(string.IsNullOrWhiteSpace(Model.BaseUrl) ? "lms.company.local" : Model.BaseUrl)</span></div>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="pv-app" role="tabpanel">
+                            <div class="pv-app">
+                                <div class="pv-side">
+                                    <div class="pv-brand @(Model.HasLogo ? "has-logo" : "")">
+                                        <span class="pv-mono" data-bind-mono>@mono</span>
+                                        <span class="pv-logo">@if (Model.HasLogo) { <img data-pv-logo src="~/Files/Brand?kind=logo&v=@v" alt="" /> } else { <img data-pv-logo alt="" /> }</span>
+                                        <span><b class="bidi" data-bind-target="SystemName">@Model.SystemName</b><small class="bidi" data-bind-target="OrgName">@Model.OrgName</small></span>
+                                    </div>
+                                    <div class="pv-nav on"><i class="bi bi-house-heart"></i> @L["Dashboard"]</div>
+                                    <div class="pv-nav"><i class="bi bi-journal-text"></i> @L["Content"]</div>
+                                    <div class="pv-nav"><i class="bi bi-shield-check"></i> @L["Policies"]</div>
+                                    <div class="pv-nav"><i class="bi bi-patch-question"></i> @L["Assessments"]</div>
+                                </div>
+                                <div class="pv-main">
+                                    <div class="pv-top"><span>@L["Employee portal"]</span><span class="pv-av"></span></div>
+                                    <div class="pv-body">
+                                        <div class="pv-hero"><b>@L.Format("Welcome, {0}", L["Employee"])</b><span class="bidi" data-bind-target="WelcomeText" data-fallback="@L["Your learning space for the policies, controls and safe practices that protect our organization."]">@(string.IsNullOrWhiteSpace(Model.WelcomeText) ? L["Your learning space for the policies, controls and safe practices that protect our organization."] : Model.WelcomeText)</span></div>
+                                        <div class="pv-cards"><div class="pv-card"><b><bdi dir="ltr">80%</bdi></b><span>@L["Overall progress"]</span></div><div class="pv-card"><b>3</b><span>@L["Pending acknowledgments"]</span></div></div>
+                                        <div class="pv-btns"><span class="pv-btn p">@L["Primary color"]</span><span class="pv-btn a">@L["Accent color"]</span><span class="pv-btn o">@L["Open"]</span></div>
+                                    </div>
+                                    <div class="pv-foot bidi" data-bind-target="FooterText">@Model.FooterText</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="pv-login" role="tabpanel">
+                            <div class="pv-login">
+                                <div class="pv-login-hero" style="@(Model.HasLoginBackground ? $"background-image:linear-gradient(160deg, rgba(10,20,50,.75), rgba(10,20,50,.35)), url('/Files/Brand?kind=loginbg&v={v}')" : null)">
+                                    <i class="bi bi-shield-lock fs-4"></i>
+                                    <b class="bidi" data-bind-target="SystemName">@Model.SystemName</b>
+                                    <span class="bidi" data-bind-target="OrgName">@Model.OrgName</span>
+                                </div>
+                                <div class="pv-login-panel">
+                                    <div class="pv-login-card">
+                                        <b class="bidi" data-bind-target="LoginTitle">@Model.LoginTitle</b>
+                                        <span class="text-muted bidi" data-bind-target="LoginSubtitle">@Model.LoginSubtitle</span>
+                                        <div class="pv-input"></div><div class="pv-input"></div>
+                                        <span class="pv-btn p">@L["Sign in"]</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle"></i> @L["Text colors on buttons are chosen automatically for readability."]</p>
+            </div>
+        </div>
+    </aside>
 </div>
-<div class="col-lg-4">
-    <div class="card"><div class="card-header bg-white fw-semibold">@L["Preview"]</div><div class="card-body p-0">
-        <div class="px-3 py-2" style="background:var(--brand-header);color:var(--brand-header-text)">@Model.SystemName</div>
-        <div class="d-flex"><div class="p-2" style="width:35%;background:var(--brand-sidebar);color:var(--brand-sidebar-text)">@L["Dashboard"]<br>@L["Content"]</div><div class="p-2 flex-grow-1"><button type="button" class="btn btn-sm btn-primary">@L["Primary color"]</button> <button type="button" class="btn btn-sm btn-accent">@L["Accent color"]</button></div></div>
-        <div class="p-2 small text-muted">@L["The saved theme is shown. Changes apply to all users immediately after saving - no rebuild or restart needed."]</div>
-    </div></div>
-</div>
-</div></form>
+</form>
 </div>
 
-<div class="tab-pane fade" id="t-general"><div class="card" style="max-width:640px"><div class="card-body">
+<div class="tab-pane fade" id="t-general" role="tabpanel"><div class="panel" style="max-width:680px"><div class="panel-head"><h2><i class="bi bi-sliders"></i> @L["General"]</h2></div><div class="panel-body">
 <form method="post" asp-action="SaveGeneral" novalidate>
-    <div class="mb-3"><label class="form-label">@L["Public base URL (used for links in emails)"]</label><input class="form-control" dir="ltr" name="BaseUrl" value="@Model.BaseUrl" placeholder="https://lms.company.local" /></div>
-    <div class="mb-3"><label class="form-label">@L["Default interface language"]</label><select class="form-select" name="DefaultLanguage"><option value="ar" selected="@(Model.DefaultLanguage == "ar")">@L["Arabic (right-to-left)"]</option><option value="en" selected="@(Model.DefaultLanguage == "en")">@L["English"]</option></select><div class="form-text">@L["Users can switch language from the header at any time."]</div></div>
-    <button class="btn btn-primary">@L["Save"]</button>
+    <div class="mb-3"><label class="form-label" for="BaseUrl">@L["Public base URL (used for links in emails)"]</label><input class="form-control" dir="ltr" id="BaseUrl" name="BaseUrl" value="@Model.BaseUrl" placeholder="https://lms.company.local" /></div>
+    <div class="mb-3"><label class="form-label" for="DefaultLanguage">@L["Default interface language"]</label><select class="form-select" id="DefaultLanguage" name="DefaultLanguage"><option value="ar" selected="@(Model.DefaultLanguage == "ar")">@L["Arabic (right-to-left)"]</option><option value="en" selected="@(Model.DefaultLanguage == "en")">@L["English"]</option></select><div class="form-text">@L["Users can switch language from the header at any time."]</div></div>
+    <button class="btn btn-primary"><i class="bi bi-check2"></i> @L["Save"]</button>
 </form></div></div></div>
 
-<div class="tab-pane fade" id="t-mail"><div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-body">
+<div class="tab-pane fade" id="t-mail" role="tabpanel"><div class="row g-3"><div class="col-lg-7"><div class="panel"><div class="panel-head"><h2><i class="bi bi-hdd-network"></i> @L["Email settings (SMTP)"]</h2></div><div class="panel-body">
 <form method="post" asp-action="SaveSmtp" novalidate>
-    <div class="row"><div class="col-md-8 mb-3"><label class="form-label">@L["SMTP server"]</label><input class="form-control" dir="ltr" name="SmtpHost" value="@Model.SmtpHost" /></div>
-    <div class="col-md-4 mb-3"><label class="form-label">@L["Port"]</label><input type="number" dir="ltr" class="form-control" name="SmtpPort" value="@Model.SmtpPort" /></div></div>
-    <div class="row"><div class="col-md-6 mb-3"><label class="form-label">@L["Sender address"]</label><input class="form-control" dir="ltr" name="SmtpSender" value="@Model.SmtpSender" /></div>
-    <div class="col-md-6 mb-3"><label class="form-label">@L["Sender name"]</label><input class="form-control bidi" name="SmtpSenderName" value="@Model.SmtpSenderName" /></div></div>
-    <div class="row"><div class="col-md-6 mb-3"><label class="form-label">@L["SMTP username (if required)"]</label><input class="form-control" dir="ltr" name="SmtpUsername" value="@Model.SmtpUsername" autocomplete="off" /></div>
-    <div class="col-md-6 mb-3"><label class="form-label">@L["Connection security"]</label><select class="form-select" name="SmtpSecurity"><option value="Auto" selected="@(Model.SmtpSecurity == "Auto")">@L["Automatic"]</option><option value="None" selected="@(Model.SmtpSecurity == "None")">@L["None"]</option><option value="StartTls" selected="@(Model.SmtpSecurity == "StartTls")">STARTTLS</option><option value="Ssl" selected="@(Model.SmtpSecurity == "Ssl")">SSL/TLS</option></select></div></div>
-    <div class="alert alert-@(Model.SmtpPasswordConfigured ? "success" : "secondary") py-2">@L["SMTP password"]: @L[Model.SmtpPasswordConfigured ? "configured on the server" : "not configured"] @L["(set it in the server configuration or the Smtp__Password environment variable; it is never stored in the database)."]</div>
-    <button class="btn btn-primary">@L["Save"]</button>
+    <div class="row"><div class="col-md-8 mb-3"><label class="form-label" for="SmtpHost">@L["SMTP server"]</label><input class="form-control" dir="ltr" id="SmtpHost" name="SmtpHost" value="@Model.SmtpHost" /></div>
+    <div class="col-md-4 mb-3"><label class="form-label" for="SmtpPort">@L["Port"]</label><input type="number" dir="ltr" class="form-control" id="SmtpPort" name="SmtpPort" value="@Model.SmtpPort" /></div></div>
+    <div class="row"><div class="col-md-6 mb-3"><label class="form-label" for="SmtpSender">@L["Sender address"]</label><input class="form-control" dir="ltr" id="SmtpSender" name="SmtpSender" value="@Model.SmtpSender" /></div>
+    <div class="col-md-6 mb-3"><label class="form-label" for="SmtpSenderName">@L["Sender name"]</label><input class="form-control bidi" id="SmtpSenderName" name="SmtpSenderName" value="@Model.SmtpSenderName" /></div></div>
+    <div class="row"><div class="col-md-6 mb-3"><label class="form-label" for="SmtpUsername">@L["SMTP username (if required)"]</label><input class="form-control" dir="ltr" id="SmtpUsername" name="SmtpUsername" value="@Model.SmtpUsername" autocomplete="off" /></div>
+    <div class="col-md-6 mb-3"><label class="form-label" for="SmtpSecurity">@L["Connection security"]</label><select class="form-select" id="SmtpSecurity" name="SmtpSecurity"><option value="Auto" selected="@(Model.SmtpSecurity == "Auto")">@L["Automatic"]</option><option value="None" selected="@(Model.SmtpSecurity == "None")">@L["None"]</option><option value="StartTls" selected="@(Model.SmtpSecurity == "StartTls")">STARTTLS</option><option value="Ssl" selected="@(Model.SmtpSecurity == "Ssl")">SSL/TLS</option></select></div></div>
+    <div class="alert alert-@(Model.SmtpPasswordConfigured ? "success" : "info") py-2"><i class="bi @(Model.SmtpPasswordConfigured ? "bi-check-circle-fill" : "bi-info-circle-fill")"></i><span>@L["SMTP password"]: @L[Model.SmtpPasswordConfigured ? "configured on the server" : "not configured"] @L["(set it in the server configuration or the Smtp__Password environment variable; it is never stored in the database)."]</span></div>
+    <button class="btn btn-primary"><i class="bi bi-check2"></i> @L["Save"]</button>
 </form></div></div></div>
-<div class="col-lg-5"><div class="card"><div class="card-header bg-white fw-semibold">@L["Send test email"]</div><div class="card-body">
+<div class="col-lg-5"><div class="panel"><div class="panel-head"><h2><i class="bi bi-send"></i> @L["Send test email"]</h2></div><div class="panel-body">
 <form method="post" asp-action="TestEmail" novalidate><div class="input-group" dir="ltr"><input class="form-control" dir="ltr" name="to" placeholder="you@company.com" aria-label="@L["Email"]" /><button class="btn btn-outline-primary">@L["Send"]</button></div></form></div></div></div>
 </div></div>
 </div>

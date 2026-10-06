@@ -4,6 +4,7 @@
     var ctl = (string?)ViewContext.RouteData.Values["controller"];
     var act = (string?)ViewContext.RouteData.Values["action"];
     var isAdmin = User.IsInRole(RoleNames.Admin);
+    var navPolicies = act == "Policies" || (string?)ViewData["Nav"] == "Policies";
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "";
     var initial = displayName.Trim().Length > 0 ? displayName.Trim()[0].ToString() : "؟";
     var monogram = b.SystemName.Trim().Length > 0 ? b.SystemName.Trim()[0].ToString() : "•";
@@ -55,8 +56,8 @@
             {
                 <div class="sb-label">@L["Learning"]</div>
                 <a class="sb-link @Active("Home")" aria-current="@Aria("Home")" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house-heart"></i><span>@L["Dashboard"]</span></a>
-                <a class="sb-link @(ctl == "Content" && act != "Policies" && !isAdminArea ? "active" : "")" asp-area="" asp-controller="Content" asp-action="Index"><i class="bi bi-journal-text"></i><span>@L["Content"]</span></a>
-                <a class="sb-link @(ctl == "Content" && act == "Policies" && !isAdminArea ? "active" : "")" asp-area="" asp-controller="Content" asp-action="Policies"><i class="bi bi-shield-check"></i><span>@L["Policies"]</span></a>
+                <a class="sb-link @(ctl == "Content" && !navPolicies && !isAdminArea ? "active" : "")" asp-area="" asp-controller="Content" asp-action="Index"><i class="bi bi-journal-text"></i><span>@L["Content"]</span></a>
+                <a class="sb-link @(ctl == "Content" && navPolicies && !isAdminArea ? "active" : "")" asp-area="" asp-controller="Content" asp-action="Policies"><i class="bi bi-shield-check"></i><span>@L["Policies"]</span></a>
                 <a class="sb-link @Active("Assessments")" aria-current="@Aria("Assessments")" asp-area="" asp-controller="Assessments" asp-action="Index"><i class="bi bi-patch-question"></i><span>@L["Assessments"]</span></a>
                 <a class="sb-link @Active("MyResults")" aria-current="@Aria("MyResults")" asp-area="" asp-controller="MyResults" asp-action="Index"><i class="bi bi-award"></i><span>@L["My Results"]</span></a>
             }

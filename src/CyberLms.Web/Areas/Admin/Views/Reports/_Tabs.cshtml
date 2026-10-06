@@ -1,6 +1,6 @@
 @{ var a = (string?)ViewContext.RouteData.Values["action"]; }
-<ul class="nav nav-tabs mb-3">
-    <li class="nav-item"><a class="nav-link @(a == "Assessments" ? "active" : "")" asp-action="Assessments">@L["Assessment results"]</a></li>
-    <li class="nav-item"><a class="nav-link @(a == "Attempts" ? "active" : "")" asp-action="Attempts">@L["Attempts and scores"]</a></li>
-    <li class="nav-item"><a class="nav-link @(a == "Acknowledgments" ? "active" : "")" asp-action="Acknowledgments">@L["Acknowledgments"]</a></li>
-</ul>
+<nav class="nav nav-tabs mb-3" aria-label="@L["Reports"]">
+    <a class="nav-link @(a == "Assessments" ? "active" : "")" aria-current="@(a == "Assessments" ? "page" : null)" asp-action="Assessments"><i class="bi bi-clipboard-data"></i> @L["Assessment results"]</a>
+    <a class="nav-link @(a == "Attempts" ? "active" : "")" aria-current="@(a == "Attempts" ? "page" : null)" asp-action="Attempts"><i class="bi bi-list-ol"></i> @L["Attempts and scores"]</a>
+    <a class="nav-link @(a == "Acknowledgments" ? "active" : "")" aria-current="@(a == "Acknowledgments" ? "page" : null)" asp-action="Acknowledgments"><i class="bi bi-check2-square"></i> @L["Acknowledgments"]</a>
+</nav>

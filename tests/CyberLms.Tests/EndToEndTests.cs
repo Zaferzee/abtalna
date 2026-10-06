@@ -246,7 +246,7 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         Assert.Contains("منصة التوعية", after); Assert.Contains("شركة الاختبار", after); Assert.Contains("kind=logo", after); Assert.Contains("kind=favicon", after);
         Assert.Contains("للاستخدام الداخلي فقط", after); Assert.Contains("Contact: sec@test.local", after);
         var css = await anon.GetStringAsync("/branding/theme.css");
-        Assert.Contains("--brand-primary:#aa1122", css); Assert.Contains("--brand-header:#111111", css); Assert.Contains("--brand-login-bg:#ddeeff", css);
+        Assert.Contains("--color-primary:#aa1122", css); Assert.Contains("--color-header:#111111", css); Assert.Contains("--color-login-bg:#ddeeff", css);
         var logo = await anon.GetAsync("/Files/Brand?kind=logo");
         Assert.Equal(HttpStatusCode.OK, logo.StatusCode); Assert.Equal("image/png", logo.Content.Headers.ContentType!.MediaType);
         Assert.Equal(Png, await logo.Content.ReadAsByteArrayAsync());
@@ -260,7 +260,7 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         });
         Assert.Equal(HttpStatusCode.Redirect, inj.StatusCode);
         Assert.DoesNotContain("display:none", await anon.GetStringAsync("/branding/theme.css"));
-        Assert.Contains("--brand-primary:#aa1122", await anon.GetStringAsync("/branding/theme.css"));
+        Assert.Contains("--color-primary:#aa1122", await anon.GetStringAsync("/branding/theme.css"));
 
         // non-image logo rejected
         var badLogo = await admin.PostMultipart("/Admin/Settings", "/Admin/Settings/SaveBranding", mp =>

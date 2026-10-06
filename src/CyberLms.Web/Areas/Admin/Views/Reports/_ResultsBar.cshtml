@@ -1,0 +1,20 @@
+@model ReportVm
+@{
+    var a = (string?)ViewContext.RouteData.Values["action"];
+    var f = Model.Filter;
+    var statuses = a == "Acknowledgments" ? new[] { "Acknowledged", "NotAcknowledged" } : a == "Attempts" ? new[] { "Passed", "Failed" } : new[] { "Passed", "Failed", "NotAttempted" };
+}
+<div class="results-bar">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span class="rb-count">@Model.Pager.Total <small>@L["results"]</small></span>
+        <div class="status-chips" aria-label="@L["Status"]">
+            <a class="chip chip-link @(string.IsNullOrEmpty(f.Status) ? "active" : "")" href="@Url.Action(a, new { f.Q, f.AssessmentId, f.ContentId })">@L["All"]</a>
+            @foreach (var s in statuses)
+            { <a class="chip chip-link @(f.Status == s ? "active" : "")" href="@Url.Action(a, new { f.Q, f.AssessmentId, f.ContentId, status = s })">@L[Labels.Status(s)]</a> }
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-success btn-sm" href="@Url.Action(a, new { f.Q, f.AssessmentId, f.ContentId, f.Status, export = "csv" })"><i class="bi bi-filetype-csv"></i> @L["Export CSV"]</a>
+        <a class="btn btn-outline-success btn-sm" href="@Url.Action(a, new { f.Q, f.AssessmentId, f.ContentId, f.Status, export = "xlsx" })"><i class="bi bi-file-earmark-excel"></i> @L["Export Excel"]</a>
+    </div>
+</div>

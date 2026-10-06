@@ -3,22 +3,25 @@
     var a = (string?)ViewContext.RouteData.Values["action"];
     var ack = a == "Acknowledgments";
     var statuses = a == "Acknowledgments" ? new[] { "Acknowledged", "NotAcknowledged" } : a == "Attempts" ? new[] { "Passed", "Failed" } : new[] { "Passed", "Failed", "NotAttempted" };
+    var f = Model.Filter;
 }
-<form class="row g-2 mb-3" method="get" role="search">
-    <div class="col-12 col-md-3"><input class="form-control" name="q" value="@Model.Filter.Q" placeholder="@L["Search for a user"]" aria-label="@L["User"]" /></div>
+<form class="panel filters mb-3" method="get" role="search">
+    <div>
+        <label class="form-label" for="f-q">@L["User"]</label>
+        <div class="field-icon"><i class="bi bi-search"></i><input class="form-control" id="f-q" name="q" value="@f.Q" placeholder="@L["Search for a user"]" /></div>
+    </div>
     @if (ack)
     {
-        <div class="col-6 col-md-3"><select class="form-select" name="contentId" aria-label="@L["Content"]"><option value="">@L["All content"]</option>@foreach (var c in Model.AllContent) { <option value="@c.Id" selected="@(Model.Filter.ContentId == c.Id)">@c.Title</option> }</select></div>
+        <div><label class="form-label" for="f-c">@L["Content"]</label><select class="form-select" id="f-c" name="contentId"><option value="">@L["All content"]</option>@foreach (var c in Model.AllContent) { <option value="@c.Id" selected="@(f.ContentId == c.Id)">@c.Title</option> }</select></div>
     }
     else
     {
-        <div class="col-6 col-md-3"><select class="form-select" name="assessmentId" aria-label="@L["Assessment"]"><option value="">@L["All assessments"]</option>@foreach (var c in Model.AllAssessments) { <option value="@c.Id" selected="@(Model.Filter.AssessmentId == c.Id)">@c.Title</option> }</select></div>
+        <div><label class="form-label" for="f-a">@L["Assessment"]</label><select class="form-select" id="f-a" name="assessmentId"><option value="">@L["All assessments"]</option>@foreach (var c in Model.AllAssessments) { <option value="@c.Id" selected="@(f.AssessmentId == c.Id)">@c.Title</option> }</select></div>
     }
-    <div class="col-6 col-md-2"><select class="form-select" name="status" aria-label="@L["Status"]"><option value="">@L["Any status"]</option>@foreach (var s in statuses) { <option value="@s" selected="@(Model.Filter.Status == s)">@L[Labels.Status(s)]</option> }</select></div>
-    <div class="col-12 col-md-4 d-flex gap-2 flex-wrap">
+    <div><label class="form-label" for="f-s">@L["Status"]</label><select class="form-select" id="f-s" name="status"><option value="">@L["Any status"]</option>@foreach (var s in statuses) { <option value="@s" selected="@(f.Status == s)">@L[Labels.Status(s)]</option> }</select></div>
+    <div class="d-flex gap-2">
         <button class="btn btn-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button>
-        <a class="btn btn-outline-secondary" asp-action="@a">@L["Clear filters"]</a>
-        <a class="btn btn-outline-success" href="@Url.Action(a, new { Model.Filter.Q, Model.Filter.AssessmentId, Model.Filter.ContentId, Model.Filter.Status, export = "csv" })"><i class="bi bi-filetype-csv"></i> @L["Export CSV"]</a>
-        <a class="btn btn-outline-success" href="@Url.Action(a, new { Model.Filter.Q, Model.Filter.AssessmentId, Model.Filter.ContentId, Model.Filter.Status, export = "xlsx" })"><i class="bi bi-file-earmark-excel"></i> @L["Export Excel"]</a>
+        @if (!string.IsNullOrEmpty(f.Q) || f.AssessmentId != null || f.ContentId != null || !string.IsNullOrEmpty(f.Status))
+        { <a class="btn btn-ghost" asp-action="@a"><i class="bi bi-x-lg"></i> @L["Clear filters"]</a> }
     </div>
 </form>

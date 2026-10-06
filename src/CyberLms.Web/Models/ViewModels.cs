@@ -24,6 +24,11 @@ public class UserDashboardVm
     public List<Content> PendingAcks { get; set; } = new();
     public List<Assessment> AvailableAssessments { get; set; } = new();
     public List<AssessmentAttempt> Completed { get; set; } = new();
+    // Progress overview (read-only counts for the dashboard)
+    public int RequiredTotal { get; set; }
+    public int AssessmentsTotal { get; set; }
+    public int AssessmentsPassed { get; set; }
+    public int RequiredDone => Math.Max(0, RequiredTotal - PendingAcks.Count);
 }
 
 public class ContentIndexVm

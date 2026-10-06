@@ -28,6 +28,9 @@ public class HomeController(AppDbContext db, ILogger<HomeController> log) : AppC
         var passedIds = await db.AssessmentAttempts.Where(a => a.UserId == uid && a.Passed == true).Select(a => a.AssessmentId).Distinct().ToListAsync();
         vm.AvailableAssessments = await db.Assessments.AsNoTracking()
             .Where(a => a.IsPublished && a.Questions.Any() && !passedIds.Contains(a.Id)).OrderBy(a => a.Title).ToListAsync();
+        vm.RequiredTotal = await published.CountAsync(c => c.RequiresAcknowledgment);
+        vm.AssessmentsTotal = await db.Assessments.CountAsync(a => a.IsPublished && a.Questions.Any());
+        vm.AssessmentsPassed = await db.Assessments.CountAsync(a => a.IsPublished && a.Questions.Any() && passedIds.Contains(a.Id));
         return View(vm);
     }
 

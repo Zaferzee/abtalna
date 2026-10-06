@@ -1,24 +1,54 @@
 @model List<AssessmentListItem>
-@{ ViewData["Title"] = L["Assessments"]; }
-<h1 class="h4 mb-3">@L["Assessments"]</h1>
-@if (Model.Count == 0) { <div class="alert alert-light border">@L["No assessments available."]</div> }
-<div class="row g-3">
-@foreach (var i in Model)
+@{ ViewData["Title"] = L["Assessments"]; var i = 0; }
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-patch-question"></i> @L["Learning"]</div>
+        <h1>@L["Assessments"]</h1>
+        <p class="lead">@L["Short assessments that check your understanding of the policies and controls."]</p>
+    </div>
+</div>
+@if (Model.Count == 0)
 {
-    <div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body d-flex flex-column">
-        <h2 class="h6 bidi">@i.Assessment.Title</h2>
-        <p class="text-muted small bidi">@i.Assessment.Description</p>
-        <ul class="list-unstyled small flex-grow-1">
-            <li>@L["Number of questions"]: @i.QuestionCount</li>
-            <li>@L["Passing score"]: @i.Assessment.PassingPercentage%</li>
-            <li>@L["Attempts"]: @i.CompletedAttempts / @(i.Assessment.MaxAttempts == 0 ? L["Unlimited"] : i.Assessment.MaxAttempts.ToString())</li>
-            @if (i.Best != null) { <li>@L["Best score"]: <strong>@i.Best.Percentage.ToString("0.#")%</strong> <span class="badge text-bg-@(i.Best.Passed == true ? "success" : "danger")">@L[i.Best.Passed == true ? "Passed" : "Failed"]</span></li> }
-        </ul>
-        @if (i.CanStart)
-        {
-            <form method="post" asp-action="Start" asp-route-id="@i.Assessment.Id"><button class="btn btn-primary"><i class="bi bi-play-fill"></i> @L[i.HasInProgress ? "Continue assessment" : (i.CompletedAttempts > 0 ? "Retry" : "Start assessment")]</button></form>
-        }
-        else { <div class="text-muted small">@L["Maximum attempts reached"]</div> }
-    </div></div></div>
+    <div class="panel empty"><div class="empty-icon"><i class="bi bi-patch-question"></i></div><h3>@L["No assessments available."]</h3><p>@L["New assessments will appear here when they are published."]</p></div>
+}
+<div class="grid-auto" style="--min:320px">
+@foreach (var it in Model)
+{
+    var a = it.Assessment;
+    var passed = it.Best?.Passed == true;
+    <article class="card quiz-card @(passed ? "is-passed" : "") reveal" style="--i:@(i++)">
+        <div class="q-band"></div>
+        <div class="q-body">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <span class="icon-chip @(passed ? "success" : "accent")"><i class="bi @(passed ? "bi-patch-check-fill" : "bi-ui-checks")"></i></span>
+                @if (passed) { <span class="badge text-bg-success badge-dot">@L["Passed"]</span> }
+                else if (it.HasInProgress) { <span class="badge text-bg-warning badge-dot">@L["In progress"]</span> }
+                else if (it.Best != null) { <span class="badge text-bg-danger badge-dot">@L["Failed"]</span> }
+                else { <span class="badge text-bg-secondary">@L["New"]</span> }
+            </div>
+            <h3 class="bidi">@a.Title</h3>
+            @if (!string.IsNullOrWhiteSpace(a.Description)) { <p class="bidi">@a.Description</p> }
+            <div class="status-chips mt-auto">
+                <span class="chip"><i class="bi bi-question-circle"></i> @L.Format("{0} question(s)", it.QuestionCount)</span>
+                <span class="chip"><i class="bi bi-bullseye"></i> @L["Passing score"]: @Ui.Pct(a.PassingPercentage)</span>
+                <span class="chip"><i class="bi bi-arrow-repeat"></i> @L["Attempts"]: <bdi dir="ltr">@it.CompletedAttempts / @(a.MaxAttempts == 0 ? "∞" : a.MaxAttempts.ToString())</bdi></span>
+            </div>
+            @if (it.Best != null)
+            {
+                <div class="score-cell mt-1"><small class="text-muted text-nowrap">@L["Best score"]</small><div class="meter"><span class="@(passed ? "ok" : "bad")" data-w="@it.Best.Percentage"></span></div>@Ui.Pct((double)it.Best.Percentage)</div>
+            }
+        </div>
+        <div class="q-foot">
+            @if (it.CanStart)
+            {
+                <form method="post" asp-action="Start" asp-route-id="@a.Id" class="m-0"><button class="btn btn-primary"><i class="bi bi-play-fill"></i> @L[it.HasInProgress ? "Continue assessment" : (it.CompletedAttempts > 0 ? "Retry" : "Start assessment")]</button></form>
+                <small class="text-muted">@(a.MaxAttempts == 0 ? L["Unlimited"] : L.Format("{0} attempt(s) left", Math.Max(0, a.MaxAttempts - it.CompletedAttempts)))</small>
+            }
+            else
+            {
+                <span class="text-muted small"><i class="bi bi-lock"></i> @L["Maximum attempts reached"]</span>
+            }
+        </div>
+    </article>
 }
 </div>

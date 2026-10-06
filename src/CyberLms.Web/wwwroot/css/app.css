@@ -207,7 +207,8 @@
 .qnav button.current { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); transform: scale(1.12); box-shadow: var(--shadow-brand); }
 .qcard { padding: 2.2rem clamp(1.4rem, 4vw, 2.6rem); border: 0; box-shadow: var(--shadow-md); }
 .qcard .q-index { display: flex; align-items: center; gap: .6rem; color: var(--color-accent); font-weight: 700; font-size: .9rem; margin-bottom: .6rem; }
-.qcard legend, .qcard .q-text { font-size: 1.32rem; font-weight: 700; line-height: 1.75; margin-bottom: .5rem; float: none; width: 100%; }
+.qcard legend, .qcard .q-text { font-size: 1.32rem; font-weight: 700; line-height: 1.75; margin-bottom: .5rem; float: right; width: 100%; padding: 0; }
+[dir=ltr] .qcard legend { float: left; } .qcard legend + * { clear: both; }
 .qcard .q-hint { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.4rem; }
 .choices { display: grid; gap: .8rem; }
 .choice { position: relative; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); cursor: pointer; transition: border-color var(--dur) var(--ease), background var(--dur), transform var(--dur) var(--ease), box-shadow var(--dur); user-select: none; }
@@ -241,7 +242,7 @@
 .result-hero.fail { --rh: var(--color-danger);  --rh-ink: var(--danger-ink);  --rh-glow: color-mix(in srgb, var(--color-danger) 14%, transparent); }
 .result-hero .ring { --size: 196px; --stroke: 14; --ring-color: var(--rh); --ring-track: var(--color-surface-alt); margin: 0 auto; }
 .result-hero .ring .pass-mark { stroke: var(--color-text); stroke-width: 3; stroke-linecap: round; opacity: .55; }
-.result-hero .ring-label strong { color: var(--rh-ink); font-size: 2.8rem; }
+.result-hero .ring-label strong { color: var(--rh-ink); font-size: 2.3rem; }
 .result-status { display: inline-flex; align-items: center; gap: .55rem; margin: 1.3rem 0 .5rem; padding: .5rem 1.3rem; border-radius: var(--radius-pill); font-weight: 700; font-size: 1.15rem; background: color-mix(in srgb, var(--rh) 12%, #fff); color: var(--rh-ink); animation: pop-in .6s var(--ease-spring) .9s both; }
 .result-hero h1 { font-size: 1.15rem; color: var(--color-muted); font-weight: 600; margin-bottom: 1.4rem; }
 .result-msg { font-size: 1.08rem; max-width: 34rem; margin: 0 auto 1.6rem; }
@@ -363,3 +364,37 @@
 .pv-foot { text-align: center; font-size: .6rem; color: var(--color-faint); padding: .2rem; }
 .pv-tabs { margin-bottom: .8rem; }
 .contrast-note { font-size: .8rem; } .contrast-note.bad { color: var(--danger-ink); }
+
+/* ---------- Small helpers used by the reference screens ---------- */
+.min-w-0 { min-width: 0; }
+.icon-chip.tc { background: var(--tc-bg); color: var(--tc); }
+html:not(.js) [data-quiz-start], html:not(.js) [data-q-prev], html:not(.js) [data-q-next] { display: none; }
+.quiz-foot [data-q-submit] { margin-inline-start: auto; }
+.p-tile { border-radius: var(--radius-md); transition: background var(--dur-fast); } .p-tile:hover { background: var(--color-surface-alt); }
+.ack-panel .btn:disabled { opacity: .5; box-shadow: none; }
+.pv-flash { animation: pv-flash .6s var(--ease); }
+@keyframes pv-flash { 0% { transform: scale(.985); box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 30%, transparent); } 100% { transform: none; } }
+.kpi-value .pct { font: inherit; }
+.result-hero > * { position: relative; z-index: 1; } .result-hero .burst { position: absolute; z-index: 0; }
+@media (prefers-reduced-motion: reduce) { .pv-flash { animation: none; } }
+.quiz-intro .bidi, .result-hero .bidi, .empty .bidi { text-align: center; }
+
+/* ---------- Compatibility with screens not yet redesigned (ported from the previous site.css, now on design tokens) ---------- */
+.stat-card { text-decoration: none; color: inherit; display: block; } .stat-card .stat-num { font-size: 2rem; font-weight: 700; line-height: 1; }
+.border-brand { border-inline-start: 4px solid var(--color-primary) !important; }
+.bg-brand { background: var(--color-primary) !important; color: var(--color-on-primary); } .text-accent { color: var(--color-accent); }
+.content-body p, .content-body li, .content-body h1, .content-body h2, .content-body h3, .content-body blockquote, .ql-editor p, .ql-editor li, .ql-editor h1, .ql-editor h2, .ql-editor h3 { unicode-bidi: plaintext; text-align: start; }
+.content-body .ql-editor { padding: 0; height: auto; overflow: visible; }
+.content-body img { max-width: 100%; height: auto; }
+.content-body .ql-align-center { text-align: center; } .content-body .ql-align-right { text-align: right; }
+.content-body .ql-align-left { text-align: left; } .content-body .ql-align-justify { text-align: justify; }
+.content-body .ql-direction-rtl { direction: rtl; } .content-body .ql-direction-ltr { direction: ltr; }
+.content-body p:has(img), .ql-editor p:has(img) { unicode-bidi: normal; direction: inherit; text-align: start; }
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(70% 50% at 50% 0%, var(--primary-50), transparent 70%), var(--color-login-bg); padding: 1rem; }
+.login-card { width: 100%; max-width: 440px; }
+.option-row .form-check-input { margin-top: .6rem; }
+.question-card { border-inline-start: 4px solid var(--color-accent) !important; }
+.text-end[dir=ltr] { text-align: left !important; } [dir=rtl] .text-end[dir=ltr] { text-align: right !important; }
+.file-picker .form-control { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ring .ring-fg.is-zero { opacity: 0; }
+.qa-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .55rem; } .qa { padding: .55rem .8rem; white-space: nowrap; }

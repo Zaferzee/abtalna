@@ -7,8 +7,10 @@
     @if (b.HasFavicon) { <link rel="icon" href="~/Files/Brand?kind=favicon&v=@b.Version" /> }
     <link rel="stylesheet" href="~/lib/bootstrap/@(L.IsRtl ? "bootstrap.rtl.min.css" : "bootstrap.min.css")" />
     <link rel="stylesheet" href="~/lib/icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ds.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/branding/theme.css?v=@b.Version" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
 <body><div class="login-wrap"><div class="login-card">@RenderBody()</div></div></body>
 </html>
