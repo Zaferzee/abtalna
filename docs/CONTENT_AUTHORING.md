@@ -23,10 +23,15 @@ The wizard composes the existing records: `Content`, `ContentAttachment`, `Asses
 
 The content page reads top to bottom:
 
-1. Content
-2. Attachments and supporting material
-3. Acknowledgment (if required)
-4. **Next step: assessment**, with Start / Continue / Retry, or View result
+1. Title, description and details
+2. Written content
+3. **Embedded video** (MP4/WebM attachments, played in the page)
+4. **Embedded PDF reader** (PDF attachments, shown in the page)
+5. Other attachments (images, Word/Excel/PowerPoint downloads) and the link
+6. Acknowledgment (if required)
+7. **Next step: assessment**, with Start / Continue / Retry, or View result
+
+Video and PDF rendering is described in [MULTIMEDIA.md](MULTIMEDIA.md). **معاينة كموظف** uses the same view, so the preview shows the video and PDF exactly as employees will see them.
 
 A side card shows the steps for the item and their status. Regulations are listed on the employee's **Policies** page, together with policies. The assessment can still be started before acknowledging; this is the existing behaviour, kept unchanged.
 

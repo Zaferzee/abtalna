@@ -1,12 +1,18 @@
 @model ContentDetailsVm
 @*
-    The employee reading experience: content -> attachments -> acknowledgment -> related assessment.
+    The employee reading experience: text -> embedded video -> embedded PDF -> other attachments -> acknowledgment -> related assessment.
     Used by the employee page (Content/Details) and, non-interactively, by the authoring wizard's "preview as employee".
 *@
 @{
     var c = Model.Content;
     var live = Model.Interactive;
-    var docs = c.Attachments.Where(a => a.Kind == AttachmentKind.Document).ToList();
+    var ordered = c.Attachments.OrderBy(a => a.Id).ToList();
+    var videos = ordered.Where(a => a.Kind == AttachmentKind.Video).ToList();
+    var pdfs = ordered.Where(Ui.IsPdf).ToList();
+    var images = ordered.Where(a => a.Kind == AttachmentKind.Image).ToList();
+    var docs = ordered.Where(a => a.Kind == AttachmentKind.Document && !Ui.IsPdf(a)).ToList();
+    string FileUrl(ContentAttachment a, bool download = false) => Url.Action("Attachment", "Files", new { area = "", id = a.Id, download = download ? true : (bool?)null })!;
+    var hasBody = !string.IsNullOrWhiteSpace(c.Body);
     var needsAck = c.RequiresAcknowledgment && (!Model.Preview || !live);
     var words = System.Text.RegularExpressions.Regex.Replace(c.Body ?? "", "<[^>]+>", " ").Split((char[])null!, StringSplitOptions.RemoveEmptyEntries).Length;
     var minutes = Math.Max(1, (int)Math.Ceiling(words / 180.0));
@@ -26,127 +32,21 @@
             if (acked) { <span class="chip chip-success"><i class="bi bi-check-circle-fill"></i> @L["Acknowledged"]</span> }
             else { <span class="chip chip-warning"><i class="bi bi-pen"></i> @L["Requires your acknowledgment"]</span> }
         }
+        @if (videos.Count > 0) { <span class="chip"><i class="bi bi-play-btn"></i> @L["Includes a video"]</span> }
+        @if (pdfs.Count > 0) { <span class="chip"><i class="bi bi-file-earmark-pdf"></i> @L["Includes a PDF document"]</span> }
         @if (Model.Related.Count > 0) { <span class="chip chip-primary"><i class="bi bi-patch-question"></i> @L["Includes an assessment"]</span> }
     </div>
 </header>
 
-<div class="reader">
+<div class="reader @(hasBody ? "" : "no-body")">
     <div class="stack" style="--gap:1.5rem">
+    @if (hasBody || (videos.Count == 0 && pdfs.Count == 0))
+    {
         <article class="doc-card reveal" style="--i:1">
-            @if (!string.IsNullOrWhiteSpace(c.Body)) { <div class="doc-body content-body" data-toc-source>@Html.Raw(c.Body)</div> }
+            @if (hasBody) { <div class="doc-body content-body" data-toc-source>@Html.Raw(c.Body)</div> }
             else { <p class="text-muted mb-0">@L["This item has no text body. See the attachments below."]</p> }
         </article>
-
-        @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Video))
-        {
-            <figure class="figure-card reveal-scroll"><video controls preload="metadata" src="@Url.Action("Attachment", "Files", new { area = "", id = a.Id })"></video><figcaption class="bidi"><i class="bi bi-play-circle"></i> @a.FileName</figcaption></figure>
-        }
-        @foreach (var a in c.Attachments.Where(a => a.Kind == AttachmentKind.Image))
-        {
-            <figure class="figure-card reveal-scroll"><img alt="@a.FileName" src="@Url.Action("Attachment", "Files", new { area = "", id = a.Id })" /><figcaption class="bidi"><i class="bi bi-image"></i> @a.FileName</figcaption></figure>
-        }
-        @if (docs.Count > 0 || !string.IsNullOrEmpty(c.ExternalUrl))
-        {
-            <section class="reveal-scroll" aria-labelledby="sec-attach">
-                <div class="section-title mt-0"><h2 id="sec-attach"><i class="bi bi-paperclip"></i> @L["Attachments and supporting material"]</h2></div>
-                <div class="attach-grid">
-                    @foreach (var a in docs)
-                    {
-                        <a class="attach" href="@Url.Action("Attachment", "Files", new { area = "", id = a.Id })" target="_blank" rel="noopener">
-                            <span class="icon-chip"><i class="bi @Ui.AttachmentIcon(a)"></i></span>
-                            <span class="min-w-0"><span class="a-name bidi">@a.FileName</span><small><bdi dir="ltr">@Labels.Size(a.SizeBytes)</bdi></small></span>
-                            <i class="bi bi-download a-go"></i>
-                        </a>
-                    }
-                    @if (!string.IsNullOrEmpty(c.ExternalUrl))
-                    {
-                        <a class="attach" href="@c.ExternalUrl" target="_blank" rel="noopener noreferrer">
-                            <span class="icon-chip accent"><i class="bi bi-link-45deg"></i></span>
-                            <span class="min-w-0"><span class="a-name">@L["Related link"]</span><small class="d-block text-truncate" dir="ltr">@c.ExternalUrl</small></span>
-                            <i class="bi bi-box-arrow-up-left a-go flip-rtl"></i>
-                        </a>
-                    }
-                </div>
-            </section>
-        }
-
-        @if (needsAck)
-        {
-            @if (acked)
-            {
-                <section class="ack-panel is-done" aria-live="polite">
-                    <span class="ack-icon"><i class="bi bi-patch-check-fill"></i></span>
-                    <div><h2>@L["Acknowledged"]</h2><p class="bidi">@Model.AckText</p><p class="small mt-1">@L["Acknowledged on"] @Time.Html(Model.Ack!.AcknowledgedAt)</p></div>
-                </section>
-            }
-            else if (live)
-            {
-                <form method="post" asp-area="" asp-controller="Content" asp-action="Acknowledge" asp-route-id="@c.Id" class="ack-panel reveal-scroll">
-                    <span class="ack-icon"><i class="bi bi-pen"></i></span>
-                    <div>
-                        <h2>@L["Your acknowledgment is required"]</h2>
-                        <p>@L["Please read the full content above, then confirm below."]</p>
-                        <label class="ack-check"><input type="checkbox" data-ack-check /> <span class="bidi">@Model.AckText</span></label>
-                    </div>
-                    <button class="btn btn-primary btn-lg" data-ack-submit><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
-                </form>
-            }
-            else
-            {
-                <div class="ack-panel" data-ack-preview>
-                    <span class="ack-icon"><i class="bi bi-pen"></i></span>
-                    <div>
-                        <h2>@L["Your acknowledgment is required"]</h2>
-                        <p>@L["Please read the full content above, then confirm below."]</p>
-                        <label class="ack-check"><input type="checkbox" disabled /> <span class="bidi" data-ack-text>@Model.AckText</span></label>
-                    </div>
-                    <button type="button" class="btn btn-primary btn-lg" disabled title="@L["Preview only"]"><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
-                </div>
-            }
-        }
-
-        @foreach (var it in Model.Related)
-        {
-            var a = it.Assessment;
-            var passed = it.Best?.Passed == true;
-            <section class="next-step reveal-scroll @(passed ? "is-done" : "")" aria-label="@L["Related assessment"]">
-                <span class="ns-icon"><i class="bi @(passed ? "bi-patch-check-fill" : "bi-ui-checks")"></i></span>
-                <div class="ns-main">
-                    <div class="ns-kicker">@L["Next step: assessment"]</div>
-                    <h2 class="bidi">@a.Title</h2>
-                    @if (!string.IsNullOrWhiteSpace(a.Description)) { <p class="bidi">@a.Description</p> }
-                    <div class="status-chips">
-                        <span class="chip"><i class="bi bi-question-circle"></i> @L.Format("{0} question(s)", it.QuestionCount)</span>
-                        <span class="chip"><i class="bi bi-bullseye"></i> @L["Passing score"]: @Ui.Pct(a.PassingPercentage)</span>
-                        <span class="chip"><i class="bi bi-arrow-repeat"></i> @(a.MaxAttempts == 0 ? L["Unlimited attempts"] : L.Format("{0} attempt(s) allowed", a.MaxAttempts))</span>
-                        @if (it.Best != null) { <span class="chip @(passed ? "chip-success" : "chip-danger")"><i class="bi bi-award"></i> @L["Best score"]: @Ui.Pct((double)it.Best.Percentage)</span> }
-                    </div>
-                </div>
-                <div class="ns-action">
-                    @if (!live)
-                    {
-                        <button type="button" class="btn btn-accent btn-lg" disabled title="@L["Preview only"]"><i class="bi bi-play-fill"></i> @L["Start assessment"]</button>
-                        @if (!a.IsPublished) { <small class="text-muted d-block mt-1">@L["Becomes available to employees when published."]</small> }
-                    }
-                    else if (!a.IsPublished)
-                    {
-                        <span class="badge text-bg-secondary">@L["Not published yet"]</span>
-                    }
-                    else if (passed)
-                    {
-                        <a class="btn btn-outline-success" asp-area="" asp-controller="Assessments" asp-action="Result" asp-route-id="@it.Best!.Id"><i class="bi bi-award"></i> @L["View result"]</a>
-                    }
-                    else if (it.CanStart)
-                    {
-                        <form method="post" asp-area="" asp-controller="Assessments" asp-action="Start" asp-route-id="@a.Id" class="m-0"><button class="btn btn-accent btn-lg"><i class="bi bi-play-fill"></i> @L[it.HasInProgress ? "Continue assessment" : (it.CompletedAttempts > 0 ? "Retry" : "Start assessment")]</button></form>
-                    }
-                    else
-                    {
-                        <span class="text-muted small"><i class="bi bi-lock"></i> @L["Maximum attempts reached"]</span>
-                    }
-                </div>
-            </section>
-        }
+    }
     </div>
 
     <aside class="doc-aside">
@@ -164,4 +64,198 @@
             </div>
         }
     </aside>
+</div>
+
+<div class="reader-after stack" style="--gap:1.75rem">
+    @if (videos.Count > 0)
+    {
+        var first = videos[0];
+        <section class="media-section reveal-scroll" aria-labelledby="sec-video">
+            <div class="section-title mt-0"><h2 id="sec-video"><i class="bi bi-play-btn"></i> @L["Video"]</h2>@if (videos.Count > 1) { <span class="chip">@L.Format("{0} videos", videos.Count)</span> }</div>
+            <div class="video-player" data-video-player>
+                <div class="vp-frame">
+                    <video controls preload="metadata" playsinline src="@FileUrl(first)" data-video aria-label="@Ui.Title(first)">
+                        <p>@L["Your browser cannot play this video."] <a href="@FileUrl(first, true)">@L["Download the video"]</a></p>
+                    </video>
+                    <div class="vp-error" data-video-error hidden><i class="bi bi-camera-video-off"></i><p>@L["This video cannot be played in your browser (unsupported format or the file is unavailable)."]</p><a class="btn btn-light btn-sm" href="@FileUrl(first, true)" data-video-error-dl><i class="bi bi-download"></i> @L["Download the video"]</a></div>
+                </div>
+                <div class="vp-caption"><span class="vp-title bidi" data-video-title><i class="bi bi-camera-video"></i> @Ui.Title(first)</span><a class="vp-download" href="@FileUrl(first, true)" data-video-download><i class="bi bi-download"></i> @L["Download"]</a></div>
+                @if (videos.Count > 1)
+                {
+                    <ol class="vp-list">
+                    @for (var i = 0; i < videos.Count; i++)
+                    {
+                        var v = videos[i];
+                        <li><button type="button" class="vp-item @(i == 0 ? "is-active" : "")" aria-pressed="@(i == 0 ? "true" : "false")" data-video-src="@FileUrl(v)" data-video-dl="@FileUrl(v, true)" data-video-name="@Ui.Title(v)">
+                            <span class="vp-num">@(i + 1)</span><span class="bidi">@Ui.Title(v)</span><small dir="ltr">@Labels.Size(v.SizeBytes)</small></button></li>
+                    }
+                    </ol>
+                }
+            </div>
+        </section>
+    }
+
+    @if (pdfs.Count > 0)
+    {
+        var firstPdf = pdfs[0];
+        <section class="media-section reveal-scroll" aria-labelledby="sec-pdf">
+            <div class="section-title mt-0"><h2 id="sec-pdf"><i class="bi bi-file-earmark-pdf"></i> @L["Document"]</h2>@if (pdfs.Count > 1) { <span class="chip">@L.Format("{0} documents", pdfs.Count)</span> }</div>
+            @if (pdfs.Count > 1)
+            {
+                <div class="pdfv-tabs" role="tablist" aria-label="@L["Documents"]">
+                @for (var i = 0; i < pdfs.Count; i++)
+                {
+                    var d = pdfs[i];
+                    <button type="button" role="tab" class="pdfv-tab @(i == 0 ? "is-active" : "")" aria-selected="@(i == 0 ? "true" : "false")" data-pdf-switch data-src="@FileUrl(d)" data-download="@FileUrl(d, true)" data-name="@Ui.Title(d)" data-size="@Labels.Size(d.SizeBytes)"><i class="bi bi-file-earmark-pdf"></i> <span class="bidi">@Ui.Title(d)</span></button>
+                }
+                </div>
+            }
+            <div class="pdfv" data-pdf-viewer data-src="@FileUrl(firstPdf)" data-download="@FileUrl(firstPdf, true)"
+                 data-t-loading="@L["Loading the document..."]" data-t-invalid="@L["The file cannot be displayed: it is damaged or is not a valid PDF document."]"
+                 data-t-missing="@L["The document is not available (it may have been removed, or you do not have access to it)."]"
+                 data-t-session="@L["Your session has ended. Sign in again to view the document."]" data-t-password="@L["This document is password-protected and cannot be shown here. You can download it instead."]"
+                 data-t-error="@L["The document could not be loaded. Please try again."]" data-t-retry="@L["Try again"]" data-t-signin="@L["Sign in"]" data-t-page="@L["Page {0}"]"
+                 data-login-url="@Url.Action("Login", "Account", new { area = "", returnUrl = Context.Request.Path + Context.Request.QueryString })">
+                <div class="pdfv-bar">
+                    <div class="pdfv-title"><span class="icon-chip danger"><i class="bi bi-file-earmark-pdf"></i></span><span class="min-w-0"><strong class="bidi" data-pdf-name>@Ui.Title(firstPdf)</strong><small dir="ltr" data-pdf-size>@Labels.Size(firstPdf.SizeBytes)</small></span></div>
+                    <div class="pdfv-tools" role="toolbar" aria-label="@L["Document tools"]">
+                        <div class="pdfv-group">
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm" data-pdf-prev title="@L["Previous page"]" aria-label="@L["Previous page"]" disabled><i class="bi bi-chevron-right flip-rtl"></i></button>
+                            <span class="pdfv-pagebox"><label class="visually-hidden" for="pdf-page-@firstPdf.Id">@L["Page number"]</label><input id="pdf-page-@firstPdf.Id" type="number" min="1" value="1" dir="ltr" data-pdf-page disabled /><span class="pdfv-of">@L["of"] <bdi dir="ltr" data-pdf-count>-</bdi></span></span>
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm" data-pdf-next title="@L["Next page"]" aria-label="@L["Next page"]" disabled><i class="bi bi-chevron-left flip-rtl"></i></button>
+                        </div>
+                        <div class="pdfv-group">
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm" data-pdf-zoom-out title="@L["Zoom out"]" aria-label="@L["Zoom out"]"><i class="bi bi-zoom-out"></i></button>
+                            <select class="form-select form-select-sm" data-pdf-zoom aria-label="@L["Zoom"]">
+                                <option value="fit" selected>@L["Fit width"]</option>
+                                <option value="page">@L["Whole page"]</option>
+                                <option value="0.75">75%</option><option value="1">100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option>
+                            </select>
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm" data-pdf-zoom-in title="@L["Zoom in"]" aria-label="@L["Zoom in"]"><i class="bi bi-zoom-in"></i></button>
+                        </div>
+                        <div class="pdfv-group">
+                            <button type="button" class="btn btn-ghost btn-icon btn-sm" data-pdf-full title="@L["Full screen"]" aria-label="@L["Full screen"]"><i class="bi bi-arrows-fullscreen"></i></button>
+                            <a class="btn btn-outline-primary btn-sm" href="@FileUrl(firstPdf, true)" data-pdf-download><i class="bi bi-download"></i> @L["Download"]</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="pdfv-stage" data-pdf-stage tabindex="0" role="region" aria-label="@L["Document pages"]">
+                    <div class="pdfv-state" data-pdf-state><span class="pdfv-spinner" aria-hidden="true"></span><span>@L["Loading the document..."]</span></div>
+                    <div class="pdfv-pages" data-pdf-pages></div>
+                </div>
+                <noscript><div class="pdfv-state"><a href="@FileUrl(firstPdf)">@L["Open the document"]</a></div></noscript>
+            </div>
+        </section>
+        <script type="module" src="~/js/pdf-viewer.mjs" asp-append-version="true"></script>
+    }
+
+    @if (images.Count > 0 || docs.Count > 0 || !string.IsNullOrEmpty(c.ExternalUrl))
+    {
+        <section class="reveal-scroll" aria-labelledby="sec-attach">
+            <div class="section-title mt-0"><h2 id="sec-attach"><i class="bi bi-paperclip"></i> @L[videos.Count + pdfs.Count > 0 ? "Other attachments" : "Attachments and supporting material"]</h2></div>
+            @foreach (var a in images)
+            {
+                <figure class="figure-card mb-3"><img alt="@Ui.Title(a)" src="@FileUrl(a)" /><figcaption class="bidi"><i class="bi bi-image"></i> @a.FileName</figcaption></figure>
+            }
+            @if (docs.Count > 0 || !string.IsNullOrEmpty(c.ExternalUrl))
+            {
+                <div class="attach-grid">
+                    @foreach (var a in docs)
+                    {
+                        <a class="attach" href="@FileUrl(a, true)">
+                            <span class="icon-chip"><i class="bi @Ui.AttachmentIcon(a)"></i></span>
+                            <span class="min-w-0"><span class="a-name bidi">@a.FileName</span><small><bdi dir="ltr">@Labels.Size(a.SizeBytes)</bdi></small></span>
+                            <i class="bi bi-download a-go"></i>
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(c.ExternalUrl))
+                    {
+                        <a class="attach" href="@c.ExternalUrl" target="_blank" rel="noopener noreferrer">
+                            <span class="icon-chip accent"><i class="bi bi-link-45deg"></i></span>
+                            <span class="min-w-0"><span class="a-name">@L["Related link"]</span><small class="d-block text-truncate" dir="ltr">@c.ExternalUrl</small></span>
+                            <i class="bi bi-box-arrow-up-left a-go flip-rtl"></i>
+                        </a>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    @if (needsAck)
+    {
+        @if (acked)
+        {
+            <section class="ack-panel is-done" aria-live="polite">
+                <span class="ack-icon"><i class="bi bi-patch-check-fill"></i></span>
+                <div><h2>@L["Acknowledged"]</h2><p class="bidi">@Model.AckText</p><p class="small mt-1">@L["Acknowledged on"] @Time.Html(Model.Ack!.AcknowledgedAt)</p></div>
+            </section>
+        }
+        else if (live)
+        {
+            <form method="post" asp-area="" asp-controller="Content" asp-action="Acknowledge" asp-route-id="@c.Id" class="ack-panel reveal-scroll">
+                <span class="ack-icon"><i class="bi bi-pen"></i></span>
+                <div>
+                    <h2>@L["Your acknowledgment is required"]</h2>
+                    <p>@L["Please read the full content above, then confirm below."]</p>
+                    <label class="ack-check"><input type="checkbox" data-ack-check /> <span class="bidi">@Model.AckText</span></label>
+                </div>
+                <button class="btn btn-primary btn-lg" data-ack-submit><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
+            </form>
+        }
+        else
+        {
+            <div class="ack-panel" data-ack-preview>
+                <span class="ack-icon"><i class="bi bi-pen"></i></span>
+                <div>
+                    <h2>@L["Your acknowledgment is required"]</h2>
+                    <p>@L["Please read the full content above, then confirm below."]</p>
+                    <label class="ack-check"><input type="checkbox" disabled /> <span class="bidi" data-ack-text>@Model.AckText</span></label>
+                </div>
+                <button type="button" class="btn btn-primary btn-lg" disabled title="@L["Preview only"]"><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
+            </div>
+        }
+    }
+
+    @foreach (var it in Model.Related)
+    {
+        var a = it.Assessment;
+        var passed = it.Best?.Passed == true;
+        <section class="next-step reveal-scroll @(passed ? "is-done" : "")" aria-label="@L["Related assessment"]">
+            <span class="ns-icon"><i class="bi @(passed ? "bi-patch-check-fill" : "bi-ui-checks")"></i></span>
+            <div class="ns-main">
+                <div class="ns-kicker">@L["Next step: assessment"]</div>
+                <h2 class="bidi">@a.Title</h2>
+                @if (!string.IsNullOrWhiteSpace(a.Description)) { <p class="bidi">@a.Description</p> }
+                <div class="status-chips">
+                    <span class="chip"><i class="bi bi-question-circle"></i> @L.Format("{0} question(s)", it.QuestionCount)</span>
+                    <span class="chip"><i class="bi bi-bullseye"></i> @L["Passing score"]: @Ui.Pct(a.PassingPercentage)</span>
+                    <span class="chip"><i class="bi bi-arrow-repeat"></i> @(a.MaxAttempts == 0 ? L["Unlimited attempts"] : L.Format("{0} attempt(s) allowed", a.MaxAttempts))</span>
+                    @if (it.Best != null) { <span class="chip @(passed ? "chip-success" : "chip-danger")"><i class="bi bi-award"></i> @L["Best score"]: @Ui.Pct((double)it.Best.Percentage)</span> }
+                </div>
+            </div>
+            <div class="ns-action">
+                @if (!live)
+                {
+                    <button type="button" class="btn btn-accent btn-lg" disabled title="@L["Preview only"]"><i class="bi bi-play-fill"></i> @L["Start assessment"]</button>
+                    @if (!a.IsPublished) { <small class="text-muted d-block mt-1">@L["Becomes available to employees when published."]</small> }
+                }
+                else if (!a.IsPublished)
+                {
+                    <span class="badge text-bg-secondary">@L["Not published yet"]</span>
+                }
+                else if (passed)
+                {
+                    <a class="btn btn-outline-success" asp-area="" asp-controller="Assessments" asp-action="Result" asp-route-id="@it.Best!.Id"><i class="bi bi-award"></i> @L["View result"]</a>
+                }
+                else if (it.CanStart)
+                {
+                    <form method="post" asp-area="" asp-controller="Assessments" asp-action="Start" asp-route-id="@a.Id" class="m-0"><button class="btn btn-accent btn-lg"><i class="bi bi-play-fill"></i> @L[it.HasInProgress ? "Continue assessment" : (it.CompletedAttempts > 0 ? "Retry" : "Start assessment")]</button></form>
+                }
+                else
+                {
+                    <span class="text-muted small"><i class="bi bi-lock"></i> @L["Maximum attempts reached"]</span>
+                }
+            </div>
+        </section>
+    }
 </div>

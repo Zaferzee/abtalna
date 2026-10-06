@@ -11,6 +11,7 @@ Presentation layer only. No controller, service, scoring, auth, localization or 
 | `wwwroot/css/app.css` | Application shell (sidebar, topbar), the 9 reference screens, and a small compatibility block for screens that have not been redesigned yet. |
 | `/branding/theme.css` | Generated per request from the Branding settings. It overrides only the brand tokens below. |
 | `wwwroot/js/ui.js` | Progressive enhancement: sidebar toggle, count-up, rings and meters, scroll reveal, reading progress, generated table of contents, acknowledgment checkbox, assessment wizard, result celebration, password toggle, and the Branding **live preview**. There are no inline scripts, so CSP `script-src 'self'` is unchanged. |
+| `wwwroot/js/pdf-viewer.mjs` | Embedded PDF reader built on the locally bundled PDF.js (`wwwroot/lib/pdfjs`); see [MULTIMEDIA.md](MULTIMEDIA.md). |
 | `Services/Ui.cs` | View helpers: `Ui.Pct` (isolated LTR percentage), `Ui.Num`, `Ui.Ring` (SVG progress ring), and type, attachment and audit icons. |
 
 ## Tokens

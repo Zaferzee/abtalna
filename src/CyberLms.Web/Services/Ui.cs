@@ -49,6 +49,16 @@ public static class Ui
         ContentType.Instructions => "bi-signpost-2", _ => "bi-journal-text",
     };
 
+    public static bool IsPdf(ContentAttachment a) =>
+        a.Kind == AttachmentKind.Document && (a.ContentType == "application/pdf" || a.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Display title of an attachment: the file name without its extension.</summary>
+    public static string Title(ContentAttachment a)
+    {
+        var t = Path.GetFileNameWithoutExtension(a.FileName).Replace('_', ' ').Trim();
+        return t.Length == 0 ? a.FileName : t;
+    }
+
     public static string AttachmentIcon(ContentAttachment a)
     {
         var ext = Path.GetExtension(a.FileName).ToLowerInvariant();

@@ -1,31 +1,46 @@
 @model List<AuditLog>
-@{ ViewData["Title"] = L["Audit log"]; var pager = (Pager)ViewBag.Pager; var actions = (List<string>)ViewBag.Actions; }
+@{
+    ViewData["Title"] = L["Audit log"];
+    var pager = (Pager)ViewBag.Pager; var actions = (List<string>)ViewBag.Actions;
+    var op = (string?)ViewBag.Op; var q = (string?)ViewBag.Q; var filtered = !string.IsNullOrWhiteSpace(op) || !string.IsNullOrWhiteSpace(q);
+    var total = (int)ViewBag.All;
+}
 <div class="page-head reveal">
     <div>
         <div class="eyebrow"><i class="bi bi-clock-history"></i> @L["Insights"]</div>
         <h1>@L["Audit log"]</h1>
         <p class="lead">@L["Every administrative change, sign-in and acknowledgment-related action, with time, user and IP address."]</p>
     </div>
+    <span class="chip"><i class="bi bi-shield-lock"></i> @L["Read-only record"]</span>
 </div>
 <div class="card table-card reveal" style="--i:1">
     <form class="toolbar" method="get" role="search">
-        <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="@ViewBag.Q" placeholder="@L["Search by administrator or details"]" aria-label="@L["Search"]" /></div>
-        <select class="form-select" name="action" aria-label="@L["Action"]"><option value="">@L["All actions"]</option>@foreach (var a in actions) { <option value="@a" selected="@((string?)ViewBag.Action == a)">@L[a]</option> }</select>
-        <div class="tb-end"><button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button></div>
+        <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="@q" placeholder="@L["Search by user, details or record number"]" aria-label="@L["Search"]" /></div>
+        <select class="form-select" name="op" aria-label="@L["Action"]"><option value="">@L["All actions"]</option>@foreach (var a in actions) { <option value="@a" selected="@(op == a)">@L[a]</option> }</select>
+        <div class="tb-end">
+            <button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button>
+            @if (filtered) { <a class="btn btn-ghost" asp-action="Index"><i class="bi bi-x-lg"></i> @L["Clear filters"]</a> }
+        </div>
     </form>
-    <div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>@L["Time"]</th><th>@L["Administrator"]</th><th>@L["Action"]</th><th>@L["Entity"]</th><th>@L["Details"]</th><th>@L["IP address"]</th></tr></thead><tbody>
+    <div class="results-bar"><span class="rb-count">@pager.Total <small>@L["entries"]</small></span>@if (filtered) { <span class="small text-muted">@L.Format("of {0}", total)</span> }</div>
+    <div class="table-responsive"><table class="table table-hover mb-0 audit-table"><thead><tr><th>@L["Date and time"]</th><th>@L["Performed by"]</th><th>@L["Action"]</th><th>@L["Entity"]</th><th>@L["Details"]</th><th>@L["IP address"]</th></tr></thead><tbody>
     @foreach (var a in Model)
     {
         <tr>
             <td class="text-nowrap">@Time.Html(a.Timestamp)</td>
-            <td dir="ltr" class="text-end">@a.Username</td>
-            <td><span class="audit-action"><span class="t-dot-sm"><i class="bi @Ui.AuditIcon(a.Action)"></i></span>@L[a.Action]</span></td>
-            <td class="text-nowrap">@L["Entity: " + a.EntityType] <bdi dir="ltr">@(a.EntityId == null ? "" : "#" + a.EntityId)</bdi></td>
-            <td class="bidi">@if (string.IsNullOrWhiteSpace(a.Details)) { <span class="text-muted">-</span> } else { @a.Details }</td>
+            <td><bdi dir="ltr" class="fw-semibold">@a.Username</bdi></td>
+            <td><span class="audit-action"><span class="t-dot-sm"><i class="bi @Ui.AuditIcon(a.Action)"></i></span><span>@L[a.Action]<small class="audit-code" dir="ltr">@a.Action</small></span></span></td>
+            <td class="text-nowrap">@L["Entity: " + a.EntityType] @if (!string.IsNullOrEmpty(a.EntityId)) { <bdi dir="ltr" class="text-muted">#@a.EntityId</bdi> }</td>
+            <td class="bidi audit-details">@if (string.IsNullOrWhiteSpace(a.Details)) { <span class="text-muted">-</span> } else { @a.Details }</td>
             <td dir="ltr" class="text-end text-muted small">@a.IpAddress</td>
         </tr>
     }
-    @if (Model.Count == 0) { <tr><td colspan="6"><div class="empty py-4"><div class="empty-icon"><i class="bi bi-activity"></i></div><p>@L["No activity recorded yet."]</p></div></td></tr> }
+    @if (Model.Count == 0)
+    {
+        <tr><td colspan="6"><div class="empty py-4"><div class="empty-icon"><i class="bi @(filtered ? "bi-search" : "bi-activity")"></i></div>
+            <h3>@L[filtered ? "No entries match the filter." : "No activity recorded yet."]</h3>
+            @if (filtered) { <a class="btn btn-outline-primary mt-2" asp-action="Index">@L["Show all entries"]</a> }</div></td></tr>
+    }
     </tbody></table></div>
 </div>
 <partial name="_Pager" model="pager" />

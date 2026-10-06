@@ -151,7 +151,13 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.UseStaticFiles();
+// Local PDF.js (wwwroot/lib/pdfjs): ES modules, CMaps, standard fonts and WebAssembly decoders need explicit content types.
+var staticTypes = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+staticTypes.Mappings[".mjs"] = "text/javascript";
+staticTypes.Mappings[".bcmap"] = "application/octet-stream";
+staticTypes.Mappings[".pfb"] = "application/octet-stream";
+staticTypes.Mappings[".wasm"] = "application/wasm";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = staticTypes });
 
 // Arabic (ar-SA) is the default UI culture; formatting uses Gregorian dates and Western digits (see CultureSetup).
 app.UseRequestLocalization(o => CultureSetup.Configure(o, app.Services.GetRequiredService<SettingsService>()));

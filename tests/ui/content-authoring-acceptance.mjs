@@ -176,14 +176,14 @@ await login(e, 'nora.harbi', 'Pass#Employee1');
 await e.goto(base + '/Content/Policies');
 await shot(e, '07a-employee-policies-list', 'الموظف: صفحة السياسات تعرض اللائحة الجديدة بانتظار الإقرار', { full: false });
 await e.click('a.c-card:has-text("لائحة المخالفات الداخلية")'); await e.waitForLoadState('networkidle');
-const emp = await e.evaluate(() => ({ table: document.querySelectorAll('.doc-body table tr').length, ol: document.querySelectorAll('.doc-body ol li').length, quote: !!document.querySelector('.doc-body blockquote'), pdf: !!document.querySelector('a.attach[href*="/Files/Attachment/"]'), link: !!document.querySelector('a.attach[href*="intranet.company.local"]'), ack: document.querySelector('.ack-check span')?.textContent, start: !!document.querySelector('form[action*="/Assessments/Start/"]') }));
+const emp = await e.evaluate(() => ({ table: document.querySelectorAll('.doc-body table tr').length, ol: document.querySelectorAll('.doc-body ol li').length, quote: !!document.querySelector('.doc-body blockquote'), pdf: !!document.querySelector('[data-pdf-viewer][data-src*="/Files/Attachment/"]'), link: !!document.querySelector('a.attach[href*="intranet.company.local"]'), ack: document.querySelector('.ack-check span')?.textContent, start: !!document.querySelector('form[action*="/Assessments/Start/"]') }));
 ok(emp.table === 7, `employee sees the table with the added row (${emp.table} rows)`);
 ok(emp.ol >= 4 && emp.quote, 'numbered rules and callout rendered');
 ok(emp.pdf && emp.link, 'attachment and link shown');
 ok(emp.ack && emp.ack.includes('لائحة المخالفات الداخلية للأمن السيبراني'), 'acknowledgment statement shown: ' + emp.ack);
 ok(emp.start, 'related assessment can be started from the content page');
 await shot(e, '07-employee-regulation-view', 'الموظف: اللائحة المنشورة (التنسيق، الجدول، القائمة المرقمة، المرفق والرابط، الإقرار، ثم الاختبار المرتبط)');
-const pdfHref = await e.getAttribute('a.attach[href*="/Files/Attachment/"]', 'href');
+const pdfHref = await e.getAttribute('[data-pdf-viewer]', 'data-src'); // PDFs are shown inline by the embedded viewer
 const pdfResp = await e.request.get(base + pdfHref);
 ok(pdfResp.status() === 200 && (await pdfResp.body()).slice(0, 4).toString() === '%PDF', 'attachment downloads as a PDF');
 // acknowledge

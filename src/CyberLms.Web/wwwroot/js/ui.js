@@ -212,6 +212,35 @@
     });
   });
 
+  // ---------- Embedded video player ----------
+  $$('[data-video-player]').forEach(function (pl) {
+    var video = $('[data-video]', pl), frame = $('.vp-frame', pl);
+    // Keep the video's own proportions (16:9 frame by default) and do not blow small videos up past ~1.5x.
+    var fit = function () {
+      var w = video.videoWidth, h = video.videoHeight;
+      if (!w || !h) return;
+      var r = w / h;
+      frame.style.setProperty('--ar', r >= 1.2 && r <= 2.4 ? (w + ' / ' + h) : '16 / 9');
+      frame.style.maxWidth = w < 640 ? Math.max(Math.round(w * 1.5), 480) + 'px' : '';
+    };
+    video.addEventListener('loadedmetadata', fit); if (video.readyState >= 1) fit();
+    var err = $('[data-video-error]', pl);
+    video.addEventListener('error', function () { err.hidden = false; pl.classList.add('has-error'); });
+    video.addEventListener('loadstart', function () { err.hidden = true; pl.classList.remove('has-error'); });
+    video.addEventListener('play', function () { pl.classList.add('is-playing'); });
+    video.addEventListener('pause', function () { pl.classList.remove('is-playing'); });
+    // Several videos: one player, a list to switch between them.
+    $$('[data-video-src]', pl).forEach(function (b) {
+      b.addEventListener('click', function () {
+        $$('[data-video-src]', pl).forEach(function (x) { x.classList.toggle('is-active', x === b); x.setAttribute('aria-pressed', x === b); });
+        video.pause(); video.src = b.getAttribute('data-video-src'); video.setAttribute('aria-label', b.getAttribute('data-video-name'));
+        var title = $('[data-video-title]', pl); title.lastChild.textContent = ' ' + b.getAttribute('data-video-name');
+        $('[data-video-download]', pl).href = b.getAttribute('data-video-dl'); $('[data-video-error-dl]', pl).href = b.getAttribute('data-video-dl');
+        video.load(); video.play().catch(function () { });
+      });
+    });
+  });
+
   // ---------- Authoring wizard ----------
   // Sections that only apply to one answer of a yes/no question.
   $$('[data-show-when]').forEach(function (el) {

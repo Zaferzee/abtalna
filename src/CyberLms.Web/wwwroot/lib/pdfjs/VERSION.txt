@@ -1,0 +1,1 @@
+PDF.js 5.7.284 (legacy build: polyfilled for older browsers), from the pdfjs-dist npm package. License: LICENSE (Apache-2.0); wasm/ decoders: see their LICENSE files.
