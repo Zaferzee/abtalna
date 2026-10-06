@@ -212,6 +212,109 @@
     });
   });
 
+  // ---------- Authoring wizard ----------
+  // Sections that only apply to one answer of a yes/no question.
+  $$('[data-show-when]').forEach(function (el) {
+    var radio = doc.getElementById(el.getAttribute('data-show-when'));
+    if (!radio) return;
+    var sync = function () { el.hidden = !radio.checked; };
+    $$('input[name="' + radio.name + '"]').forEach(function (r) { r.addEventListener('change', sync); });
+    sync();
+  });
+  // Live mirror of a text field (e.g. the acknowledgment statement as the employee will see it).
+  $$('[data-mirror]').forEach(function (inp) {
+    var key = inp.getAttribute('data-mirror');
+    var sync = function () { $$('[data-mirror-target="' + key + '"]').forEach(function (t) { t.textContent = inp.value; }); };
+    inp.addEventListener('input', sync); sync();
+  });
+  $$('[data-fill]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var inp = doc.getElementById(b.getAttribute('data-fill')); if (!inp) return;
+      inp.value = b.getAttribute('data-value'); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.focus();
+    });
+  });
+  $$('[data-counter]').forEach(function (inp) {
+    var out = $('[data-counter-for="' + inp.id + '"]'); if (!out) return;
+    var sync = function () { out.textContent = inp.value.length + ' / ' + inp.maxLength; };
+    inp.addEventListener('input', sync); sync();
+  });
+  // Drop zone: show the chosen files before upload.
+  $$('[data-dropzone]').forEach(function (z) {
+    var inp = $('input[type=file]', z), list = $('[data-dz-list]', z);
+    ['dragenter', 'dragover'].forEach(function (ev) { z.addEventListener(ev, function () { z.classList.add('is-over'); }); });
+    ['dragleave', 'drop'].forEach(function (ev) { z.addEventListener(ev, function () { z.classList.remove('is-over'); }); });
+    inp.addEventListener('change', function () {
+      list.innerHTML = '';
+      Array.prototype.forEach.call(inp.files, function (f) { var s = doc.createElement('span'); s.textContent = '• ' + f.name; s.dir = 'auto'; list.appendChild(s); });
+    });
+  });
+  // Removing an existing assessment asks first.
+  var asmNo = $('[data-confirm-change]');
+  if (asmNo && asmNo.getAttribute('data-confirm-change')) {
+    var asmForm = asmNo.form;
+    var syncAsm = function () { if (asmNo.checked) asmForm.setAttribute('data-confirm', asmNo.getAttribute('data-confirm-change')); else asmForm.removeAttribute('data-confirm'); };
+    $$('input[name="' + asmNo.name + '"]').forEach(function (r) { r.addEventListener('change', syncAsm); });
+    syncAsm();
+  }
+  // Question editor: type switch, options, fast keyboard entry.
+  var qe = $('[data-qeditor]');
+  if (qe) {
+    var wrap = qe.closest('[data-q-editor-wrap]');
+    var typeVal = function () { var r = $('input[name="Question.Type"]:checked', qe); return r ? r.value : '1'; };
+    var applyType = function () {
+      var t = typeVal();
+      $$('[data-when-type]', qe).forEach(function (sec) { sec.hidden = sec.getAttribute('data-when-type').split(',').indexOf(t) < 0; });
+      var multi = t === '3';
+      $$('.opt-correct', qe).forEach(function (i) { if (i.type !== (multi ? 'checkbox' : 'radio')) { var was = i.checked; i.type = multi ? 'checkbox' : 'radio'; i.checked = was; } });
+      if (!multi) { var first = true; $$('.opt-correct', qe).forEach(function (i) { if (i.checked) { if (!first) i.checked = false; first = false; } }); }
+      $('[data-hint-single]', qe).hidden = multi; $('[data-hint-multi]', qe).hidden = !multi;
+    };
+    $$('input[name="Question.Type"]', qe).forEach(function (r) { r.addEventListener('change', applyType); });
+    applyType();
+    var addOption = function () {
+      var hidden = $$('[data-opt-row][hidden]', qe)[0];
+      if (!hidden) return null;
+      hidden.hidden = false;
+      if (!$$('[data-opt-row][hidden]', qe).length) $('[data-add-option]', qe).hidden = true;
+      return $('input.form-control', hidden);
+    };
+    $('[data-add-option]', qe).addEventListener('click', function () { var i = addOption(); if (i) i.focus(); });
+    if (!$$('[data-opt-row][hidden]', qe).length) $('[data-add-option]', qe).hidden = true;
+    // Enter in an option moves to the next one (and opens a new row when needed) instead of submitting.
+    qe.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' || !e.target.matches('[data-opt-row] input.form-control')) return;
+      e.preventDefault();
+      var rows = $$('[data-opt-row]:not([hidden])', qe), idx = rows.indexOf(e.target.closest('[data-opt-row]'));
+      var nxt = rows[idx + 1] ? $('input.form-control', rows[idx + 1]) : addOption();
+      if (nxt) nxt.focus();
+    });
+    var editingId = $('input[name="Question.Id"]', qe);
+    var openEditor = function (focus) {
+      wrap.hidden = false;
+      wrap.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      if (focus) { var ta = $('[data-autofocus]', qe); if (ta) setTimeout(function () { ta.focus({ preventScroll: true }); }, reduce ? 0 : 350); }
+    };
+    $$('[data-open-editor]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        if (editingId && +editingId.value > 0) return; // editing another question: load a fresh form
+        e.preventDefault(); openEditor(true);
+      });
+    });
+    $$('[data-close-editor]', qe).forEach(function (b) {
+      b.addEventListener('click', function (e) { if (editingId && +editingId.value > 0) return; e.preventDefault(); wrap.hidden = true; });
+    });
+    if (!wrap.hidden) openEditor(true);
+  }
+  // Warn before leaving a wizard step with unsaved changes.
+  $$('form[data-dirty-guard]').forEach(function (f) {
+    var dirty = false, submitting = false;
+    f.addEventListener('input', function () { dirty = true; });
+    f.addEventListener('change', function () { dirty = true; });
+    // The step bar and navigation buttons save through this form (form="id").
+    doc.addEventListener('submit', function () { submitting = true; }, true);
+    window.addEventListener('beforeunload', function (e) { if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; } });
+  });
+
   // ---------- Branding: live preview of unsaved changes ----------
   var form = $('[data-brand-form]'), pv = $('[data-preview]');
   if (form && pv) {

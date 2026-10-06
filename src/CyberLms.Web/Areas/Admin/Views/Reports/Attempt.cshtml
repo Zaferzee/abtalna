@@ -1,15 +1,32 @@
 @model AttemptDetailVm
-@{ ViewData["Title"] = L["Attempt details"]; var a = Model.Attempt; var n = 0; }
+@{ ViewData["Title"] = L["Attempt details"]; var a = Model.Attempt; var n = 0; var pass = a.Passed == true; }
 <nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Attempts">@L["Attempts and scores"]</a></li><li class="breadcrumb-item active" aria-current="page">@L["Attempt details"]</li></ol></nav>
-<h1 class="h4 bidi">@a.Assessment.Title</h1>
-<p><span class="bidi">@a.User.DisplayName</span> (<bdi dir="ltr">@a.User.Username</bdi>) &middot; @Time.Html(a.StartedAt) &rarr; @Time.Html(a.CompletedAt) &middot; <strong>@a.Percentage.ToString("0.#")%</strong>
-    <span class="badge text-bg-@(a.Passed == true ? "success" : "danger")">@L[a.Passed == true ? "Passed" : "Failed"]</span>
-    &middot; @L["Passing score"]: @a.PassingPercentageSnapshot% &middot; @L["Correct answers"]: @a.CorrectAnswers / @a.TotalQuestions</p>
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-clipboard-data"></i> @L["Attempt details"]</div>
+        <h1 class="bidi">@a.Assessment.Title</h1>
+        <div class="user-cell mt-2"><span class="avatar avatar-sm">@(a.User.DisplayName.Trim().Length > 0 ? a.User.DisplayName.Trim()[0] : '?')</span><div><strong class="bidi">@a.User.DisplayName</strong><small dir="ltr">@a.User.Username</small></div></div>
+    </div>
+    <span style="--ring-color:var(--color-@(pass ? "success" : "danger"))">@Ui.Ring((double)a.Percentage, L[pass ? "Passed" : "Failed"], size: 110, stroke: 11, mark: a.PassingPercentageSnapshot)</span>
+</div>
+<div class="result-stats mb-4" style="max-width:none">
+    <div><strong>@Ui.Num(a.CorrectAnswers) <small class="text-muted fs-6 fw-normal">@L.Format("of {0}", a.TotalQuestions)</small></strong><span>@L["Correct answers"]</span></div>
+    <div><strong>@Ui.Pct(a.PassingPercentageSnapshot)</strong><span>@L["Passing score"]</span></div>
+    <div><strong class="fs-6 d-block pt-2">@Time.Html(a.StartedAt)</strong><span>@L["Started"]</span></div>
+    <div><strong class="fs-6 d-block pt-2">@Time.Html(a.CompletedAt)</strong><span>@L["Assessment date"]</span></div>
+</div>
+<div class="review">
 @foreach (var q in Model.Questions)
 {
     n++; var ans = Model.Answers[q.Id];
-    <div class="card question-card mb-2"><div class="card-body">
-        <div class="d-flex justify-content-between gap-2"><div class="fw-semibold bidi">@n. @q.Text</div><span class="badge text-bg-@(ans.IsCorrect ? "success" : "danger") align-self-start">@L[ans.IsCorrect ? "Correct" : "Incorrect"] (@ans.PointsAwarded/@q.Points)</span></div>
-        <ul class="list-unstyled mb-0 mt-2">@foreach (var o in q.Options.OrderBy(o => o.SortOrder)) { var sel = ans.SelectedOptionIds.Contains(o.Id); <li class="bidi"><i class="bi bi-@(sel ? "check-square-fill" : "square")"></i> @(q.Type == QuestionType.TrueFalse ? L[o.Text] : o.Text) @if (o.IsCorrect) { <span class="badge text-bg-success">@L["Correct answer"]</span> }</li> }</ul>
-    </div></div>
+    <details open>
+        <summary>
+            <span class="icon-chip @(ans.IsCorrect ? "success" : "danger")"><i class="bi @(ans.IsCorrect ? "bi-check-lg" : "bi-x-lg")"></i></span>
+            <span class="bidi flex-grow-1"><small class="text-muted d-block fw-normal">@L.Format("Question {0} of {1}", n, Model.Questions.Count)</small>@q.Text</span>
+            <span class="badge text-bg-@(ans.IsCorrect ? "success" : "danger")">@L[ans.IsCorrect ? "Correct" : "Incorrect"] (<bdi dir="ltr">@ans.PointsAwarded/@q.Points</bdi>)</span>
+            <i class="bi bi-chevron-down"></i>
+        </summary>
+        <div class="rv-body"><ul class="list-unstyled mb-0">@foreach (var o in q.Options.OrderBy(o => o.SortOrder)) { var sel = ans.SelectedOptionIds.Contains(o.Id); <li class="bidi mb-1"><i class="bi bi-@(sel ? "check-square-fill text-primary" : "square")"></i> @(q.Type == QuestionType.TrueFalse ? L[o.Text] : o.Text) @if (o.IsCorrect) { <span class="badge text-bg-success">@L["Correct answer"]</span> }</li> }</ul></div>
+    </details>
 }
+</div>

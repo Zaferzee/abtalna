@@ -1,27 +1,50 @@
 @model QuestionsVm
-@{ ViewData["Title"] = L["Questions"]; var a = Model.Assessment; var n = 0; }
+@{ ViewData["Title"] = L["Questions"]; var a = Model.Assessment; var n = 0; var keys = L.IsRtl ? new[] { "أ", "ب", "ج", "د", "هـ", "و", "ز", "ح" } : new[] { "A", "B", "C", "D", "E", "F", "G", "H" }; }
 <nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">@L["Assessments"]</a></li><li class="breadcrumb-item active bidi" aria-current="page">@a.Title</li></ol></nav>
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <div><h1 class="h4 mb-0 bidi">@a.Title</h1>
-        <small class="text-muted">@L["Passing percentage"]: @a.PassingPercentage% &middot; @(a.MaxAttempts == 0 ? L["Unlimited attempts"] : L.Format("{0} attempt(s)", a.MaxAttempts)) &middot; <span class="badge text-bg-@(a.IsPublished ? "success" : "secondary")">@L[a.IsPublished ? "Published" : "Draft"]</span></small></div>
+<div class="page-head reveal">
     <div>
+        <div class="eyebrow"><i class="bi bi-list-ol"></i> @L["Questions"]</div>
+        <h1 class="bidi">@a.Title</h1>
+        <div class="cluster mt-2">
+            <span class="chip"><i class="bi bi-bullseye"></i> @L["Passing percentage"]: @Ui.Pct(a.PassingPercentage)</span>
+            <span class="chip"><i class="bi bi-arrow-repeat"></i> @(a.MaxAttempts == 0 ? L["Unlimited attempts"] : L.Format("{0} attempt(s)", a.MaxAttempts))</span>
+            <span class="badge badge-dot text-bg-@(a.IsPublished ? "success" : "secondary")">@L[a.IsPublished ? "Published" : "Draft"]</span>
+        </div>
+    </div>
+    <div class="page-actions cluster">
+        @if (a.ContentId != null) { <a class="btn btn-ghost" asp-controller="Authoring" asp-action="Assessment" asp-route-id="@a.ContentId"><i class="bi bi-magic"></i> @L["Open in the content wizard"]</a> }
         @if (Model.Attempts == 0) { <a class="btn btn-primary" asp-action="AddQuestion" asp-route-id="@a.Id"><i class="bi bi-plus-lg"></i> @L["Add question"]</a> }
-        <form method="post" asp-action="SetStatus" asp-route-id="@a.Id" asp-route-publish="@(!a.IsPublished)" class="d-inline"><button class="btn btn-@(a.IsPublished ? "warning" : "success")">@L[a.IsPublished ? "Unpublish" : "Publish"]</button></form>
+        <form method="post" asp-action="SetStatus" asp-route-id="@a.Id" asp-route-publish="@(!a.IsPublished)" class="d-inline"><button class="btn btn-@(a.IsPublished ? "outline-warning" : "success")">@L[a.IsPublished ? "Unpublish" : "Publish"]</button></form>
     </div>
 </div>
-@if (Model.Attempts > 0) { <div class="alert alert-info">@L["This assessment has attempts, so questions are locked to protect historical results. Use Duplicate on the assessments list to create an editable copy."]</div> }
-@if (Model.Questions.Count == 0) { <div class="alert alert-light border">@L["No questions yet."]</div> }
-@foreach (var q in Model.Questions)
+@if (Model.Attempts > 0) { <div class="alert alert-warning"><i class="bi bi-lock-fill"></i><span>@L["This assessment has attempts, so questions are locked to protect historical results. Use Duplicate on the assessments list to create an editable copy."]</span></div> }
+<section class="panel reveal" style="--i:1">
+@if (Model.Questions.Count == 0)
 {
-    n++;
-    <div class="card question-card mb-2"><div class="card-body">
-        <div class="d-flex justify-content-between gap-2"><div class="fw-semibold bidi">@n. @q.Text</div>
-            <div class="text-nowrap"><span class="badge text-bg-light">@L[Labels.QuestionType(q.Type)]</span> <span class="badge text-bg-light">@L.Format("{0} point(s)", q.Points)</span>
+    <div class="empty py-4"><div class="empty-icon"><i class="bi bi-patch-question"></i></div><h3>@L["No questions yet."]</h3></div>
+}
+else
+{
+    <ol class="q-list pt-3">
+    @foreach (var q in Model.Questions)
+    {
+        n++; var k = 0;
+        <li class="q-item">
+            <span class="q-num">@n</span>
+            <div class="q-main">
+                <div class="q-meta"><span class="chip chip-primary">@L[Labels.QuestionType(q.Type)]</span><span class="chip"><i class="bi bi-star"></i> @L.Format("{0} point(s)", q.Points)</span></div>
+                <p class="q-text bidi">@q.Text</p>
+                <ul class="q-opts">@foreach (var o in q.Options.OrderBy(o => o.SortOrder)) { <li class="@(o.IsCorrect ? "ok" : "")"><span class="q-key">@(q.Type == QuestionType.TrueFalse ? "" : keys[k++ % keys.Length])</span><span class="bidi">@(q.Type == QuestionType.TrueFalse ? L[o.Text] : o.Text)</span>@if (o.IsCorrect) { <i class="bi bi-check-circle-fill"></i><span class="visually-hidden">(@L["Correct"])</span> }</li> }</ul>
+            </div>
             @if (Model.Attempts == 0)
             {
-                <a class="btn btn-sm btn-outline-primary" asp-action="EditQuestion" asp-route-id="@q.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
-                <form method="post" asp-action="DeleteQuestion" asp-route-id="@q.Id" class="d-inline" data-confirm="@L["Delete this question?"]"><button class="btn btn-sm btn-outline-danger" title="@L["Delete"]" aria-label="@L["Delete"]"><i class="bi bi-trash"></i></button></form>
-            }</div></div>
-        <ul class="list-unstyled mb-0 mt-2">@foreach (var o in q.Options.OrderBy(o => o.SortOrder)) { <li class="bidi">@(o.IsCorrect ? Html.Raw("<i class=\"bi bi-check-circle-fill text-success\"></i>") : Html.Raw("<i class=\"bi bi-circle text-muted\"></i>")) @(q.Type == QuestionType.TrueFalse ? L[o.Text] : o.Text) @if (o.IsCorrect) { <span class="visually-hidden">(@L["Correct"])</span> }</li> }</ul>
-    </div></div>
+                <div class="q-actions">
+                    <a class="btn btn-sm btn-ghost btn-icon" asp-action="EditQuestion" asp-route-id="@q.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
+                    <form method="post" asp-action="DeleteQuestion" asp-route-id="@q.Id" class="d-inline" data-confirm="@L["Delete this question?"]"><button class="btn btn-sm btn-ghost btn-icon text-danger" title="@L["Delete"]" aria-label="@L["Delete"]"><i class="bi bi-trash3"></i></button></form>
+                </div>
+            }
+        </li>
+    }
+    </ol>
 }
+</section>

@@ -1,26 +1,34 @@
 @model List<AssessmentRowVm>
-@{ ViewData["Title"] = L["Assessments"]; }
-<div class="d-flex justify-content-between align-items-center mb-3"><h1 class="h4 mb-0">@L["Assessments"]</h1><a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> @L["New assessment"]</a></div>
-<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+@{ ViewData["Title"] = L["Assessments"]; var i = 0; }
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-patch-question"></i> @L["Manage"]</div>
+        <h1>@L["Assessments"]</h1>
+        <p class="lead">@L["Assessments linked to content are easiest to manage from the content wizard; standalone assessments are managed here."]</p>
+    </div>
+    <div class="page-actions"><a class="btn btn-primary btn-lg" asp-action="Create"><i class="bi bi-plus-lg"></i> @L["New assessment"]</a></div>
+</div>
+<div class="card table-card reveal" style="--i:1"><div class="table-responsive"><table class="table table-hover mb-0">
 <thead><tr><th>@L["Title"]</th><th>@L["Linked content"]</th><th>@L["Questions"]</th><th>@L["Passing percentage"]</th><th>@L["Attempts allowed"]</th><th>@L["Completed attempts"]</th><th>@L["Status"]</th><th><span class="visually-hidden">@L["Actions"]</span></th></tr></thead><tbody>
 @foreach (var r in Model)
 {
     var a = r.A;
-    <tr>
-        <td class="bidi"><a asp-action="Questions" asp-route-id="@a.Id">@a.Title</a></td>
-        <td class="bidi">@(r.ContentTitle ?? "-")</td><td>@r.Questions</td><td>@a.PassingPercentage%</td>
+    <tr class="reveal" style="--i:@(Math.Min(i++, 10))">
+        <td><div class="t-title"><span class="icon-chip accent"><i class="bi bi-ui-checks"></i></span><a class="t-name bidi" asp-action="Questions" asp-route-id="@a.Id">@a.Title</a></div></td>
+        <td class="bidi">@if (r.ContentTitle != null) { <a class="text-decoration-none" asp-controller="Authoring" asp-action="Assessment" asp-route-id="@a.ContentId"><i class="bi bi-journal-text"></i> @r.ContentTitle</a> } else { <span class="text-muted">-</span> }</td>
+        <td>@r.Questions</td><td>@Ui.Pct(a.PassingPercentage)</td>
         <td>@(a.MaxAttempts == 0 ? L["Unlimited"] : a.MaxAttempts.ToString())</td>
         <td><a asp-controller="Reports" asp-action="Attempts" asp-route-assessmentId="@a.Id">@r.Attempts</a></td>
-        <td><span class="badge text-bg-@(a.IsPublished ? "success" : "secondary")">@L[a.IsPublished ? "Published" : "Draft"]</span></td>
-        <td class="text-nowrap text-end">
-            <a class="btn btn-sm btn-outline-secondary" asp-action="Questions" asp-route-id="@a.Id">@L["Questions"]</a>
-            <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@a.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
-            <form method="post" asp-action="SetStatus" asp-route-id="@a.Id" asp-route-publish="@(!a.IsPublished)" class="d-inline"><button class="btn btn-sm btn-outline-@(a.IsPublished ? "warning" : "success")">@L[a.IsPublished ? "Unpublish" : "Publish"]</button></form>
-            @if (a.IsPublished) { <form method="post" asp-action="Notify" asp-route-id="@a.Id" class="d-inline" data-confirm="@L["Email everyone who has not completed this assessment?"]"><button class="btn btn-sm btn-outline-secondary" title="@L["Email employees"]" aria-label="@L["Email employees"]"><i class="bi bi-envelope"></i></button></form> }
-            <form method="post" asp-action="Duplicate" asp-route-id="@a.Id" class="d-inline"><button class="btn btn-sm btn-outline-secondary" title="@L["Duplicate"]" aria-label="@L["Duplicate"]"><i class="bi bi-files"></i></button></form>
-            @if (r.Attempts == 0) { <form method="post" asp-action="Delete" asp-route-id="@a.Id" class="d-inline" data-confirm="@L["Delete this assessment and its questions?"]"><button class="btn btn-sm btn-outline-danger" title="@L["Delete"]" aria-label="@L["Delete"]"><i class="bi bi-trash"></i></button></form> }
-        </td>
+        <td><span class="badge badge-dot text-bg-@(a.IsPublished ? "success" : "secondary")">@L[a.IsPublished ? "Published" : "Draft"]</span></td>
+        <td><div class="row-actions">
+            <a class="btn btn-sm btn-ghost" asp-action="Questions" asp-route-id="@a.Id"><i class="bi bi-list-ol"></i> @L["Questions"]</a>
+            <a class="btn btn-sm btn-ghost btn-icon" asp-action="Edit" asp-route-id="@a.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
+            <form method="post" asp-action="SetStatus" asp-route-id="@a.Id" asp-route-publish="@(!a.IsPublished)" class="d-inline"><button class="btn btn-sm btn-soft-@(a.IsPublished ? "warning" : "success")">@L[a.IsPublished ? "Unpublish" : "Publish"]</button></form>
+            @if (a.IsPublished) { <form method="post" asp-action="Notify" asp-route-id="@a.Id" class="d-inline" data-confirm="@L["Email everyone who has not completed this assessment?"]"><button class="btn btn-sm btn-ghost btn-icon" title="@L["Email employees"]" aria-label="@L["Email employees"]"><i class="bi bi-envelope"></i></button></form> }
+            <form method="post" asp-action="Duplicate" asp-route-id="@a.Id" class="d-inline"><button class="btn btn-sm btn-ghost btn-icon" title="@L["Duplicate"]" aria-label="@L["Duplicate"]"><i class="bi bi-copy"></i></button></form>
+            @if (r.Attempts == 0) { <form method="post" asp-action="Delete" asp-route-id="@a.Id" class="d-inline" data-confirm="@L["Delete this assessment and its questions?"]"><button class="btn btn-sm btn-ghost btn-icon text-danger" title="@L["Delete"]" aria-label="@L["Delete"]"><i class="bi bi-trash3"></i></button></form> }
+        </div></td>
     </tr>
 }
-@if (Model.Count == 0) { <tr><td colspan="8" class="text-muted text-center py-4">@L["No assessments yet."]</td></tr> }
+@if (Model.Count == 0) { <tr><td colspan="8"><div class="empty"><div class="empty-icon"><i class="bi bi-patch-question"></i></div><h3>@L["No assessments yet."]</h3></div></td></tr> }
 </tbody></table></div></div>

@@ -46,6 +46,7 @@ builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 builder.Services.AddScoped<Localizer>();
 builder.Services.AddSingleton<IPostConfigureOptions<MvcOptions>, LocalizedMvcSetup>();
 builder.Services.AddScoped<AuditService>();
+builder.Services.AddScoped<ContentAuthoring>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddScoped<AuthService>();

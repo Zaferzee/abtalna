@@ -1,0 +1,66 @@
+@model WriteStepVm
+@{ ViewData["Title"] = Model.Content!.Title; var c = Model.Content!; }
+@section Head { <partial name="_EditorHead" /> }
+@section PreScripts { <script src="~/lib/quill/quill.js"></script> }
+<partial name="_Shell" model="Model" />
+<form method="post" asp-action="Write" asp-route-id="@c.Id" id="author-form" enctype="multipart/form-data" class="wz-body reveal" style="--i:2" novalidate
+      data-upload-url="@Url.Action("UploadImage", "Content")" data-dirty-guard>
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+    <div class="write-layout">
+        <section class="panel">
+            <div class="panel-head"><h2><i class="bi bi-pencil-square"></i> @L["Write the content"]</h2><span class="small text-muted">@L.Format("Step {0} of {1}", 2, 6)</span></div>
+            <div class="panel-body">
+                <input type="hidden" asp-for="Body" />
+                <partial name="_EditorField" model="@("Body")" />
+                <div class="editor-tips">
+                    <span><i class="bi bi-type-h2"></i> @L["Headings structure the document and build the employee's table of contents."]</span>
+                    <span><i class="bi bi-table"></i> @L["Tables: use the table button, then add rows and columns."]</span>
+                    <span><i class="bi bi-clipboard-check"></i> @L["Paste from Word keeps headings, lists and tables; fonts, colours and unsafe code are removed."]</span>
+                </div>
+            </div>
+        </section>
+
+        <aside class="stack" style="--gap:1.2rem">
+            <section class="panel">
+                <div class="panel-head"><h2><i class="bi bi-paperclip"></i> @L["Attachments"]</h2><span class="chip">@c.Attachments.Count</span></div>
+                <div class="panel-body stack" style="--gap:.9rem">
+                    @if (c.Attachments.Count > 0)
+                    {
+                        <ul class="att-list">
+                        @foreach (var a in c.Attachments.OrderBy(a => a.Id))
+                        {
+                            <li>
+                                <span class="icon-chip"><i class="bi @Ui.AttachmentIcon(a)"></i></span>
+                                <span class="min-w-0 flex-grow-1"><a class="att-name bidi" href="@Url.Action("Attachment", "Files", new { area = "", id = a.Id })" target="_blank">@a.FileName</a><small><bdi dir="ltr">@Labels.Size(a.SizeBytes)</bdi></small></span>
+                                <button class="btn btn-ghost btn-icon btn-sm text-danger" form="rm-@a.Id" title="@L["Remove"]" aria-label="@L["Remove"]"><i class="bi bi-trash3"></i></button>
+                            </li>
+                        }
+                        </ul>
+                    }
+                    <label class="dropzone" data-dropzone>
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <strong>@L["Add files"]</strong>
+                        <small>@L["PDF, Word, Excel, PowerPoint, images, MP4/WebM video"]</small>
+                        <input type="file" name="files" multiple accept="@StorageService.AcceptList" data-native />
+                        <span class="dz-files" data-dz-list></span>
+                    </label>
+                    <button class="btn btn-outline-primary" name="go" value="stay"><i class="bi bi-upload"></i> @L["Upload now"]</button>
+                </div>
+            </section>
+            <section class="panel">
+                <div class="panel-head"><h2><i class="bi bi-link-45deg"></i> @L["Link"]</h2></div>
+                <div class="panel-body">
+                    <label class="form-label" asp-for="ExternalUrl">@L["Intranet page, shared document or video link"]</label>
+                    <input class="form-control" dir="ltr" asp-for="ExternalUrl" placeholder="https://intranet/..." />
+                    <span asp-validation-for="ExternalUrl" class="field-validation-error"></span>
+                    <div class="form-text">@L["Use an http(s) address (e.g. the intranet, SharePoint or the internal video portal) or a path starting with '/'."]</div>
+                </div>
+            </section>
+        </aside>
+    </div>
+</form>
+@foreach (var a in c.Attachments)
+{
+    <form id="rm-@a.Id" method="post" asp-action="RemoveAttachment" asp-route-id="@c.Id" asp-route-attachmentId="@a.Id" data-confirm="@L["Remove this file?"]"></form>
+}
+<partial name="_Nav" model="Model" />

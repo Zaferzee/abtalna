@@ -1,6 +1,6 @@
 namespace CyberLms.Web.Domain;
 
-public enum ContentType { Policy = 1, Control = 2, Awareness = 3, Training = 4, Procedure = 5, General = 6 }
+public enum ContentType { Policy = 1, Control = 2, Awareness = 3, Training = 4, Procedure = 5, General = 6, Regulation = 7, Instructions = 8 }
 public enum ContentStatus { Draft = 0, Published = 1 }
 public enum AttachmentKind { Image = 1, Video = 2, Document = 3 }
 public enum QuestionType { SingleChoice = 1, TrueFalse = 2, MultipleChoice = 3 }
@@ -60,6 +60,8 @@ public class Content
     public ContentType Type { get; set; } = ContentType.General;
     public ContentStatus Status { get; set; } = ContentStatus.Draft;
     public bool RequiresAcknowledgment { get; set; }
+    /// <summary>Statement the employee confirms when acknowledging. Null = the default statement.</summary>
+    public string? AcknowledgmentText { get; set; }
     /// <summary>Reserved for future re-acknowledgment; acknowledgments record the version they were given for.</summary>
     public int Version { get; set; } = 1;
     public string? ExternalUrl { get; set; }

@@ -15,20 +15,7 @@ public class AssessmentsController(AppDbContext db) : AppController
     {
         var uid = User.UserId();
         var list = await db.Assessments.AsNoTracking().Where(a => a.IsPublished && a.Questions.Any()).OrderBy(a => a.Title).ToListAsync();
-        var attempts = await db.AssessmentAttempts.AsNoTracking().Where(a => a.UserId == uid).ToListAsync();
-        var counts = await db.Questions.GroupBy(q => q.AssessmentId).Select(g => new { g.Key, N = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.N);
-        var items = list.Select(a =>
-        {
-            var mine = attempts.Where(t => t.AssessmentId == a.Id).ToList();
-            var done = mine.Where(t => t.Status == AttemptStatus.Completed).ToList();
-            var inProg = mine.Any(t => t.Status == AttemptStatus.InProgress);
-            return new AssessmentListItem
-            {
-                Assessment = a, QuestionCount = counts.GetValueOrDefault(a.Id), CompletedAttempts = done.Count, HasInProgress = inProg,
-                Best = done.OrderByDescending(t => t.Percentage).FirstOrDefault(),
-                CanStart = inProg || a.MaxAttempts == 0 || done.Count < a.MaxAttempts,
-            };
-        }).ToList();
+        var items = await AssessmentQueries.ForUser(db, uid, list);
         return View(items);
     }
 

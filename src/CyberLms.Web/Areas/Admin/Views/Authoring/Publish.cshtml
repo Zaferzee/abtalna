@@ -1,0 +1,81 @@
+@model PublishStepVm
+@{
+    ViewData["Title"] = Model.Content!.Title;
+    var c = Model.Content!;
+    var a = Model.Assessment;
+    var published = c.Status == ContentStatus.Published;
+    var asmPublished = a?.IsPublished == true;
+}
+<partial name="_Shell" model="Model" />
+<div class="wz-body reveal" style="--i:2">
+    @if (published)
+    {
+        <section class="publish-done">
+            <span class="pd-icon"><i class="bi bi-check-lg"></i></span>
+            <div>
+                <h2>@L["Published"]</h2>
+                <p>@L["Employees can see this material now."] @if (c.PublishedAt != null) { <span class="text-muted">@L["Published on"] @Time.Html(c.PublishedAt)</span> }</p>
+                <div class="cluster mt-2">
+                    <a class="btn btn-primary" asp-area="" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id" target="_blank"><i class="bi bi-eye"></i> @L["View as employee"]</a>
+                    <form method="post" asp-controller="Content" asp-action="Notify" asp-route-id="@c.Id" class="m-0" data-confirm="@L["Send an email to all employees (only those who still need to acknowledge, if acknowledgment is required)?"]"><button class="btn btn-outline-primary"><i class="bi bi-envelope"></i> @L["Email employees"]</button></form>
+                    @if (c.RequiresAcknowledgment) { <a class="btn btn-ghost" asp-controller="Reports" asp-action="Acknowledgments" asp-route-contentId="@c.Id"><i class="bi bi-bar-chart-line"></i> @L["Acknowledgment report"]</a> }
+                    @if (a != null) { <a class="btn btn-ghost" asp-controller="Reports" asp-action="Assessments" asp-route-assessmentId="@a.Id"><i class="bi bi-clipboard-data"></i> @L["Assessment report"]</a> }
+                </div>
+            </div>
+        </section>
+    }
+
+    <section class="panel">
+        <div class="panel-head"><h2><i class="bi bi-clipboard-check"></i> @L["Summary"]</h2><span class="small text-muted">@L.Format("Step {0} of {1}", 6, 6)</span></div>
+        <div class="panel-body">
+            <dl class="summary-grid">
+                <div class="sg-item sg-wide"><dt><i class="bi bi-journal-richtext"></i> @L["Content"]</dt><dd class="bidi">@c.Title</dd><dd class="small text-muted">@L[Labels.Type(c.Type)] · @(Model.HasBody ? L["Text written"] : L["No text"]) · @L.Format("{0} attachment(s)", Model.Attachments)</dd><a class="sg-edit" asp-action="Write" asp-route-id="@c.Id">@L["Edit"]</a></div>
+                <div class="sg-item"><dt><i class="bi bi-pen"></i> @L["Acknowledgment"]</dt><dd>@if (c.RequiresAcknowledgment) { <span class="badge text-bg-warning badge-dot">@L["Required"]</span> } else { <span class="badge text-bg-secondary">@L["Not required"]</span> }</dd>
+                    @if (c.RequiresAcknowledgment) { <dd class="small text-muted bidi">«@Model.AckText»</dd> }<a class="sg-edit" asp-action="Acknowledgment" asp-route-id="@c.Id">@L["Edit"]</a></div>
+                <div class="sg-item"><dt><i class="bi bi-ui-checks"></i> @L["Assessment"]</dt><dd class="bidi">@(a?.Title ?? L["No assessment"])</dd>@if (a != null) { <dd class="small text-muted">@L[asmPublished ? "Published" : "Will be published with the content"]</dd> }<a class="sg-edit" asp-action="Assessment" asp-route-id="@c.Id">@L["Edit"]</a></div>
+                @if (a != null)
+                {
+                    <div class="sg-item sg-num"><dt>@L["Number of questions"]</dt><dd>@Ui.Num(Model.QuestionCount)</dd></div>
+                    <div class="sg-item sg-num"><dt>@L["Passing score"]</dt><dd>@Ui.Pct(a.PassingPercentage)</dd></div>
+                    <div class="sg-item sg-num"><dt>@L["Attempts"]</dt><dd>@if (a.MaxAttempts == 0) { @L["Unlimited"] } else { @Ui.Num(a.MaxAttempts) }</dd></div>
+                    <div class="sg-item sg-num"><dt>@L["Total points"]</dt><dd>@Ui.Num(a.Questions.Sum(q => q.Points))</dd></div>
+                }
+                <div class="sg-item sg-num"><dt>@L["Status"]</dt><dd><span class="badge badge-dot text-bg-@(published ? "success" : "secondary")">@L[Labels.ContentStatus(c.Status)]</span></dd></div>
+                @if (published)
+                {
+                    <div class="sg-item sg-num"><dt>@L["Acknowledged"]</dt><dd>@Ui.Num(Model.Acknowledged)</dd></div>
+                    @if (a != null) { <div class="sg-item sg-num"><dt>@L["Completed attempts"]</dt><dd>@Ui.Num(Model.Attempts)</dd></div> }
+                }
+            </dl>
+
+            @if (Model.Blockers.Count > 0 || Model.Warnings.Count > 0)
+            {
+                <ul class="checklist mt-3">
+                    @foreach (var b in Model.Blockers) { <li class="bad"><i class="bi bi-x-octagon-fill"></i><span>@b</span></li> }
+                    @foreach (var w in Model.Warnings) { <li class="warn"><i class="bi bi-exclamation-triangle-fill"></i><span>@w</span></li> }
+                </ul>
+            }
+            else if (!published)
+            {
+                <ul class="checklist mt-3"><li class="ok"><i class="bi bi-check-circle-fill"></i><span>@L["Everything is ready to publish."]</span></li></ul>
+            }
+        </div>
+    </section>
+
+    <form method="post" asp-action="Publish" asp-route-id="@c.Id" class="publish-actions">
+        @if (!published)
+        {
+            <button class="btn btn-outline-secondary btn-lg" name="go" value="draft"><i class="bi bi-save"></i> @L["Save as draft"]</button>
+            <button class="btn btn-success btn-lg" name="go" value="publish" disabled="@(Model.Blockers.Count > 0)" data-confirm-click="@L[a != null ? "Publish the content and its assessment now? Employees will see them immediately." : "Publish the content now? Employees will see it immediately."]"><i class="bi bi-rocket-takeoff"></i> @L["Publish now"]</button>
+        }
+        else
+        {
+            @if (a != null && !asmPublished && Model.Blockers.Count == 0) { <button class="btn btn-success btn-lg" name="go" value="publish"><i class="bi bi-rocket-takeoff"></i> @L["Publish the assessment too"]</button> }
+            <button class="btn btn-outline-danger" name="go" value="unpublish" data-confirm-click="@L["Unpublish this material (and its assessment)? Employees will no longer see it. Acknowledgments and results are kept."]"><i class="bi bi-pause-circle"></i> @L["Unpublish"]</button>
+            <a class="btn btn-outline-secondary btn-lg" asp-controller="Content" asp-action="Index"><i class="bi bi-list-ul"></i> @L["Back to Content Management"]</a>
+        }
+    </form>
+</div>
+<div class="wz-nav"><div class="wz-nav-inner">
+    <a class="btn btn-outline-secondary" asp-action="Preview" asp-route-id="@c.Id"><i class="bi bi-arrow-right-short flip-rtl"></i> @L["Previous"]</a>
+</div></div>

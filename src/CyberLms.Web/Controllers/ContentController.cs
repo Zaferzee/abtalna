@@ -9,15 +9,15 @@ using Microsoft.EntityFrameworkCore;
 namespace CyberLms.Web.Controllers;
 
 [Authorize]
-public class ContentController(AppDbContext db) : AppController
+public class ContentController(AppDbContext db, ContentAuthoring authoring) : AppController
 {
     private IQueryable<Content> Published => db.Contents.AsNoTracking().Where(c => c.Status == ContentStatus.Published);
 
     private async Task<ContentIndexVm> Build(ContentType? type, string? q, bool policies)
     {
         var query = Published;
-        if (policies) type = ContentType.Policy;
-        if (type != null) query = query.Where(c => c.Type == type);
+        if (policies) query = query.Where(c => c.Type == ContentType.Policy || c.Type == ContentType.Regulation);
+        else if (type != null) query = query.Where(c => c.Type == type);
         if (!string.IsNullOrWhiteSpace(q)) { var s = q.Trim().ToLower(); query = query.Where(c => c.Title.ToLower().Contains(s) || (c.Description != null && c.Description.ToLower().Contains(s))); }
         var uid = User.UserId();
         var items = await query.OrderByDescending(c => c.PublishedAt).Take(500).ToListAsync();
@@ -44,11 +44,13 @@ public class ContentController(AppDbContext db) : AppController
             preview = true;
         }
         var uid = User.UserId();
+        // Employees see the published assessments of this content; an administrator previewing unpublished content also sees the draft one.
+        var related = await db.Assessments.AsNoTracking().Where(a => a.ContentId == id && a.Questions.Any() && (a.IsPublished || preview)).OrderBy(a => a.Id).ToListAsync();
         return View(new ContentDetailsVm
         {
-            Content = c, Preview = preview,
+            Content = c, Preview = preview, AckText = authoring.AckText(c),
             Ack = await db.UserAcknowledgments.AsNoTracking().FirstOrDefaultAsync(a => a.UserId == uid && a.ContentId == id && a.ContentVersion == c.Version),
-            RelatedAssessments = await db.Assessments.AsNoTracking().Where(a => a.ContentId == id && a.IsPublished && a.Questions.Any()).ToListAsync(),
+            Related = await AssessmentQueries.ForUser(db, uid, related),
         });
     }
 

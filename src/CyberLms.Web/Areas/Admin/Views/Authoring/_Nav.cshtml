@@ -1,0 +1,25 @@
+@model AuthorPageVm
+@{
+    var cur = (int)Model.Step;
+    var next = cur < 6 ? (AuthorStep)(cur + 1) : (AuthorStep?)null;
+    var nextKey = next switch { AuthorStep.Write => "Write the content", AuthorStep.Acknowledgment => "Acknowledgment", AuthorStep.Assessment => "Assessment", AuthorStep.Preview => "Preview", AuthorStep.Publish => "Publish", _ => "" };
+    var f = Model.FormId;
+}
+<div class="wz-nav">
+    <div class="wz-nav-inner">
+        @if (cur > 1)
+        {
+            if (f != null) { <button class="btn btn-outline-secondary" form="@f" name="go" value="prev" formnovalidate><i class="bi bi-arrow-right-short flip-rtl"></i> @L["Previous"]</button> }
+            else { <a class="btn btn-outline-secondary" asp-action="@(((AuthorStep)(cur - 1)).ToString())" asp-route-id="@Model.Content!.Id"><i class="bi bi-arrow-right-short flip-rtl"></i> @L["Previous"]</a> }
+        }
+        <span class="wz-nav-hint d-none d-md-inline"><i class="bi bi-cloud-check"></i> @L["Each step is saved; you can stop and continue later."]</span>
+        <div class="wz-nav-end">
+            @if (f != null) { <button class="btn btn-ghost" form="@f" name="go" value="draft"><i class="bi bi-save"></i> @L[Model.Content?.Status == ContentStatus.Published ? "Save and close" : "Save as draft"]</button> }
+            @if (next != null)
+            {
+                if (f != null) { <button class="btn btn-primary btn-lg" form="@f" name="go" value="next" data-busy-btn>@L["Next"]: @L[nextKey] <i class="bi bi-arrow-left-short flip-rtl"></i></button> }
+                else { <a class="btn btn-primary btn-lg" asp-action="@next.ToString()" asp-route-id="@Model.Content!.Id">@L["Next"]: @L[nextKey] <i class="bi bi-arrow-left-short flip-rtl"></i></a> }
+            }
+        </div>
+    </div>
+</div>

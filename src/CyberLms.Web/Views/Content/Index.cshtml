@@ -1,25 +1,38 @@
 @model ContentIndexVm
-@{ ViewData["Title"] = Model.PoliciesOnly ? L["Policies"] : L["Content"]; }
-<h1 class="h4 mb-3">@ViewData["Title"]</h1>
-<form class="row g-2 mb-3" method="get" role="search">
-    <div class="col-12 col-md-5"><input class="form-control" name="q" value="@Model.Q" placeholder="@L["Search by title or description"]" aria-label="@L["Search"]" /></div>
+@{ ViewData["Title"] = Model.PoliciesOnly ? L["Policies"] : L["Content"]; var i = 0; var pending = Model.Items.Count(c => c.RequiresAcknowledgment && !Model.AcknowledgedIds.Contains(c.Id)); }
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi @(Model.PoliciesOnly ? "bi-shield-check" : "bi-journal-text")"></i> @L["Learning"]</div>
+        <h1>@ViewData["Title"]</h1>
+        <p class="lead">@L[Model.PoliciesOnly ? "Policies and regulations you are expected to read and acknowledge." : "Policies, controls, awareness and training material published for you."]</p>
+    </div>
+    @if (pending > 0) { <span class="chip chip-warning"><i class="bi bi-pen"></i> @L.Format("{0} awaiting your acknowledgment", pending)</span> }
+</div>
+<form class="panel toolbar mb-4 reveal" style="--i:1" method="get" role="search">
+    <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="@Model.Q" placeholder="@L["Search by title or description"]" aria-label="@L["Search"]" /></div>
     @if (!Model.PoliciesOnly)
     {
-        <div class="col-8 col-md-4"><select class="form-select" name="type" aria-label="@L["Content type"]"><option value="">@L["All types"]</option>
-            @foreach (var t in Enum.GetValues<ContentType>()) { <option value="@((int)t)" selected="@(Model.Type == t)">@L[Labels.Type(t)]</option> }</select></div>
+        <select class="form-select" name="type" aria-label="@L["Content type"]"><option value="">@L["All types"]</option>
+            @foreach (var t in Labels.TypeOrder) { <option value="@((int)t)" selected="@(Model.Type == t)">@L[Labels.Type(t)]</option> }</select>
     }
-    <div class="col-4 col-md-3"><button class="btn btn-primary w-100"><i class="bi bi-search"></i> @L["Search"]</button></div>
+    <div class="tb-end"><button class="btn btn-primary"><i class="bi bi-search"></i> @L["Search"]</button></div>
 </form>
-@if (Model.Items.Count == 0) { <div class="alert alert-light border">@L["No content has been published yet."]</div> }
-<div class="row g-3">
+@if (Model.Items.Count == 0)
+{
+    <div class="panel empty"><div class="empty-icon"><i class="bi bi-journal"></i></div><h3>@L[string.IsNullOrEmpty(Model.Q) ? "No content has been published yet." : "No results."]</h3></div>
+}
+<div class="grid-auto" style="--min:290px">
 @foreach (var c in Model.Items)
 {
-    <div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body d-flex flex-column">
-        <div class="mb-1"><span class="badge text-bg-light">@L[Labels.Type(c.Type)]</span>
-            @if (c.RequiresAcknowledgment) { <span class="badge text-bg-@(Model.AcknowledgedIds.Contains(c.Id) ? "success" : "warning")">@L[Model.AcknowledgedIds.Contains(c.Id) ? "Acknowledged" : "Not acknowledged"]</span> }</div>
-        <h2 class="h6 bidi"><a class="text-decoration-none" asp-action="Details" asp-route-id="@c.Id">@c.Title</a></h2>
-        <p class="text-muted small bidi flex-grow-1">@c.Description</p>
-        <div class="d-flex justify-content-between align-items-center"><small class="text-muted">@Time.Html(c.PublishedAt)</small><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@c.Id">@L["View"]</a></div>
-    </div></div></div>
+    var acked = Model.AcknowledgedIds.Contains(c.Id);
+    <a class="card card-lift c-card reveal" style="--i:@(Math.Min(i++, 8))" asp-action="Details" asp-route-id="@c.Id">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
+            @if (c.RequiresAcknowledgment) { <span class="badge badge-dot text-bg-@(acked ? "success" : "warning")">@L[acked ? "Acknowledged" : "Not acknowledged"]</span> }
+        </div>
+        <h3 class="bidi">@c.Title</h3>
+        @if (!string.IsNullOrWhiteSpace(c.Description)) { <p class="bidi">@c.Description</p> }
+        <div class="c-foot"><span>@Time.Html(c.PublishedAt)</span><span class="c-go">@L[c.RequiresAcknowledgment && !acked ? "Read and acknowledge" : "Read"] <i class="bi bi-arrow-left flip-rtl"></i></span></div>
+    </a>
 }
 </div>

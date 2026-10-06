@@ -1,0 +1,55 @@
+@model PreviewStepVm
+@{
+    ViewData["Title"] = Model.Content!.Title;
+    var c = Model.Content!;
+    var a = Model.Assessment;
+    var keys = L.IsRtl ? new[] { "أ", "ب", "ج", "د", "هـ", "و", "ز", "ح" } : new[] { "A", "B", "C", "D", "E", "F", "G", "H" };
+    var n = 0;
+}
+<partial name="_Shell" model="Model" />
+<div class="wz-body reveal" style="--i:2">
+    <div class="preview-intro">
+        <span class="icon-chip"><i class="bi bi-person-badge"></i></span>
+        <div><strong>@L["Preview as employee"]</strong><div class="small text-muted">@L["This is the employee page, built with the same components. Buttons are inactive in the preview."]</div></div>
+        <a class="btn btn-outline-primary btn-sm ms-auto" asp-area="" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id" target="_blank"><i class="bi bi-box-arrow-up-left flip-rtl"></i> @L["Open in a new tab"]</a>
+    </div>
+    <div class="employee-frame">
+        <div class="ef-chrome" aria-hidden="true"><i></i><i></i><i></i><span>@L["Employee portal"] · @c.Title</span></div>
+        <div class="ef-body">
+            <partial name="~/Views/Shared/_ContentReader.cshtml" model="Model.Reader" />
+        </div>
+    </div>
+
+    @if (a != null && a.Questions.Count > 0)
+    {
+        <details class="panel mt-4 q-preview">
+            <summary class="panel-head"><h2><i class="bi bi-ui-checks"></i> @L["Preview the assessment questions"] <span class="chip chip-primary">@a.Questions.Count</span></h2><i class="bi bi-chevron-down"></i></summary>
+            <div class="panel-body stack" style="--gap:1rem">
+                @foreach (var q in a.Questions.OrderBy(q => q.SortOrder).ThenBy(q => q.Id))
+                {
+                    n++;
+                    var multi = q.Type == QuestionType.MultipleChoice; var tf = q.Type == QuestionType.TrueFalse; var k = 0;
+                    <div class="card qcard">
+                        <div class="q-index"><i class="bi bi-question-circle-fill"></i> @L.Format("Question {0} of {1}", n, a.Questions.Count)</div>
+                        <div class="q-text bidi">@q.Text</div>
+                        <div class="q-hint"><span class="chip chip-primary"><i class="bi @(multi ? "bi-ui-checks" : "bi-ui-radios")"></i> @L[multi ? "Select all that apply" : "Select one answer"]</span><span class="chip"><i class="bi bi-star"></i> @L.Format("{0} point(s)", q.Points)</span></div>
+                        <div class="choices @(tf ? "tf" : "")">
+                        @foreach (var o in q.Options.OrderBy(o => o.SortOrder))
+                        {
+                            var isTrue = tf && o.Text == "True";
+                            <div class="choice @(multi ? "is-multi" : "") @(tf ? (isTrue ? "tf-true" : "tf-false") : "") is-static">
+                                <span class="ch-key">@if (tf) { <i class="bi @(isTrue ? "bi-check-lg" : "bi-x-lg")"></i> } else { @keys[k % keys.Length] }</span>
+                                <span class="ch-text bidi">@(tf ? L[o.Text] : o.Text)</span>
+                                @if (o.IsCorrect) { <span class="badge text-bg-success admin-only"><i class="bi bi-check2"></i> @L["Correct answer"]</span> }
+                            </div>
+                            k++;
+                        }
+                        </div>
+                    </div>
+                }
+                <p class="small text-muted mb-0"><i class="bi bi-shield-lock"></i> @L["Correct answers are marked here for you only; employees never see them."]</p>
+            </div>
+        </details>
+    }
+</div>
+<partial name="_Nav" model="Model" />

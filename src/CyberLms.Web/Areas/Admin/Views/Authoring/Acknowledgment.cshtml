@@ -1,0 +1,52 @@
+@model AckStepVm
+@{ ViewData["Title"] = Model.Content!.Title; var c = Model.Content!; }
+<partial name="_Shell" model="Model" />
+<form method="post" asp-action="Acknowledgment" asp-route-id="@c.Id" id="author-form" class="wz-body reveal" style="--i:2" novalidate data-dirty-guard>
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+    <section class="panel">
+        <div class="panel-head"><h2><i class="bi bi-pen"></i> @L["Acknowledgment"]</h2><span class="small text-muted">@L.Format("Step {0} of {1}", 3, 6)</span></div>
+        <div class="panel-body stack" style="--gap:1.4rem">
+            <fieldset>
+                <legend class="wz-question">@L["Does this content require employees to acknowledge that they have read it?"]</legend>
+                <div class="yn-cards">
+                    <label class="yn-card">
+                        <input type="radio" name="RequiresAcknowledgment" value="true" id="ack-yes" checked="@Model.RequiresAcknowledgment" />
+                        <span class="yn-icon ok"><i class="bi bi-pen"></i></span>
+                        <span><strong>@L["Yes, acknowledgment is required"]</strong><small>@L["Employees confirm a statement; the date and time are recorded for compliance reports."]</small></span>
+                    </label>
+                    <label class="yn-card">
+                        <input type="radio" name="RequiresAcknowledgment" value="false" id="ack-no" checked="@(!Model.RequiresAcknowledgment)" />
+                        <span class="yn-icon"><i class="bi bi-book"></i></span>
+                        <span><strong>@L["No, for reading only"]</strong><small>@L["The content is available to read without a confirmation."]</small></span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <div class="ack-config" data-show-when="ack-yes">
+                <label class="form-label" asp-for="Statement">@L["Acknowledgment statement"]</label>
+                <textarea class="form-control bidi" asp-for="Statement" rows="2" maxlength="1000" data-mirror="ack-text"></textarea>
+                <span asp-validation-for="Statement" class="field-validation-error"></span>
+                <div class="form-text d-flex flex-wrap gap-2 align-items-center">
+                    <span>@L["Write it as the employee will confirm it, in the first person."]</span>
+                    <button type="button" class="btn btn-link btn-sm p-0" data-fill="Statement" data-value="@Model.Suggested"><i class="bi bi-magic"></i> @L["Use the suggested statement"]</button>
+                </div>
+
+                <div class="preview-label mt-4"><i class="bi bi-eye"></i> @L["Exactly what the employee will see"]</div>
+                <div class="ack-panel ack-demo" aria-hidden="true">
+                    <span class="ack-icon"><i class="bi bi-pen"></i></span>
+                    <div>
+                        <h2>@L["Your acknowledgment is required"]</h2>
+                        <p>@L["Please read the full content above, then confirm below."]</p>
+                        <label class="ack-check"><input type="checkbox" tabindex="-1" /> <span class="bidi" data-mirror-target="ack-text">@Model.Statement</span></label>
+                    </div>
+                    <span class="btn btn-primary btn-lg disabled"><i class="bi bi-check2-square"></i> @L["Acknowledge"]</span>
+                </div>
+                @if (Model.Acknowledged > 0)
+                {
+                    <div class="alert alert-info mt-3"><i class="bi bi-people"></i><span>@L.Format("{0} employee(s) have already acknowledged this content. Changing the statement does not reset their acknowledgments.", Model.Acknowledged)</span></div>
+                }
+            </div>
+        </div>
+    </section>
+</form>
+<partial name="_Nav" model="Model" />

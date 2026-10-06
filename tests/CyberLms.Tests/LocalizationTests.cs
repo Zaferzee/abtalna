@@ -63,7 +63,9 @@ public class LocalizationTests
                 foreach (Match m in Regex.Matches(t, pat))
                     if (pat.StartsWith(@"\bH")) { foreach (Match l in Lit.Matches(m.Groups[1].Value)) keys.Add(Unescape(l.Groups[1].Value)); }
                     else keys.Add(Unescape(m.Groups[1].Value));
-            foreach (Match m in Regex.Matches(t, @"(?:Success|Failure|L\.Format)\(([^;]*?)\);"))
+            // Literal arguments of Success/Failure/L.Format (e.g. ternaries). In Razor views the call never spans lines, so stay on one line there
+            // (otherwise the scan would run on through the following HTML markup).
+            foreach (Match m in Regex.Matches(t, f.EndsWith(".cshtml") ? @"(?:Success|Failure|L\.Format)\(([^;\n]*?)\)" : @"(?:Success|Failure|L\.Format)\(([^;]*?)\);"))
                 foreach (Match l in Lit.Matches(m.Groups[1].Value)) if (l.Groups[1].Value.Contains(' ') && l.Groups[1].Value.Length > 3) keys.Add(Unescape(l.Groups[1].Value));
             foreach (Match m in Regex.Matches(t, @"notify\.Send\((.*)"))
                 foreach (Match l in Lit.Matches(m.Groups[1].Value)) if (!l.Groups[1].Value.StartsWith('/') && l.Groups[1].Value.Contains(' ')) keys.Add(Unescape(l.Groups[1].Value));

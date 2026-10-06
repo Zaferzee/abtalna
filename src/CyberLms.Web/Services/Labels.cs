@@ -8,8 +8,14 @@ public static class Labels
     public static string Type(ContentType t) => t switch
     {
         ContentType.Policy => "Policy", ContentType.Control => "Cybersecurity Control", ContentType.Awareness => "Awareness Content",
-        ContentType.Training => "Training Content", ContentType.Procedure => "Procedure / Instruction", _ => "General Content",
+        ContentType.Training => "Training Content", ContentType.Procedure => "Procedure", ContentType.Regulation => "Regulation",
+        ContentType.Instructions => "Instructions", _ => "General Content",
     };
+    /// <summary>Content types in the order they are offered to authors and in filters.</summary>
+    public static readonly ContentType[] TypeOrder =
+        [ContentType.Policy, ContentType.Regulation, ContentType.Procedure, ContentType.Control, ContentType.Awareness, ContentType.Training, ContentType.Instructions, ContentType.General];
+    /// <summary>Governance documents listed on the employees' "Policies" page.</summary>
+    public static bool IsPolicyLike(ContentType t) => t is ContentType.Policy or ContentType.Regulation;
     public static string Status(string s) => s switch
     {
         ReportService.Passed => "Passed", ReportService.Failed => "Failed", ReportService.NotAttempted => "Not attempted",

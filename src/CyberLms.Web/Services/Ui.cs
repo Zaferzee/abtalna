@@ -45,7 +45,8 @@ public static class Ui
     public static string TypeIcon(ContentType t) => t switch
     {
         ContentType.Policy => "bi-shield-check", ContentType.Control => "bi-sliders2-vertical", ContentType.Awareness => "bi-lightbulb",
-        ContentType.Training => "bi-mortarboard", ContentType.Procedure => "bi-list-check", _ => "bi-journal-text",
+        ContentType.Training => "bi-mortarboard", ContentType.Procedure => "bi-list-check", ContentType.Regulation => "bi-bank",
+        ContentType.Instructions => "bi-signpost-2", _ => "bi-journal-text",
     };
 
     public static string AttachmentIcon(ContentAttachment a)

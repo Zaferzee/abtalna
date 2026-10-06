@@ -156,14 +156,7 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
         var q = await db.Questions.AsNoTracking().Include(x => x.Options).FirstOrDefaultAsync(x => x.Id == id);
         if (q == null) return NotFound();
         if (await Locked(q.AssessmentId)) { Failure("Questions are locked because attempts exist. Duplicate the assessment instead."); return RedirectToAction(nameof(Questions), new { id = q.AssessmentId }); }
-        var opts = q.Options.OrderBy(o => o.SortOrder).ToList();
-        var vm = new QuestionFormVm { Id = q.Id, AssessmentId = q.AssessmentId, Text = q.Text, Type = q.Type, Points = q.Points, SortOrder = q.SortOrder };
-        if (q.Type == QuestionType.TrueFalse) vm.TrueIsCorrect = opts.FirstOrDefault()?.IsCorrect ?? true;
-        else
-        {
-            for (var i = 0; i < opts.Count && i < vm.Options.Count; i++) { vm.Options[i] = opts[i].Text; if (opts[i].IsCorrect) vm.Correct.Add(i); }
-        }
-        return View("QuestionForm", vm);
+        return View("QuestionForm", ContentAuthoring.FormFor(q));
     }
 
     [HttpPost]
@@ -193,29 +186,5 @@ public class AssessmentsController(AppDbContext db, AuditService audit, Notifica
         return RedirectToAction(nameof(Questions), new { id = q.AssessmentId });
     }
 
-    /// <summary>Validates the form and fills the question + options. Returns false (with model errors) when invalid.</summary>
-    private bool Apply(Question q, QuestionFormVm vm)
-    {
-        if (!ModelState.IsValid) return false;
-        q.Text = vm.Text.Trim(); q.Type = vm.Type; q.Points = vm.Points; q.SortOrder = vm.SortOrder;
-        q.Options = new List<QuestionOption>();
-        if (vm.Type == QuestionType.TrueFalse)
-        {
-            q.Options.Add(new QuestionOption { Text = "True", IsCorrect = vm.TrueIsCorrect, SortOrder = 1 });
-            q.Options.Add(new QuestionOption { Text = "False", IsCorrect = !vm.TrueIsCorrect, SortOrder = 2 });
-            return true;
-        }
-        var order = 0;
-        for (var i = 0; i < vm.Options.Count; i++)
-        {
-            var t = vm.Options[i]?.Trim();
-            if (string.IsNullOrEmpty(t)) continue;
-            q.Options.Add(new QuestionOption { Text = t.Length > 1000 ? t[..1000] : t, IsCorrect = vm.Correct.Contains(i), SortOrder = ++order });
-        }
-        if (q.Options.Count < 2) ModelState.AddModelError("", L["Provide at least two answer options."]);
-        var correct = q.Options.Count(o => o.IsCorrect);
-        if (correct == 0) ModelState.AddModelError("", L["Mark at least one correct answer."]);
-        if (vm.Type == QuestionType.SingleChoice && correct > 1) ModelState.AddModelError("", L["Single choice questions must have exactly one correct answer."]);
-        return ModelState.IsValid;
-    }
+    private bool Apply(Question q, QuestionFormVm vm) => ContentAuthoring.ApplyQuestion(q, vm, ModelState, L);
 }

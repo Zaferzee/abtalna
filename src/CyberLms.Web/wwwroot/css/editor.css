@@ -26,3 +26,32 @@
 [dir=rtl] .ql-editor ol, [dir=rtl] .ql-editor ul { padding-right: 0; padding-left: 0; }
 [dir=rtl] .ql-editor li:not(.ql-direction-ltr) { padding-left: 0; padding-right: 1.5em; }
 [dir=rtl] .ql-editor li:not(.ql-direction-ltr) > .ql-ui:before { margin-left: .3em; margin-right: -1.5em; text-align: left; }
+
+/* ---------- Design-system skin (redesign) ---------- */
+.editor-shell { border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); overflow: visible; background: var(--color-surface); box-shadow: var(--shadow-sm); transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+.editor-shell:focus-within { border-color: var(--color-primary); box-shadow: var(--ring); }
+.editor-shell .ql-toolbar.ql-snow { border: 0; border-bottom: 1px solid var(--color-border); background: var(--color-surface-alt); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: .55rem .6rem; position: sticky; top: var(--topbar-h); z-index: 5; }
+.editor-shell .ql-container.ql-snow { border: 0; font-family: var(--font); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.editor-shell .ql-editor { min-height: 420px; font-size: 1.06rem; line-height: 2; padding: 1.4rem 1.6rem; color: var(--color-text); }
+.editor-shell .ql-editor.ql-blank::before { font-style: normal; color: var(--color-faint); }
+.ql-toolbar.ql-snow .ql-formats { margin-inline-end: 10px; margin-right: 0; }
+[dir=rtl] .ql-toolbar.ql-snow .ql-formats { margin-left: 10px; }
+.ql-toolbar.ql-snow button { border-radius: 6px; width: 30px; height: 28px; }
+.ql-toolbar.ql-snow button:hover, .ql-toolbar.ql-snow button.ql-active { background: var(--primary-100); }
+.ql-toolbar.ql-snow button.ql-ext { display: inline-grid; place-items: center; color: #444; font-size: 15px; padding: 0; }
+.ql-toolbar.ql-snow button.ql-ext:hover { color: var(--color-primary); }
+.ql-editor h2 { font-size: 1.4rem; font-weight: 700; margin: 1.2rem 0 .5rem; } .ql-editor h3 { font-size: 1.15rem; font-weight: 700; margin: 1rem 0 .4rem; color: var(--primary-700); }
+/* Quote / callout: bar on the reading side (right in Arabic) */
+.ql-editor blockquote { border-left: 0 !important; border-inline-start: 4px solid var(--color-accent) !important; background: var(--gradient-soft); padding: .7rem 1rem !important; border-radius: var(--radius-sm); margin: .8rem 0 !important; }
+/* Tables inside the editor */
+.ql-editor table { width: 100%; border-collapse: collapse; margin: .8rem 0; table-layout: fixed; }
+.ql-editor td { border: 1px solid var(--color-border-strong); padding: .45rem .6rem; min-width: 3rem; vertical-align: top; }
+.ql-editor tr:first-child td { background: var(--primary-50); font-weight: 700; }
+/* Table size picker */
+.ql-formats { position: relative; }
+.tbl-picker { position: absolute; top: 2.3rem; inset-inline-start: 0; z-index: 30; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: .6rem; animation: pop-in .18s var(--ease); }
+.tbl-picker-grid { display: grid; grid-template-columns: repeat(6, 1.3rem); gap: 3px; direction: ltr; }
+[dir=rtl] .tbl-picker-grid { direction: rtl; }
+.tbl-picker-grid button { width: 1.3rem !important; height: 1.3rem !important; border: 1px solid var(--color-border-strong) !important; border-radius: 3px !important; background: var(--color-surface) !important; padding: 0 !important; }
+.tbl-picker-grid button.on { background: var(--primary-200) !important; border-color: var(--color-primary) !important; }
+.tbl-picker-label { text-align: center; font-size: .8rem; color: var(--color-muted); margin-top: .4rem; direction: ltr; }

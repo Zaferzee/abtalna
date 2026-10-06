@@ -1,53 +1,89 @@
 @model ContentListVm
-@{ ViewData["Title"] = L["Content Management"]; var filtered = !string.IsNullOrEmpty(Model.Q) || Model.Type != null || Model.Status != null; }
+@{ ViewData["Title"] = L["Content Management"]; var filtered = !string.IsNullOrEmpty(Model.Q) || Model.Type != null || Model.Status != null; var i = 0; }
 <div class="page-head reveal">
     <div>
         <div class="eyebrow"><i class="bi bi-journal-richtext"></i> @L["Manage"]</div>
         <h1>@L["Content Management"]</h1>
-        <p class="lead">@L["Policies, controls, awareness and training material shown to employees."]</p>
+        <p class="lead">@L["Policies, regulations, controls, awareness and training material: with acknowledgment and an assessment when needed."]</p>
     </div>
-    <div class="page-actions"><a class="btn btn-primary btn-lg" asp-action="Create"><i class="bi bi-plus-lg"></i> @L["New content"]</a></div>
+    <div class="page-actions"><a class="btn btn-primary btn-lg" asp-controller="Authoring" asp-action="New"><i class="bi bi-magic"></i> @L["Create learning material"]</a></div>
 </div>
 
 <div class="card table-card reveal" style="--i:1">
     <form class="toolbar" method="get" role="search">
         <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="@Model.Q" placeholder="@L["Search by title"]" aria-label="@L["Search"]" /></div>
-        <select class="form-select" name="type" aria-label="@L["Content type"]"><option value="">@L["All types"]</option>@foreach (var t in Enum.GetValues<ContentType>()) { <option value="@((int)t)" selected="@(Model.Type == t)">@L[Labels.Type(t)]</option> }</select>
+        <select class="form-select" name="type" aria-label="@L["Content type"]"><option value="">@L["All types"]</option>@foreach (var t in Labels.TypeOrder) { <option value="@((int)t)" selected="@(Model.Type == t)">@L[Labels.Type(t)]</option> }</select>
         <select class="form-select" name="status" aria-label="@L["Status"]"><option value="">@L["All statuses"]</option><option value="Published" selected="@(Model.Status == ContentStatus.Published)">@L["Published"]</option><option value="Draft" selected="@(Model.Status == ContentStatus.Draft)">@L["Draft"]</option></select>
         <div class="tb-end">
             <button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button>
             @if (filtered) { <a class="btn btn-ghost" asp-action="Index"><i class="bi bi-x-lg"></i> @L["Clear filters"]</a> }
         </div>
     </form>
-    <div class="table-responsive"><table class="table table-hover mb-0">
-    <thead><tr><th>@L["Title"]</th><th>@L["Content type"]</th><th>@L["Status"]</th><th>@L["Acknowledgments"]</th><th>@L["Created on"]</th><th class="text-end"><span class="visually-hidden">@L["Actions"]</span></th></tr></thead><tbody>
+    <div class="table-responsive"><table class="table table-hover mb-0 content-table">
+    <thead><tr><th>@L["Content title"]</th><th>@L["Status"]</th><th>@L["Acknowledgment"]</th><th>@L["Assessment"]</th><th>@L["Publish date"]</th><th class="text-end"><span class="visually-hidden">@L["Actions"]</span></th></tr></thead><tbody>
     @foreach (var r in Model.Items)
     {
         var c = r.Content;
         var published = c.Status == ContentStatus.Published;
-        <tr>
+        var hasAsm = r.AssessmentId != null;
+        <tr class="reveal" style="--i:@(Math.Min(i++, 10))">
             <td><div class="t-title">
                 <span class="icon-chip tc type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i></span>
-                <div class="min-w-0"><a class="t-name bidi" asp-action="Edit" asp-route-id="@c.Id">@c.Title</a>@if (!string.IsNullOrWhiteSpace(c.Description)) { <span class="t-desc bidi">@c.Description</span> }</div>
+                <div class="min-w-0"><a class="t-name bidi" asp-controller="Authoring" asp-action="Basics" asp-route-id="@c.Id">@c.Title</a>
+                    <span class="t-meta"><span class="type-chip type-@((int)c.Type)">@L[Labels.Type(c.Type)]</span>@if (!string.IsNullOrWhiteSpace(c.Description)) { <span class="t-desc bidi">@c.Description</span> }</span></div>
             </div></td>
-            <td class="text-nowrap">@L[Labels.Type(c.Type)]</td>
             <td><span class="badge badge-dot text-bg-@(published ? "success" : "secondary")">@L[Labels.ContentStatus(c.Status)]</span></td>
-            <td class="text-nowrap">@if (c.RequiresAcknowledgment) { <a class="chip chip-link" asp-controller="Reports" asp-action="Acknowledgments" asp-route-contentId="@c.Id"><i class="bi bi-check2-square"></i> @L.Format("{0} acknowledged", r.Acked)</a> } else { <span class="text-muted">-</span> }</td>
-            <td class="text-nowrap">@Time.Html(c.CreatedAt)</td>
+            <td class="text-nowrap">
+                @if (c.RequiresAcknowledgment) { <a class="chip chip-link chip-warning" asp-controller="Reports" asp-action="Acknowledgments" asp-route-contentId="@c.Id" title="@L["Acknowledgment report"]"><i class="bi bi-pen"></i> @L["Required"] · @r.Acked</a> }
+                else { <span class="text-muted small">@L["Not required"]</span> }
+            </td>
+            <td>
+                @if (hasAsm)
+                {
+                    <a class="asm-cell" asp-controller="Authoring" asp-action="Assessment" asp-route-id="@c.Id">
+                        <span class="bidi">@r.AssessmentTitle</span>
+                        <small>@L.Format("{0} question(s)", r.Questions) · @L[r.AssessmentPublished ? "Published" : "Draft"]</small>
+                    </a>
+                }
+                else { <span class="text-muted small">@L["No assessment"]</span> }
+            </td>
+            <td class="text-nowrap">@if (published) { @Time.Html(c.PublishedAt) } else { <span class="text-muted">-</span> }</td>
             <td><div class="row-actions">
-                <a class="btn btn-sm btn-ghost btn-icon" asp-area="" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id" title="@L["Preview"]" aria-label="@L["Preview"]"><i class="bi bi-eye"></i></a>
-                <a class="btn btn-sm btn-ghost btn-icon" asp-action="Edit" asp-route-id="@c.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
-                @if (published)
-                { <form method="post" asp-action="Notify" asp-route-id="@c.Id" class="d-inline" data-confirm="@L["Send an email to all employees (only those who still need to acknowledge, if acknowledgment is required)?"]"><button class="btn btn-sm btn-ghost btn-icon" title="@L["Email employees"]" aria-label="@L["Email employees"]"><i class="bi bi-envelope"></i></button></form> }
+                <a class="btn btn-sm btn-ghost btn-icon" asp-area="" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id" target="_blank" title="@L["View"]" aria-label="@L["View"]"><i class="bi bi-box-arrow-up-left flip-rtl"></i></a>
+                <a class="btn btn-sm btn-ghost btn-icon" asp-controller="Authoring" asp-action="Basics" asp-route-id="@c.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
+                <a class="btn btn-sm btn-ghost btn-icon" asp-controller="Authoring" asp-action="Preview" asp-route-id="@c.Id" title="@L["Preview"]" aria-label="@L["Preview"]"><i class="bi bi-eye"></i></a>
+                @if (!published)
+                {
+                    if (hasAsm) { <a class="btn btn-sm btn-outline-success" asp-controller="Authoring" asp-action="Publish" asp-route-id="@c.Id"><i class="bi bi-broadcast"></i> @L["Publish"]</a> }
+                    else { <form method="post" asp-action="SetStatus" asp-route-id="@c.Id" asp-route-publish="true" class="d-inline"><button class="btn btn-sm btn-soft-success btn-icon" title="@L["Publish"]" aria-label="@L["Publish"]"><i class="bi bi-broadcast"></i></button></form> }
+                }
                 else
-                { <form method="post" asp-action="Delete" asp-route-id="@c.Id" class="d-inline" data-confirm="@L["Delete this content and its files permanently?"]"><button class="btn btn-sm btn-ghost btn-icon text-danger" title="@L["Delete"]" aria-label="@L["Delete"]"><i class="bi bi-trash3"></i></button></form> }
-                <form method="post" asp-action="SetStatus" asp-route-id="@c.Id" asp-route-publish="@(!published)" class="d-inline"><button class="btn btn-sm btn-outline-@(published ? "warning" : "success")"><i class="bi @(published ? "bi-pause-circle" : "bi-broadcast")"></i> @L[published ? "Unpublish" : "Publish"]</button></form>
+                {
+                    if (hasAsm) { <form method="post" asp-controller="Authoring" asp-action="Publish" asp-route-id="@c.Id" asp-route-go="unpublish" asp-route-back="list" class="d-inline" data-confirm="@L["Unpublish this material (and its assessment)? Employees will no longer see it. Acknowledgments and results are kept."]"><button class="btn btn-sm btn-soft-warning btn-icon" title="@L["Unpublish"]" aria-label="@L["Unpublish"]"><i class="bi bi-pause-circle"></i></button></form> }
+                    else { <form method="post" asp-action="SetStatus" asp-route-id="@c.Id" asp-route-publish="false" class="d-inline"><button class="btn btn-sm btn-soft-warning btn-icon" title="@L["Unpublish"]" aria-label="@L["Unpublish"]"><i class="bi bi-pause-circle"></i></button></form> }
+                }
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-ghost btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="@L["More actions"]" aria-label="@L["More actions"]"><i class="bi bi-three-dots-vertical"></i></button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" asp-controller="Authoring" asp-action="Assessment" asp-route-id="@c.Id"><i class="bi bi-ui-checks"></i> @L[hasAsm ? "Manage assessment" : "Add an assessment"]</a></li>
+                        <li><form method="post" asp-controller="Authoring" asp-action="Copy" asp-route-id="@c.Id"><button class="dropdown-item"><i class="bi bi-copy"></i> @L["Duplicate"]</button></form></li>
+                        @if (published)
+                        {
+                            <li><form method="post" asp-action="Notify" asp-route-id="@c.Id" data-confirm="@L["Send an email to all employees (only those who still need to acknowledge, if acknowledgment is required)?"]"><button class="dropdown-item" title="@L["Email employees"]"><i class="bi bi-envelope"></i> @L["Email employees"]</button></form></li>
+                        }
+                        else
+                        {
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><form method="post" asp-action="Delete" asp-route-id="@c.Id" data-confirm="@L["Delete this content and its files permanently?"]"><button class="dropdown-item text-danger" title="@L["Delete"]"><i class="bi bi-trash3"></i> @L["Delete"]</button></form></li>
+                        }
+                    </ul>
+                </div>
             </div></td>
         </tr>
     }
     @if (Model.Items.Count == 0)
     {
-        <tr><td colspan="6"><div class="empty"><div class="empty-icon"><i class="bi bi-journal-plus"></i></div><h3>@L["No content found."]</h3>@if (!filtered) { <p><a class="btn btn-primary mt-2" asp-action="Create"><i class="bi bi-plus-lg"></i> @L["New content"]</a></p> }</div></td></tr>
+        <tr><td colspan="6"><div class="empty"><div class="empty-icon"><i class="bi bi-journal-plus"></i></div><h3>@L["No content found."]</h3>@if (!filtered) { <p><a class="btn btn-primary mt-2" asp-controller="Authoring" asp-action="New"><i class="bi bi-magic"></i> @L["Create learning material"]</a></p> }</div></td></tr>
     }
     </tbody></table></div>
     @if (Model.Pager.Total > 0) { <div class="table-foot"><span class="text-muted small">@L.Format("Total: {0}", Model.Pager.Total)</span></div> }

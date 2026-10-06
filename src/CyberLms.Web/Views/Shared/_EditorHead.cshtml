@@ -1,0 +1,8 @@
+@* Rich-text editor assets + localized Quill strings (CSS custom properties; CSP allows inline styles, not inline scripts). *@
+@functions {
+    /// <summary>CSS string literal ("...") with non-ASCII characters written as \HEX escapes.</summary>
+    string C(string key) => "\"" + string.Concat(L[key].Select(ch => ch < 128 && ch >= 32 && ch != '"' && ch != '\\' && ch != '<' ? ch.ToString() : "\\" + ((int)ch).ToString("x") + " ")) + "\"";
+}
+<link rel="stylesheet" href="~/lib/quill/quill.snow.css" />
+<link rel="stylesheet" href="~/css/editor.css" asp-append-version="true" />
+<style>:root{--t-ql-visit:@Html.Raw(C("Editor: Visit link:"));--t-ql-enter:@Html.Raw(C("Editor: Enter link:"));--t-ql-edit:@Html.Raw(C("Edit"));--t-ql-remove:@Html.Raw(C("Remove"));--t-ql-save:@Html.Raw(C("Save"));--t-ql-normal:@Html.Raw(C("Editor: Normal text"));--t-ql-h2:@Html.Raw(C("Editor: Main heading"));--t-ql-h3:@Html.Raw(C("Editor: Sub heading"))}</style>

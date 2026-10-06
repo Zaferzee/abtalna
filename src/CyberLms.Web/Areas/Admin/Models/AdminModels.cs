@@ -26,7 +26,7 @@ public class ContentListVm
     public ContentStatus? Status { get; set; }
     public Pager Pager { get; set; } = new();
 }
-public record ContentRow(Content Content, int Acked);
+public record ContentRow(Content Content, int Acked, int? AssessmentId = null, string? AssessmentTitle = null, int Questions = 0, bool AssessmentPublished = false);
 
 public class AssessmentFormVm
 {

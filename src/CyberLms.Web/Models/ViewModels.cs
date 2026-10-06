@@ -44,8 +44,13 @@ public class ContentDetailsVm
 {
     public Content Content { get; set; } = null!;
     public UserAcknowledgment? Ack { get; set; }
-    public List<Assessment> RelatedAssessments { get; set; } = new();
+    /// <summary>Assessments linked to this content, with the current user's status.</summary>
+    public List<AssessmentListItem> Related { get; set; } = new();
+    /// <summary>Administrator viewing unpublished content.</summary>
     public bool Preview { get; set; }
+    /// <summary>False inside the authoring wizard's preview: buttons are shown exactly as employees see them but do nothing.</summary>
+    public bool Interactive { get; set; } = true;
+    public string AckText { get; set; } = "";
 }
 
 public class AssessmentListItem

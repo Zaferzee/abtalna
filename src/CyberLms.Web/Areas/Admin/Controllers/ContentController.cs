@@ -3,25 +3,13 @@ using CyberLms.Web.Data;
 using CyberLms.Web.Domain;
 using CyberLms.Web.Models;
 using CyberLms.Web.Services;
-using Ganss.Xss;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CyberLms.Web.Areas.Admin.Controllers;
 
-public class ContentController(AppDbContext db, StorageService storage, AuditService audit, NotificationService notify) : AdminController
+public class ContentController(AppDbContext db, StorageService storage, AuditService audit, NotificationService notify, ContentAuthoring authoring) : AdminController
 {
-    private static readonly HtmlSanitizer Sanitizer = CreateSanitizer();
-
-    private static HtmlSanitizer CreateSanitizer()
-    {
-        var s = new HtmlSanitizer();
-        // Images may only reference files uploaded through the editor (served by FilesController.Inline); no external or data: images.
-        s.FilterUrl += (_, e) => { if (string.Equals(e.Tag?.LocalName, "img", StringComparison.OrdinalIgnoreCase) && !(e.OriginalUrl ?? "").StartsWith("/Files/Inline/", StringComparison.Ordinal)) e.SanitizedUrl = null; };
-        s.AllowedAttributes.Add("dir");
-        return s;
-    }
-
     public async Task<IActionResult> Index(string? q, ContentType? type, ContentStatus? status, int page = 1)
     {
         var query = db.Contents.AsNoTracking().AsQueryable();
@@ -30,7 +18,11 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         if (status != null) query = query.Where(c => c.Status == status);
         var pager = new Pager { Page = Math.Max(1, page), PageSize = 25, Total = await query.CountAsync() };
         var items = await query.OrderByDescending(c => c.CreatedAt).Skip((pager.Page - 1) * pager.PageSize).Take(pager.PageSize)
-            .Select(c => new ContentRow(c, db.UserAcknowledgments.Count(a => a.ContentId == c.Id && a.ContentVersion == c.Version))).ToListAsync();
+            .Select(c => new ContentRow(c, db.UserAcknowledgments.Count(a => a.ContentId == c.Id && a.ContentVersion == c.Version),
+                db.Assessments.Where(a => a.ContentId == c.Id).OrderBy(a => a.Id).Select(a => (int?)a.Id).FirstOrDefault(),
+                db.Assessments.Where(a => a.ContentId == c.Id).OrderBy(a => a.Id).Select(a => a.Title).FirstOrDefault(),
+                db.Assessments.Where(a => a.ContentId == c.Id).OrderBy(a => a.Id).Select(a => a.Questions.Count).FirstOrDefault(),
+                db.Assessments.Where(a => a.ContentId == c.Id).OrderBy(a => a.Id).Select(a => a.IsPublished).FirstOrDefault())).ToListAsync();
         return View(new ContentListVm { Items = items, Q = q, Type = type, Status = status, Pager = pager });
     }
 
@@ -167,18 +159,12 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         return Json(new { url = "/Files/Inline/" + Path.GetFileName(stored.RelativePath) });
     }
 
-    private void Publish(Content c)
-    {
-        c.Status = ContentStatus.Published;
-        c.PublishedAt ??= DateTime.UtcNow;
-        audit.Add("CONTENT_PUBLISHED", "Content", c.Id, c.Title);
-    }
+    private void Publish(Content c) => authoring.Publish(c);
+    private Task<List<string>> SaveFiles(Content c, List<IFormFile> files) => authoring.SaveFiles(c, files);
 
     private void Validate(ContentFormVm vm)
     {
-        if (!string.IsNullOrWhiteSpace(vm.ExternalUrl) && !(Uri.TryCreate(vm.ExternalUrl, UriKind.RelativeOrAbsolute, out var u) &&
-            (!u.IsAbsoluteUri ? vm.ExternalUrl.StartsWith('/') : u.Scheme is "http" or "https")))
-            ModelState.AddModelError(nameof(vm.ExternalUrl), L["Enter an http(s) URL or a path starting with '/'."]);
+        if (authoring.LinkError(vm.ExternalUrl) is string err) ModelState.AddModelError(nameof(vm.ExternalUrl), err);
     }
 
     private static void Apply(Content c, ContentFormVm vm)
@@ -186,22 +172,6 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
         c.Title = vm.Title.Trim(); c.Description = vm.Description?.Trim(); c.Type = vm.Type;
         c.RequiresAcknowledgment = vm.RequiresAcknowledgment;
         c.ExternalUrl = string.IsNullOrWhiteSpace(vm.ExternalUrl) ? null : vm.ExternalUrl.Trim();
-        c.Body = string.IsNullOrWhiteSpace(vm.Body) ? null : Sanitizer.Sanitize(vm.Body);
-    }
-
-    private async Task<List<string>> SaveFiles(Content c, List<IFormFile> files)
-    {
-        var errors = new List<string>();
-        foreach (var f in files.Where(f => f.Length > 0))
-        {
-            var (err, stored) = await storage.SaveAsync(f, $"content/{c.Id}");
-            if (err != null) { errors.Add($"{f.FileName}: {L.Format(err.Key, err.Args)}"); continue; }
-            db.ContentAttachments.Add(new ContentAttachment
-            {
-                ContentId = c.Id, FileName = stored!.OriginalName, StoredPath = stored.RelativePath, ContentType = stored.ContentType, SizeBytes = stored.Size, Kind = stored.Kind,
-            });
-            audit.Add("ATTACHMENT_ADDED", "Content", c.Id, stored.OriginalName);
-        }
-        return errors;
+        c.Body = ContentAuthoring.CleanBody(vm.Body);
     }
 }

@@ -1,0 +1,65 @@
+@model AuthorPageVm
+@{
+    var c = Model.Content;
+    var isNew = c == null;
+    var cur = (int)Model.Step;
+    var steps = new (AuthorStep S, string Key, string Icon, string Sub)[]
+    {
+        (AuthorStep.Basics, "Basic information", "bi-card-heading", c == null ? L["Title and type"] : L[Labels.Type(c.Type)]),
+        (AuthorStep.Write, "Write the content", "bi-pencil-square", c == null ? L["Text, tables, files"] : (string.IsNullOrWhiteSpace(c.Body) ? L["Not written yet"] : L.Format("{0} attachment(s)", c.Attachments.Count + (string.IsNullOrEmpty(c.ExternalUrl) ? 0 : 1)))),
+        (AuthorStep.Acknowledgment, "Acknowledgment", "bi-pen", c == null ? L["Required or not"] : L[c.RequiresAcknowledgment ? "Required" : "Not required"]),
+        (AuthorStep.Assessment, "Assessment", "bi-ui-checks", c == null ? L["Questions and passing score"] : (Model.Assessment == null ? L["No assessment"] : L.Format("{0} question(s)", Model.QuestionCount))),
+        (AuthorStep.Preview, "Preview", "bi-eye", L["As an employee sees it"]),
+        (AuthorStep.Publish, "Publish", "bi-rocket-takeoff", c == null ? L["Draft"] : L[Labels.ContentStatus(c.Status)]),
+    };
+}
+<div class="page-head wz-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-magic"></i> @L[isNew ? "Create new learning material" : "Edit learning material"]</div>
+        <h1 class="bidi">@(isNew ? L["New learning material"] : c!.Title)</h1>
+        @if (!isNew)
+        {
+            <div class="cluster mt-2">
+                <span class="badge badge-dot text-bg-@(c!.Status == ContentStatus.Published ? "success" : "secondary")">@L[Labels.ContentStatus(c.Status)]</span>
+                <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
+            </div>
+        }
+    </div>
+    <div class="page-actions cluster">
+        @if (!isNew) { <a class="btn btn-ghost" asp-area="" asp-controller="Content" asp-action="Details" asp-route-id="@c!.Id" target="_blank"><i class="bi bi-box-arrow-up-left flip-rtl"></i> @L["Open employee page"]</a> }
+        <a class="btn btn-outline-secondary" asp-controller="Content" asp-action="Index"><i class="bi bi-x-lg"></i> @L["Close"]</a>
+    </div>
+</div>
+
+<nav class="wz-steps reveal" style="--i:1" aria-label="@L["Steps"]">
+    <ol>
+    @foreach (var s in steps)
+    {
+        var n = (int)s.S;
+        var state = n < cur ? "is-done" : n == cur ? "is-current" : "is-todo";
+        <li class="wz-step @state">
+            @{
+                var inner = $"<span class=\"wz-num\" aria-hidden=\"true\">{(n < cur ? "<i class=\"bi bi-check-lg\"></i>" : $"<i class=\"bi {s.Icon}\"></i>")}</span><span class=\"wz-text\"><strong>{System.Net.WebUtility.HtmlEncode(L[s.Key])}</strong><small>{System.Net.WebUtility.HtmlEncode(s.Sub)}</small></span>";
+            }
+            @if (isNew || n == cur)
+            {
+                <span class="wz-link" aria-current="@(n == cur ? "step" : null)">@Html.Raw(inner)</span>
+            }
+            else if (Model.FormId != null)
+            {
+                <button type="submit" class="wz-link" form="@Model.FormId" name="go" value="step:@n" formnovalidate>@Html.Raw(inner)</button>
+            }
+            else
+            {
+                <a class="wz-link" asp-action="@s.S.ToString()" asp-route-id="@c!.Id">@Html.Raw(inner)</a>
+            }
+        </li>
+    }
+    </ol>
+    <div class="wz-bar" aria-hidden="true"><span style="width:@((cur - 1) * 20)%"></span></div>
+</nav>
+
+@if (!isNew && c!.Status == ContentStatus.Published && Model.Step != AuthorStep.Publish)
+{
+    <div class="alert alert-info"><i class="bi bi-broadcast"></i><span>@L["This material is published: every change you save is visible to employees immediately."]</span></div>
+}

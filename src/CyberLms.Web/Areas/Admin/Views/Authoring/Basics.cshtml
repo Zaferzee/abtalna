@@ -1,0 +1,50 @@
+@model BasicsStepVm
+@{
+    ViewData["Title"] = Model.Content == null ? L["New learning material"] : Model.Content.Title;
+    var hints = new Dictionary<ContentType, string>
+    {
+        [ContentType.Policy] = "Binding rules that set the organization's direction",
+        [ContentType.Regulation] = "Articles, violations and their penalties",
+        [ContentType.Procedure] = "Step-by-step way of carrying out a process",
+        [ContentType.Control] = "A cybersecurity control and how it is applied",
+        [ContentType.Awareness] = "Tips and messages that raise awareness",
+        [ContentType.Training] = "Learning material for a course or session",
+        [ContentType.Instructions] = "Practical instructions and guidance",
+        [ContentType.General] = "Any other content",
+    };
+}
+<partial name="_Shell" model="Model" />
+<form method="post" asp-action="Basics" asp-route-id="@Model.Content?.Id" id="author-form" class="wz-body reveal" style="--i:2" novalidate data-dirty-guard>
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+    <section class="panel">
+        <div class="panel-head"><h2><i class="bi bi-card-heading"></i> @L["Basic information"]</h2><span class="small text-muted">@L.Format("Step {0} of {1}", 1, 6)</span></div>
+        <div class="panel-body stack" style="--gap:1.4rem">
+            <div>
+                <label class="form-label" asp-for="Title">@L["Content title"] <span class="text-danger">*</span></label>
+                <input class="form-control form-control-lg bidi" asp-for="Title" maxlength="300" autofocus placeholder="@L["e.g. Internal cybersecurity violations regulation"]" />
+                <span asp-validation-for="Title" class="field-validation-error"></span>
+            </div>
+            <fieldset>
+                <legend class="form-label">@L["Content type"]</legend>
+                <div class="type-cards">
+                @foreach (var t in Labels.TypeOrder)
+                {
+                    <label class="type-card type-@((int)t)">
+                        <input type="radio" name="Type" value="@((int)t)" checked="@(Model.Type == t)" />
+                        <span class="tc-icon"><i class="bi @Ui.TypeIcon(t)"></i></span>
+                        <span class="tc-text"><strong>@L[Labels.Type(t)]</strong><small>@L[hints[t]]</small></span>
+                        <i class="bi bi-check-circle-fill tc-check" aria-hidden="true"></i>
+                    </label>
+                }
+                </div>
+                <span asp-validation-for="Type" class="field-validation-error"></span>
+            </fieldset>
+            <div>
+                <label class="form-label" asp-for="Description">@L["Short description"]</label>
+                <textarea class="form-control bidi" asp-for="Description" rows="3" maxlength="2000" data-counter placeholder="@L["One or two sentences shown in lists and on the employee dashboard."]"></textarea>
+                <div class="form-text d-flex justify-content-between"><span>@L["Shown in lists and on the employee dashboard."]</span><span data-counter-for="Description" dir="ltr"></span></div>
+            </div>
+        </div>
+    </section>
+</form>
+<partial name="_Nav" model="Model" />

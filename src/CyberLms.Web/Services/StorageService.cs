@@ -92,6 +92,19 @@ public class StorageService
         return full.StartsWith(_root + Path.DirectorySeparatorChar, StringComparison.Ordinal) ? full : null;
     }
 
+    /// <summary>Duplicates a stored file under a new server-generated name. Returns the new relative path, or null if the source is missing.</summary>
+    public string? Copy(string relative, string subFolder)
+    {
+        var src = Resolve(relative);
+        if (src == null || !File.Exists(src)) return null;
+        var safeSub = string.Concat(subFolder.Where(c => char.IsLetterOrDigit(c) || c is '-' or '_' or '/'));
+        var rel = $"{safeSub}/{Guid.NewGuid():N}{Path.GetExtension(relative).ToLowerInvariant()}";
+        var dest = Resolve(rel)!;
+        Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+        File.Copy(src, dest);
+        return rel;
+    }
+
     public void Delete(string? relative)
     {
         if (string.IsNullOrEmpty(relative)) return;

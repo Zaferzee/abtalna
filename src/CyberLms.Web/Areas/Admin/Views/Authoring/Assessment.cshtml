@@ -1,0 +1,189 @@
+@model AssessmentStepVm
+@{
+    ViewData["Title"] = Model.Content!.Title;
+    var c = Model.Content!;
+    var a = Model.Assessment;
+    var keys = L.IsRtl ? new[] { "أ", "ب", "ج", "د", "هـ", "و", "ز", "ح" } : new[] { "A", "B", "C", "D", "E", "F", "G", "H" };
+    var qf = Model.Question;
+    var editing = qf.Id > 0;
+    var shownOptions = Math.Max(4, qf.Options.FindLastIndex(o => !string.IsNullOrWhiteSpace(o)) + 1);
+    var totalPoints = Model.Questions.Sum(q => q.Points);
+    var n = 0;
+}
+<partial name="_Shell" model="Model" />
+
+<form method="post" asp-action="AssessmentSettings" asp-route-id="@c.Id" id="asm-form" class="wz-body reveal" style="--i:2" novalidate data-dirty-guard>
+    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+    <input type="hidden" asp-for="Settings.Id" />
+    <section class="panel">
+        <div class="panel-head"><h2><i class="bi bi-ui-checks"></i> @L["Assessment"]</h2><span class="small text-muted">@L.Format("Step {0} of {1}", 4, 6)</span></div>
+        <div class="panel-body stack" style="--gap:1.4rem">
+            <fieldset>
+                <legend class="wz-question">@L["Do you want to add an assessment for this content?"]</legend>
+                <div class="yn-cards">
+                    <label class="yn-card">
+                        <input type="radio" name="include" value="true" id="asm-yes" checked="@Model.Include" />
+                        <span class="yn-icon ok"><i class="bi bi-ui-checks"></i></span>
+                        <span><strong>@L["Yes, add an assessment"]</strong><small>@L["Employees answer questions after reading; results appear in the reports."]</small></span>
+                    </label>
+                    <label class="yn-card">
+                        <input type="radio" name="include" value="false" id="asm-no" checked="@(!Model.Include)" data-confirm-change="@(a != null ? L["Remove the assessment and its questions from this content?"] : null)" />
+                        <span class="yn-icon"><i class="bi bi-slash-circle"></i></span>
+                        <span><strong>@L["No assessment"]</strong><small>@L["The content is read (and acknowledged, if required) without questions."]</small></span>
+                    </label>
+                </div>
+            </fieldset>
+
+            <div class="asm-config" data-show-when="asm-yes">
+                <div class="row g-3">
+                    <div class="col-lg-7">
+                        <label class="form-label" asp-for="Settings.Title">@L["Assessment name"] <span class="text-danger">*</span></label>
+                        <input class="form-control bidi" asp-for="Settings.Title" maxlength="300" />
+                        <span asp-validation-for="Settings.Title" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-6 col-lg-2">
+                        <label class="form-label" asp-for="Settings.PassingPercentage">@L["Passing score (%)"]</label>
+                        <div class="input-suffix"><input class="form-control" asp-for="Settings.PassingPercentage" type="number" min="0" max="100" dir="ltr" /><span>%</span></div>
+                        <span asp-validation-for="Settings.PassingPercentage" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-6 col-lg-3">
+                        <label class="form-label" asp-for="Settings.MaxAttempts">@L["Number of attempts"]</label>
+                        <input class="form-control" asp-for="Settings.MaxAttempts" type="number" min="0" max="100" dir="ltr" />
+                        <div class="form-text">@L["0 = unlimited"]</div>
+                        <span asp-validation-for="Settings.MaxAttempts" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Settings.Description">@L["Description / instructions"]</label>
+                        <textarea class="form-control bidi" asp-for="Settings.Description" rows="2" maxlength="2000" placeholder="@L["e.g. Answer all questions after reading the regulation."]"></textarea>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                    <button class="btn @(a == null ? "btn-primary" : "btn-outline-primary")" name="go" value="stay"><i class="bi @(a == null ? "bi-plus-lg" : "bi-check2")"></i> @L[a == null ? "Create the assessment and add questions" : "Save assessment settings"]</button>
+                    @if (a != null && Model.Attempts > 0) { <span class="small text-muted"><i class="bi bi-info-circle"></i> @L["Completed attempts keep the passing score they were taken with."]</span> }
+                </div>
+            </div>
+        </div>
+    </section>
+</form>
+
+@if (a != null)
+{
+    <section class="panel mt-4 reveal" style="--i:3" id="questions" data-show-when="asm-yes">
+        <div class="panel-head">
+            <h2><i class="bi bi-list-ol"></i> @L["Questions"] <span class="chip chip-primary">@Model.Questions.Count</span></h2>
+            <div class="cluster">
+                <span class="small text-muted">@L.Format("Total points: {0}", totalPoints)</span>
+                @if (!Model.Locked) { <a class="btn btn-primary btn-sm" href="?add=1#editor" data-open-editor><i class="bi bi-plus-lg"></i> @L["Add question"]</a> }
+            </div>
+        </div>
+        @if (Model.Locked)
+        {
+            <div class="alert alert-warning m-3"><i class="bi bi-lock-fill"></i><span>@L.Format("This assessment already has {0} attempt(s), so its questions are locked to keep the results consistent. You can still change its name, passing score and attempts.", Model.Attempts)</span></div>
+        }
+        @if (Model.Questions.Count == 0)
+        {
+            <div class="empty py-4"><div class="empty-icon"><i class="bi bi-patch-question"></i></div><h3>@L["No questions yet"]</h3><p>@L["Add the first question below. Each saved question appears here in order."]</p></div>
+        }
+        else
+        {
+            <ol class="q-list">
+            @foreach (var q in Model.Questions)
+            {
+                n++;
+                var isEditing = editing && qf.Id == q.Id;
+                <li class="q-item @(isEditing ? "is-editing" : "")" id="q-@q.Id">
+                    <span class="q-num">@n</span>
+                    <div class="q-main">
+                        <div class="q-meta">
+                            <span class="chip chip-primary"><i class="bi @(q.Type == QuestionType.MultipleChoice ? "bi-ui-checks" : q.Type == QuestionType.TrueFalse ? "bi-toggles" : "bi-ui-radios")"></i> @L[Labels.QuestionType(q.Type)]</span>
+                            <span class="chip"><i class="bi bi-star"></i> @L.Format("{0} point(s)", q.Points)</span>
+                        </div>
+                        <p class="q-text bidi">@q.Text</p>
+                        <ul class="q-opts">
+                        @{ var k = 0; }
+                        @foreach (var o in q.Options.OrderBy(o => o.SortOrder))
+                        {
+                            <li class="@(o.IsCorrect ? "ok" : "")"><span class="q-key">@(q.Type == QuestionType.TrueFalse ? "" : keys[k % keys.Length])</span><span class="bidi">@(q.Type == QuestionType.TrueFalse ? L[o.Text] : o.Text)</span>@if (o.IsCorrect) { <i class="bi bi-check-circle-fill" title="@L["Correct answer"]"></i> }</li>
+                            k++;
+                        }
+                        </ul>
+                    </div>
+                    @if (!Model.Locked)
+                    {
+                        <div class="q-actions">
+                            <button class="btn btn-ghost btn-icon btn-sm" form="mv-up-@q.Id" title="@L["Move up"]" aria-label="@L["Move up"]" disabled="@(n == 1)"><i class="bi bi-arrow-up"></i></button>
+                            <button class="btn btn-ghost btn-icon btn-sm" form="mv-dn-@q.Id" title="@L["Move down"]" aria-label="@L["Move down"]" disabled="@(n == Model.Questions.Count)"><i class="bi bi-arrow-down"></i></button>
+                            <a class="btn btn-ghost btn-icon btn-sm" href="?edit=@q.Id#editor" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
+                            <button class="btn btn-ghost btn-icon btn-sm text-danger" form="del-@q.Id" title="@L["Delete"]" aria-label="@L["Delete"]"><i class="bi bi-trash3"></i></button>
+                        </div>
+                    }
+                </li>
+            }
+            </ol>
+        }
+
+        @if (!Model.Locked)
+        {
+            <div class="q-editor-wrap" id="editor" data-q-editor-wrap @(Model.EditorOpen ? "" : "hidden")>
+            <form method="post" asp-action="SaveQuestion" asp-route-id="@c.Id" class="q-editor" data-qeditor novalidate>
+                <input type="hidden" asp-for="Question.Id" />
+                <div class="q-editor-head">
+                    <h3><i class="bi @(editing ? "bi-pencil" : "bi-plus-circle")"></i> @(editing ? L.Format("Edit question {0}", Model.Questions.FindIndex(q => q.Id == qf.Id) + 1) : L.Format("Question {0}", Model.Questions.Count + 1))</h3>
+                    <a class="btn btn-ghost btn-sm" href="@Url.Action("Assessment", new { id = c.Id })#questions" data-close-editor>@L["Cancel"]</a>
+                </div>
+                <div asp-validation-summary="All" class="validation-summary-errors"></div>
+                <div class="seg-control mb-3" role="radiogroup" aria-label="@L["Question type"]">
+                    <label><input type="radio" name="Question.Type" value="1" checked="@(qf.Type == QuestionType.SingleChoice)" /><span><i class="bi bi-ui-radios"></i> @L["Single choice"]</span></label>
+                    <label><input type="radio" name="Question.Type" value="3" checked="@(qf.Type == QuestionType.MultipleChoice)" /><span><i class="bi bi-ui-checks"></i> @L["Multiple choice"]</span></label>
+                    <label><input type="radio" name="Question.Type" value="2" checked="@(qf.Type == QuestionType.TrueFalse)" /><span><i class="bi bi-toggles"></i> @L["True / False"]</span></label>
+                </div>
+                <label class="form-label" asp-for="Question.Text">@L["Question text"] <span class="text-danger">*</span></label>
+                <textarea class="form-control bidi mb-3" asp-for="Question.Text" rows="2" maxlength="2000" data-autofocus></textarea>
+
+                <div class="q-options" data-when-type="1,3">
+                    <div class="form-label d-flex justify-content-between"><span>@L["Answer options"]</span><span class="small text-muted" data-hint-single>@L["Mark the correct answer"]</span><span class="small text-muted" data-hint-multi hidden>@L["Mark every correct answer"]</span></div>
+                    @for (var i = 0; i < qf.Options.Count; i++)
+                    {
+                        <div class="opt-row" @(i >= shownOptions ? "hidden" : "") data-opt-row>
+                            <label class="opt-correct-wrap" title="@L["Correct answer"]">
+                                <input class="opt-correct" type="@(qf.Type == QuestionType.MultipleChoice ? "checkbox" : "radio")" name="Question.Correct" value="@i" checked="@qf.Correct.Contains(i)" aria-label="@L["Correct answer"] @keys[i]" />
+                                <span class="opt-key">@keys[i]</span>
+                            </label>
+                            <input class="form-control bidi" name="Question.Options[@i]" value="@qf.Options[i]" maxlength="1000" placeholder="@L.Format("Option {0}", keys[i])" aria-label="@L.Format("Option {0}", keys[i])" />
+                        </div>
+                    }
+                    <button type="button" class="btn btn-ghost btn-sm" data-add-option><i class="bi bi-plus-lg"></i> @L["Add option"]</button>
+                </div>
+                <div class="q-tf" data-when-type="2">
+                    <div class="form-label">@L["The correct answer is"]</div>
+                    <div class="yn-cards compact">
+                        <label class="yn-card"><input type="radio" name="Question.TrueIsCorrect" value="true" checked="@qf.TrueIsCorrect" /><span class="yn-icon ok"><i class="bi bi-check-lg"></i></span><strong>@L["True"]</strong></label>
+                        <label class="yn-card"><input type="radio" name="Question.TrueIsCorrect" value="false" checked="@(!qf.TrueIsCorrect)" /><span class="yn-icon bad"><i class="bi bi-x-lg"></i></span><strong>@L["False"]</strong></label>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-end gap-3 mt-3">
+                    <div style="width:9rem">
+                        <label class="form-label" asp-for="Question.Points">@L["Points"]</label>
+                        <input class="form-control" asp-for="Question.Points" type="number" min="1" max="1000" dir="ltr" />
+                    </div>
+                    <div class="ms-auto d-flex gap-2">
+                        <button class="btn btn-primary btn-lg"><i class="bi bi-check2"></i> @L[editing ? "Save changes" : "Save question"]</button>
+                    </div>
+                </div>
+                <p class="form-text mb-0 mt-2"><i class="bi bi-lightning-charge"></i> @L["After saving, the form is ready for the next question."]</p>
+            </form>
+            </div>
+        }
+    </section>
+    @foreach (var q in Model.Questions)
+    {
+        <form id="mv-up-@q.Id" method="post" asp-action="MoveQuestion" asp-route-id="@c.Id" asp-route-questionId="@q.Id" asp-route-dir="-1"></form>
+        <form id="mv-dn-@q.Id" method="post" asp-action="MoveQuestion" asp-route-id="@c.Id" asp-route-questionId="@q.Id" asp-route-dir="1"></form>
+        <form id="del-@q.Id" method="post" asp-action="DeleteQuestion" asp-route-id="@c.Id" asp-route-questionId="@q.Id" data-confirm="@L["Delete this question?"]"></form>
+    }
+}
+@if (Model.Others.Count > 0)
+{
+    <div class="alert alert-info mt-3"><i class="bi bi-info-circle"></i><span>@L.Format("This content has {0} more linked assessment(s); manage them from the Assessments page.", Model.Others.Count) <a asp-controller="Assessments" asp-action="Index">@L["Assessments"]</a></span></div>
+}
+<partial name="_Nav" model="Model" />

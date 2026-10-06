@@ -1,0 +1,9 @@
+@model string
+@* Quill editor bound to the hidden input whose id is the model. Toolbar tooltips come from the localization resources. *@
+@functions {
+    string Q(string key) => System.Text.Json.JsonSerializer.Serialize(L[key]);
+}
+<div class="editor-shell">
+<div data-quill-for="@Model" dir="@L.Dir" data-placeholder="@L["Start writing here, or paste from Word..."]" data-t-table-size="@L["Table size (rows x columns), e.g. 4x3"]"
+     data-quill-tips='{"ql-bold":@Html.Raw(Q("Editor: Bold")),"ql-italic":@Html.Raw(Q("Editor: Italic")),"ql-underline":@Html.Raw(Q("Editor: Underline")),"ql-blockquote":@Html.Raw(Q("Editor: Quote / callout")),"ql-link":@Html.Raw(Q("Editor: Link")),"ql-image":@Html.Raw(Q("Editor: Image")),"ql-clean":@Html.Raw(Q("Editor: Clear formatting")),"ql-list[value=ordered]":@Html.Raw(Q("Editor: Numbered list")),"ql-list[value=bullet]":@Html.Raw(Q("Editor: Bulleted list")),"ql-direction":@Html.Raw(Q("Editor: Right-to-left text")),"ql-align":@Html.Raw(Q("Editor: Alignment")),"ql-table-insert":@Html.Raw(Q("Editor: Insert table")),"ql-table-row":@Html.Raw(Q("Editor: Add row")),"ql-table-col":@Html.Raw(Q("Editor: Add column")),"ql-table-row-del":@Html.Raw(Q("Editor: Delete row")),"ql-table-col-del":@Html.Raw(Q("Editor: Delete column")),"ql-table-del":@Html.Raw(Q("Editor: Delete table"))}'></div>
+</div>

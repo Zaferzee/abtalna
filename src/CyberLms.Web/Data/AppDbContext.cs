@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Title).HasMaxLength(300);
             e.Property(x => x.Description).HasMaxLength(2000);
             e.Property(x => x.ExternalUrl).HasMaxLength(1000);
+            e.Property(x => x.AcknowledgmentText).HasMaxLength(1000);
             e.HasIndex(x => new { x.Status, x.Type });
             e.HasOne(x => x.CreatedBy).WithMany().HasForeignKey(x => x.CreatedById).OnDelete(DeleteBehavior.SetNull);
         });
