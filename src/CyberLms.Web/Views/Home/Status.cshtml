@@ -8,6 +8,8 @@
         403 => ("Access denied", "You do not have permission to view this page."),
         400 => ("Invalid request", "The request could not be processed. Your session may have expired; please reload the page and try again."),
         401 => ("Sign-in required", "Please sign in to continue."),
+        413 => ("File too large", "The uploaded file or request is larger than the allowed size. Choose a smaller file."),
+        503 => ("Service temporarily unavailable", "The system cannot reach its database at the moment. Please try again shortly; the details have been recorded in the server log."),
         _ => ("Unexpected error", "An unexpected error occurred. Please try again or contact the administrator."),
     };
 }

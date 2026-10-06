@@ -11,7 +11,7 @@ namespace CyberLms.Web.Services;
 /// Authentication abstraction: local password login and Windows (AD) login both end in the same place - an application
 /// User record plus a cookie. Application authorisation (roles) always comes from our own tables, never from the login method.
 /// </summary>
-public class AuthService(AppDbContext db, PasswordService passwords, IConfiguration cfg, AuditService audit)
+public class AuthService(AppDbContext db, PasswordService passwords, IConfiguration cfg, AuditService audit, IDirectoryLookup directory, ILogger<AuthService> log)
 {
     private const int MaxFailures = 5;
     private static readonly TimeSpan Lockout = TimeSpan.FromMinutes(15);
@@ -39,23 +39,61 @@ public class AuthService(AppDbContext db, PasswordService passwords, IConfigurat
         return (user, null);
     }
 
-    /// <summary>Maps a Windows identity (DOMAIN\user) to a User, optionally auto-provisioning an employee account.</summary>
+    /// <summary>
+    /// Maps a Windows identity (DOMAIN\user, as given by IIS) to an application User.
+    /// * A domain user NEVER becomes an administrator automatically: new accounts only get the Employee (User) role.
+    /// * Accounts are created on first valid sign-in when Authentication:Windows:AutoProvision is true (default).
+    /// * Authentication:Windows:AllowedDomains (optional) rejects identities from other domains / local machine accounts.
+    /// * No password is ever stored for Windows accounts.
+    /// </summary>
     public async Task<(User? User, string? Error)> ResolveWindowsAsync(string windowsName)
     {
-        var n = windowsName.Trim().ToLowerInvariant();
+        windowsName = windowsName.Trim();
+        var slash = windowsName.IndexOf('\\');
+        var domain = slash > 0 ? windowsName[..slash] : "";
+        var sam = slash > 0 ? windowsName[(slash + 1)..] : windowsName;
+        if (sam.Length == 0 || sam.Length > 200) return (null, "Your account has not been enabled in this system.");
+
+        var allowed = cfg.GetSection("Authentication:Windows:AllowedDomains").Get<string[]>()?.Where(d => !string.IsNullOrWhiteSpace(d)).ToArray() ?? [];
+        if (allowed.Length > 0 && !allowed.Contains(domain, StringComparer.OrdinalIgnoreCase))
+        {
+            log.LogWarning("Windows sign-in rejected: domain '{Domain}' of identity '{Identity}' is not in Authentication:Windows:AllowedDomains.", domain, windowsName);
+            return (null, "Your Windows domain is not permitted for this system.");
+        }
+
+        var n = windowsName.ToLowerInvariant();
         var user = await db.Users.Include(u => u.UserRoles).ThenInclude(r => r.Role).FirstOrDefaultAsync(u => u.NormalizedUsername == n);
         if (user == null)
         {
-            if (!cfg.GetValue("Authentication:Windows:AutoProvision", true)) return (null, "Your account has not been enabled in this system.");
+            if (!cfg.GetValue("Authentication:Windows:AutoProvision", true))
+            {
+                log.LogWarning("Windows sign-in rejected: no application account for '{Identity}' and AutoProvision is off.", windowsName);
+                return (null, "Your account has not been enabled in this system.");
+            }
+            var info = directory.Find(domain, sam);
             var role = await db.Roles.FirstAsync(r => r.Name == RoleNames.User);
-            var display = windowsName.Contains('\\') ? windowsName[(windowsName.IndexOf('\\') + 1)..] : windowsName;
-            user = new User { Username = windowsName.Trim(), NormalizedUsername = n, DisplayName = display, AuthSource = "Windows", ExternalId = windowsName.Trim() };
+            user = new User
+            {
+                Username = windowsName, NormalizedUsername = n, ExternalId = windowsName, AuthSource = "Windows",
+                DisplayName = string.IsNullOrWhiteSpace(info?.DisplayName) ? sam : info!.DisplayName!, Email = info?.Email,
+            };
             user.UserRoles.Add(new UserRole { Role = role });
             db.Users.Add(user);
             await db.SaveChangesAsync();
             audit.Add("USER_CREATED", "User", user.Id, Res.Ar("Account created automatically from Windows identity {0}", windowsName));
+            log.LogInformation("Account created from Windows identity '{Identity}'.", windowsName);
         }
-        if (!user.IsActive) return (null, "Your account is disabled.");
+        else if (user.AuthSource == "Windows" && user.IsActive && (string.IsNullOrWhiteSpace(user.Email) || user.DisplayName == sam))
+        {
+            // Pre-created / imported accounts: fill in display name and e-mail from AD once, never overwrite edits.
+            var info = directory.Find(domain, sam);
+            if (info != null)
+            {
+                if (string.IsNullOrWhiteSpace(user.Email) && !string.IsNullOrWhiteSpace(info.Email)) user.Email = info.Email;
+                if (user.DisplayName == sam && !string.IsNullOrWhiteSpace(info.DisplayName)) user.DisplayName = info.DisplayName!;
+            }
+        }
+        if (!user.IsActive) { log.LogWarning("Windows sign-in rejected: account '{Identity}' is disabled.", windowsName); return (null, "Your account is disabled."); }
         return (user, null);
     }
 

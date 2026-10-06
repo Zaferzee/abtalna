@@ -16,6 +16,17 @@ using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Production logging: rolling daily files (IIS does not capture the console). Path defaults to <app>\logs; set Logging:File:Path to a dedicated folder.
+if (builder.Configuration.GetValue("Logging:File:Enabled", true))
+{
+    try
+    {
+        var logDir = builder.Configuration["Logging:File:Path"] ?? Path.Combine(builder.Environment.ContentRootPath, "logs");
+        builder.Logging.AddProvider(new FileLoggerProvider(logDir, builder.Configuration.GetValue("Logging:File:RetentionDays", 30)));
+    }
+    catch (Exception ex) { Console.Error.WriteLine("File logging disabled: " + ex.Message); }
+}
+
 // Secrets (DB password, SMTP password) must come from env vars / secrets / appsettings.Production.json - never from source.
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured.");
@@ -37,10 +48,11 @@ builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<IDirectoryLookup, ActiveDirectoryLookup>();
 
 var storage = new StorageService(builder.Configuration, builder.Environment);
 builder.Services.AddSingleton(storage);
-builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = storage.MaxRequestBytes);
+builder.WebHost.ConfigureKestrel(k => { k.AddServerHeader = false; k.Limits.MaxRequestBodySize = storage.MaxRequestBytes; });
 builder.Services.Configure<FormOptions>(o => { o.MultipartBodyLengthLimit = storage.MaxRequestBytes; o.ValueCountLimit = 4000; });
 
 var authMode = builder.Configuration["Authentication:Mode"] ?? "Local"; // Local | Windows | Both
@@ -63,14 +75,24 @@ var auth = builder.Services.AddAuthentication(CookieAuthenticationDefaults.Authe
             // Re-check (cached 1 min) that the account is still active and its roles unchanged.
             var id = ctx.Principal!.UserId();
             var cache = ctx.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
-            var state = await cache.GetOrCreateAsync($"userstate.{id}", async e =>
+            UserState? state;
+            try
             {
-                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
-                var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-                var u = await db.Users.AsNoTracking().Where(x => x.Id == id)
-                    .Select(x => new { x.IsActive, Roles = x.UserRoles.Select(r => r.Role.Name).OrderBy(n => n).ToList() }).FirstOrDefaultAsync();
-                return u == null ? null : new UserState(u.IsActive, string.Join(",", u.Roles));
-            });
+                state = await cache.GetOrCreateAsync($"userstate.{id}", async e =>
+                {
+                    e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+                    var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                    var u = await db.Users.AsNoTracking().Where(x => x.Id == id)
+                        .Select(x => new { x.IsActive, Roles = x.UserRoles.Select(r => r.Role.Name).OrderBy(n => n).ToList() }).FirstOrDefaultAsync();
+                    return u == null ? null : new UserState(u.IsActive, string.Join(",", u.Roles));
+                });
+            }
+            catch (Exception ex)
+            {
+                // Database unreachable: keep the existing sign-in so the (Arabic) error page can render; data pages fail on their own.
+                ctx.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("Auth").LogError(ex, "Could not re-validate the signed-in user (database unavailable?).");
+                return;
+            }
             var claimed = string.Join(",", ctx.Principal!.FindAll(ClaimTypes.Role).Select(c => c.Value).OrderBy(n => n));
             if (state is not { Active: true } || state.Roles != claimed)
             {
@@ -84,7 +106,8 @@ if (windowsEnabled && !underIis) auth.AddNegotiate();
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("Admin", p => p.RequireRole(RoleNames.Admin));
 
-builder.Services.AddAntiforgery(o => { o.Cookie.Name = "CyberLms.Csrf"; o.Cookie.HttpOnly = true; o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; });
+builder.Services.AddAntiforgery(o => { o.Cookie.Name = "CyberLms.Csrf"; o.Cookie.HttpOnly = true; o.Cookie.SameSite = SameSiteMode.Strict;
+    o.Cookie.SecurePolicy = builder.Configuration.GetValue("Security:RequireHttpsCookies", !builder.Environment.IsDevelopment()) ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest; });
 builder.Services.AddControllersWithViews(o => { o.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()); o.Filters.Add<MustChangePasswordFilter>(); })
     .AddViewLocalization()
     .AddDataAnnotationsLocalization(o => o.DataAnnotationLocalizerProvider = (_, f) => f.Create(typeof(SharedResource)));
@@ -143,7 +166,31 @@ app.UseAuthorization();
 app.MapControllerRoute("areas", "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
+// Liveness/readiness for monitoring and the deployment smoke test (no data returned).
+app.MapGet("/health", async (AppDbContext db) =>
+{
+    try
+    {
+        if (!await db.Database.CanConnectAsync()) return Results.Json(new { status = "database-unreachable" }, statusCode: 503);
+        var pending = (await db.Database.GetPendingMigrationsAsync()).Count();
+        return pending == 0 ? Results.Json(new { status = "healthy" }) : Results.Json(new { status = "migrations-pending", pending }, statusCode: 503);
+    }
+    catch { return Results.Json(new { status = "database-unreachable" }, statusCode: 503); }
+}).AllowAnonymous();
+
 await DbSeeder.MigrateAndSeedAsync(app.Services, builder.Configuration, app.Logger);
+
+// One-time administrator bootstrap from the server console:  dotnet CyberLms.Web.dll --bootstrap-admin "DOMAIN\\user"
+var bootstrapIdx = Array.IndexOf(args, "--bootstrap-admin");
+if (bootstrapIdx >= 0)
+{
+    var identity = bootstrapIdx + 1 < args.Length ? args[bootstrapIdx + 1] : "";
+    var (ok, message) = await DbSeeder.BootstrapAdminAsync(app.Services, identity, app.Logger);
+    Console.WriteLine(message);
+    Environment.ExitCode = ok ? 0 : 1;
+    return;
+}
+
 app.Run();
 
 record UserState(bool Active, string Roles);

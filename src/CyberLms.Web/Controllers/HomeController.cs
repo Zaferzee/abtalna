@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CyberLms.Web.Controllers;
 
 [Authorize]
-public class HomeController(AppDbContext db) : AppController
+public class HomeController(AppDbContext db, ILogger<HomeController> log) : AppController
 {
     public async Task<IActionResult> Index()
     {
@@ -32,7 +32,20 @@ public class HomeController(AppDbContext db) : AppController
     }
 
     [AllowAnonymous, IgnoreAntiforgeryToken]
-    public IActionResult Error() => View("Status", new ErrorVm { Code = 500, RequestId = HttpContext.TraceIdentifier });
+    public IActionResult Error()
+    {
+        // Reached through the exception handler: classify the failure so the user gets a precise (Arabic) message; details are in the server log.
+        var ex = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+        var code = 500;
+        for (var e = ex; e != null; e = e.InnerException)
+        {
+            if (e is Microsoft.AspNetCore.Http.BadHttpRequestException { StatusCode: 413 } || (e is InvalidDataException && e.Message.Contains("length limit", StringComparison.OrdinalIgnoreCase))) { code = 413; break; }
+            if (e is System.Data.Common.DbException || e is System.Net.Sockets.SocketException) { code = 503; break; }
+        }
+        if (code != 500) log.LogWarning(ex, "Request {RequestId} failed with a handled condition ({Code}).", HttpContext.TraceIdentifier, code);
+        Response.StatusCode = code;
+        return View("Status", new ErrorVm { Code = code, RequestId = HttpContext.TraceIdentifier });
+    }
 
     /// <summary>Friendly Arabic page for 400/403/404/500 (re-executed by the status-code middleware).</summary>
     [AllowAnonymous, IgnoreAntiforgeryToken] // re-executed for failed POSTs (e.g. CSRF 400), so it must not demand a token itself

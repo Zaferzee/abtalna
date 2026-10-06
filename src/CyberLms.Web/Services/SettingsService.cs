@@ -7,17 +7,27 @@ using Microsoft.Extensions.Caching.Memory;
 namespace CyberLms.Web.Services;
 
 /// <summary>Key/value settings stored in PostgreSQL, cached in memory. Changes apply immediately (cache is invalidated on save).</summary>
-public class SettingsService(IServiceScopeFactory scopes, IMemoryCache cache)
+public class SettingsService(IServiceScopeFactory scopes, IMemoryCache cache, ILogger<SettingsService>? log = null)
 {
     private const string CacheKey = "settings.all";
 
     public IReadOnlyDictionary<string, string?> All()
     {
-        return cache.GetOrCreate(CacheKey, _ =>
+        return cache.GetOrCreate(CacheKey, e =>
         {
-            using var scope = scopes.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            return (IReadOnlyDictionary<string, string?>)db.SystemSettings.AsNoTracking().ToDictionary(s => s.Key, s => s.Value);
+            try
+            {
+                using var scope = scopes.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                return (IReadOnlyDictionary<string, string?>)db.SystemSettings.AsNoTracking().ToDictionary(s => s.Key, s => s.Value);
+            }
+            catch (Exception ex)
+            {
+                // Database unavailable: fall back to defaults for a few seconds so error pages can still render (in Arabic).
+                log?.LogError(ex, "Settings could not be loaded from the database; using defaults.");
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);
+                return new Dictionary<string, string?>();
+            }
         })!;
     }
 

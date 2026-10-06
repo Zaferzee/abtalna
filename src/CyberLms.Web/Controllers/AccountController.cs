@@ -10,13 +10,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberLms.Web.Controllers;
 
-public class AccountController(AuthService auth, AppDbContext db, PasswordService passwords, AuditService audit, IConfiguration cfg) : AppController
+public class AccountController(AuthService auth, AppDbContext db, PasswordService passwords, AuditService audit, IConfiguration cfg, ILogger<AccountController> log) : AppController
 {
     [AllowAnonymous, HttpGet]
-    public IActionResult Login(string? returnUrl)
+    public IActionResult Login(string? returnUrl, bool signedOut = false)
     {
         if (User.Identity?.IsAuthenticated == true) return LocalRedirect("/");
-        ViewBag.Auth = auth;
+        // Windows-only mode: sign in silently with the domain identity (unless the user just signed out or an error is pending).
+        if (auth.WindowsEnabled && !auth.LocalEnabled && !signedOut && TempData.Peek("Error") == null)
+            return RedirectToAction(nameof(WindowsLogin), new { returnUrl });
+        ViewBag.Auth = auth; ViewBag.SignedOut = signedOut;
         return View(new LoginVm { ReturnUrl = returnUrl });
     }
 
@@ -30,6 +33,7 @@ public class AccountController(AuthService auth, AppDbContext db, PasswordServic
         {
             audit.Add("LOGIN_FAILED", "User", null, Res.Ar("Username: {0}", vm.Username));
             await db.SaveChangesAsync();
+            log.LogWarning("Failed sign-in for '{User}' from {Ip}: {Reason}", vm.Username, HttpContext.Connection.RemoteIpAddress, error);
             vm.Error = L[error!]; vm.Password = "";
             return View(vm);
         }
@@ -42,9 +46,10 @@ public class AccountController(AuthService auth, AppDbContext db, PasswordServic
     public async Task<IActionResult> WindowsLogin(string? returnUrl)
     {
         if (!auth.WindowsEnabled) return NotFound();
+        // Under IIS (in-process) the "Windows" scheme exposes the identity IIS authenticated (Kerberos/NTLM); under Kestrel Negotiate does.
         var scheme = !string.IsNullOrEmpty(cfg["ASPNETCORE_IIS_HTTPAUTH"]) ? "Windows" : NegotiateDefaults.AuthenticationScheme;
         var result = await HttpContext.AuthenticateAsync(scheme);
-        if (!result.Succeeded || result.Principal?.Identity?.Name is not { } name) return Challenge(scheme);
+        if (!result.Succeeded || result.Principal?.Identity is not { IsAuthenticated: true, Name: { Length: > 0 } name }) return Challenge(scheme);
         var (user, error) = await auth.ResolveWindowsAsync(name);
         if (user == null) { TempData["Error"] = L[error!]; return RedirectToAction(nameof(Login)); }
         await auth.SignInAsync(HttpContext, user);
@@ -56,7 +61,7 @@ public class AccountController(AuthService auth, AppDbContext db, PasswordServic
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction(nameof(Login));
+        return RedirectToAction(nameof(Login), new { signedOut = true });
     }
 
     [AllowAnonymous]
@@ -94,7 +99,7 @@ public class AccountController(AuthService auth, AppDbContext db, PasswordServic
         if (lang is "ar" or "en")
             Response.Cookies.Append(CultureSetup.CookieName,
                 Microsoft.AspNetCore.Localization.CookieRequestCultureProvider.MakeCookieValue(new Microsoft.AspNetCore.Localization.RequestCulture(lang == "ar" ? "ar-SA" : "en-US")),
-                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), HttpOnly = true, SameSite = SameSiteMode.Lax, IsEssential = true });
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), HttpOnly = true, SameSite = SameSiteMode.Lax, IsEssential = true, Secure = Request.IsHttps });
         return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : "/");
     }
 }

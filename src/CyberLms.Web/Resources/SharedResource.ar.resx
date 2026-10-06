@@ -26,8 +26,10 @@
   <data name="Active" xml:space="preserve"><value>نشط</value></data>
   <data name="Add at least one question before publishing." xml:space="preserve"><value>أضف سؤالاً واحداً على الأقل قبل النشر.</value></data>
   <data name="Add question" xml:space="preserve"><value>إضافة سؤال</value></data>
+  <data name="ADMIN_BOOTSTRAPPED" xml:space="preserve"><value>تعيين مدير نظام من الخادم</value></data>
   <data name="Administration" xml:space="preserve"><value>الإدارة</value></data>
   <data name="Administrator" xml:space="preserve"><value>مدير النظام</value></data>
+  <data name="Administrator '{0}' assigned from the server command line" xml:space="preserve"><value>تم تعيين '{0}' مديراً للنظام من سطر أوامر الخادم</value></data>
   <data name="All ({0}) acknowledgments reset" xml:space="preserve"><value>تمت إعادة تعيين جميع الإقرارات ({0})</value></data>
   <data name="All actions" xml:space="preserve"><value>جميع الإجراءات</value></data>
   <data name="All assessments" xml:space="preserve"><value>كل الاختبارات</value></data>
@@ -181,6 +183,7 @@
   <data name="Favicon (ICO/PNG)" xml:space="preserve"><value>أيقونة المتصفح (ICO/PNG)</value></data>
   <data name="File content does not match its extension." xml:space="preserve"><value>محتوى الملف لا يطابق امتداده.</value></data>
   <data name="File is too large (max {0} MB for this type)." xml:space="preserve"><value>حجم الملف كبير جداً (الحد الأقصى {0} ميغابايت لهذا النوع).</value></data>
+  <data name="File too large" xml:space="preserve"><value>الملف كبير جداً</value></data>
   <data name="File type '{0}' is not allowed here." xml:space="preserve"><value>نوع الملف '{0}' غير مسموح به هنا.</value></data>
   <data name="File type '{0}' is not allowed." xml:space="preserve"><value>نوع الملف '{0}' غير مسموح به.</value></data>
   <data name="File: acknowledgments" xml:space="preserve"><value>الإقرارات</value></data>
@@ -363,6 +366,7 @@
   <data name="Send test email" xml:space="preserve"><value>إرسال بريد تجريبي</value></data>
   <data name="Sender address" xml:space="preserve"><value>عنوان المرسل</value></data>
   <data name="Sender name" xml:space="preserve"><value>اسم المرسل</value></data>
+  <data name="Service temporarily unavailable" xml:space="preserve"><value>الخدمة غير متاحة مؤقتاً</value></data>
   <data name="Settings" xml:space="preserve"><value>الإعدادات</value></data>
   <data name="SETTINGS_UPDATED" xml:space="preserve"><value>تعديل الإعدادات</value></data>
   <data name="Sidebar background" xml:space="preserve"><value>خلفية القائمة الجانبية</value></data>
@@ -400,6 +404,8 @@
   <data name="The page you requested does not exist or is not available to you." xml:space="preserve"><value>الصفحة المطلوبة غير موجودة أو غير متاحة لك.</value></data>
   <data name="The request could not be processed. Your session may have expired; please reload the page and try again." xml:space="preserve"><value>تعذّر تنفيذ الطلب. قد تكون الجلسة انتهت، يرجى إعادة تحميل الصفحة والمحاولة من جديد.</value></data>
   <data name="The saved theme is shown. Changes apply to all users immediately after saving - no rebuild or restart needed." xml:space="preserve"><value>تظهر الهوية المحفوظة. تُطبّق التغييرات على جميع المستخدمين فور الحفظ دون إعادة بناء أو إعادة تشغيل.</value></data>
+  <data name="The system cannot reach its database at the moment. Please try again shortly; the details have been recorded in the server log." xml:space="preserve"><value>يتعذّر على النظام الوصول إلى قاعدة البيانات حالياً. يرجى المحاولة بعد قليل، وقد سُجّلت التفاصيل في سجل الخادم.</value></data>
+  <data name="The uploaded file or request is larger than the allowed size. Choose a smaller file." xml:space="preserve"><value>حجم الملف المرفوع أو الطلب أكبر من الحد المسموح به. اختر ملفاً أصغر.</value></data>
   <data name="The user must change it at next sign-in. Also clears lockout." xml:space="preserve"><value>سيُطلب من المستخدم تغييرها عند الدخول التالي، كما يتم رفع القفل عن الحساب.</value></data>
   <data name="The value '{0}' is invalid." xml:space="preserve"><value>القيمة '{0}' غير صالحة.</value></data>
   <data name="The value '{0}' is not valid for {1}." xml:space="preserve"><value>القيمة '{0}' غير صالحة للحقل {1}.</value></data>
@@ -451,6 +457,7 @@
   <data name="You cannot remove your own admin role or deactivate yourself." xml:space="preserve"><value>لا يمكنك إزالة صلاحية المدير عن نفسك أو تعطيل حسابك.</value></data>
   <data name="You did not reach the passing score. Review the material and try again if attempts remain." xml:space="preserve"><value>لم تبلغ درجة النجاح. راجع المحتوى وأعد المحاولة إن كانت لديك محاولات متبقية.</value></data>
   <data name="You do not have permission to view this page." xml:space="preserve"><value>ليست لديك صلاحية لعرض هذه الصفحة.</value></data>
+  <data name="You have been signed out." xml:space="preserve"><value>تم تسجيل الخروج بنجاح.</value></data>
   <data name="You have not acknowledged any policy yet." xml:space="preserve"><value>لم تقم بالإقرار على أي سياسة بعد.</value></data>
   <data name="You have not yet attempted: {0}" xml:space="preserve"><value>لم تقم بعد بأداء الاختبار: {0}</value></data>
   <data name="You must change your password before continuing." xml:space="preserve"><value>يجب تغيير كلمة المرور قبل المتابعة.</value></data>
@@ -459,6 +466,7 @@
   <data name="Your account is disabled." xml:space="preserve"><value>حسابك معطّل.</value></data>
   <data name="Your answer" xml:space="preserve"><value>إجابتك</value></data>
   <data name="Your result" xml:space="preserve"><value>نتيجتك</value></data>
+  <data name="Your Windows domain is not permitted for this system." xml:space="preserve"><value>نطاق Windows الخاص بك غير مسموح به في هذا النظام.</value></data>
   <data name="{0} acknowledged" xml:space="preserve"><value>{0} تم الإقرار</value></data>
   <data name="{0} acknowledgment(s) reset." xml:space="preserve"><value>تمت إعادة تعيين {0} إقرار.</value></data>
   <data name="{0} and {1} do not match." xml:space="preserve"><value>الحقلان {0} و{1} غير متطابقين.</value></data>

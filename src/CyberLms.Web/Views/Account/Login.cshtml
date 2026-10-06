@@ -27,6 +27,7 @@
         <div class="card"><div class="card-body p-4">
             <h2 class="h5">@b.LoginTitle</h2>
             @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <p class="text-muted bidi">@b.LoginSubtitle</p> }
+            @if (ViewBag.SignedOut == true) { <div class="alert alert-success" role="status">@L["You have been signed out."]</div> }
             @if (TempData["Error"] is string te) { <div class="alert alert-danger" role="alert">@te</div> }
             @if (Model.Error != null) { <div class="alert alert-danger" role="alert">@Model.Error</div> }
             @if (!ViewData.ModelState.IsValid) { <div class="alert alert-danger" role="alert"><div asp-validation-summary="All"></div></div> }

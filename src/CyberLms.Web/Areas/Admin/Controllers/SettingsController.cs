@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CyberLms.Web.Areas.Admin.Controllers;
 
-public class SettingsController(SettingsService settings, AppDbContext db, StorageService storage, AuditService audit, SmtpConfigProvider smtp, IConfiguration cfg) : AdminController
+public class SettingsController(SettingsService settings, AppDbContext db, StorageService storage, AuditService audit, SmtpConfigProvider smtp, IConfiguration cfg, ILogger<SettingsController> log) : AdminController
 {
     private SettingsVm Load()
     {
@@ -125,7 +125,11 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
             await client.DisconnectAsync(true, cts.Token);
             Success("Test email sent to {0}.", to);
         }
-        catch (Exception ex) { Failure("Test failed: {0}", ex.Message); }
+        catch (Exception ex)
+        {
+            log.LogWarning(ex, "SMTP test e-mail to {Recipient} failed (host {Host}:{Port}, security {Security}).", to, c.Host, c.Port, c.Security);
+            Failure("Test failed: {0}", ex.Message);
+        }
         return RedirectToAction(nameof(Index));
     }
 }

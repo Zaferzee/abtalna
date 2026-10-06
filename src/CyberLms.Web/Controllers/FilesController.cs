@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberLms.Web.Controllers;
 
-public class FilesController(AppDbContext db, StorageService storage, SettingsService settings) : AppController
+public class FilesController(AppDbContext db, StorageService storage, SettingsService settings, ILogger<FilesController> log) : AppController
 {
     /// <summary>Authenticated download/stream of a content attachment. Non-admins can only reach attachments of published content.</summary>
     [Authorize]
@@ -17,7 +17,11 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
         if (a == null) return NotFound();
         if (a.Content.Status != ContentStatus.Published && !User.IsInRole(RoleNames.Admin)) return NotFound();
         var path = storage.Resolve(a.StoredPath);
-        if (path == null || !System.IO.File.Exists(path)) return NotFound();
+        if (path == null || !System.IO.File.Exists(path))
+        {
+            log.LogWarning("Attachment {AttachmentId} (content {ContentId}) is registered but its file is missing or its path is invalid: {StoredPath}", a.Id, a.ContentId, a.StoredPath);
+            return NotFound();
+        }
         Response.Headers["X-Content-Type-Options"] = "nosniff";
         Response.Headers["Content-Security-Policy"] = "default-src 'none'; sandbox";
         var stream = System.IO.File.OpenRead(path);

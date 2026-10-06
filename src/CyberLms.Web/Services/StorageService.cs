@@ -6,7 +6,7 @@ public record UploadRule(AttachmentKind Kind, string[] Mimes, long MaxBytes);
 
 public class StorageOptions
 {
-    public string RootPath { get; set; } = "storage";
+    public string RootPath { get; set; } = "";
     public int MaxImageMB { get; set; } = 10;
     public int MaxDocumentMB { get; set; } = 50;
     public int MaxVideoMB { get; set; } = 500;
@@ -26,7 +26,15 @@ public class StorageService
     public StorageService(IConfiguration cfg, IWebHostEnvironment env)
     {
         _opt = cfg.GetSection("Storage").Get<StorageOptions>() ?? new StorageOptions();
-        _root = Path.GetFullPath(Path.IsPathRooted(_opt.RootPath) ? _opt.RootPath : Path.Combine(env.ContentRootPath, _opt.RootPath));
+        var configured = _opt.RootPath;
+        if (string.IsNullOrWhiteSpace(configured))
+        {
+            if (!env.IsDevelopment()) throw new InvalidOperationException("Storage:RootPath is not configured. Set it to a dedicated absolute folder outside the application folder (e.g. via appsettings.Production.json).");
+            configured = "storage-dev";
+        }
+        else if (!env.IsDevelopment() && !Path.IsPathRooted(configured))
+            throw new InvalidOperationException("Storage:RootPath must be an absolute path outside the application folder.");
+        _root = Path.GetFullPath(Path.IsPathRooted(configured) ? configured : Path.Combine(env.ContentRootPath, configured));
         Directory.CreateDirectory(_root);
     }
 

@@ -13,7 +13,8 @@ public class TestApp : WebApplicationFactory<Program>, IAsyncLifetime
 {
     public const string AdminPass = "Admin#Pass12345";
     private readonly string _dbName = "cyberlms_test_" + Guid.NewGuid().ToString("N")[..10];
-    private readonly string _baseCs = Environment.GetEnvironmentVariable("TEST_PG") ?? "Host=localhost;Username=cyberlms;Password=devpass_local_only";
+    // Connection to a PostgreSQL server whose role may CREATE DATABASE, e.g. "Host=localhost;Username=tester;Password=..." (never committed).
+    private readonly string _baseCs = Environment.GetEnvironmentVariable("TEST_PG") ?? throw new InvalidOperationException("Set the TEST_PG environment variable to a PostgreSQL connection string (without Database=) for a role that can create databases.");
     public string StorageDir { get; } = Path.Combine(Path.GetTempPath(), "cyberlms-test-" + Guid.NewGuid().ToString("N"));
 
     public TestApp()
@@ -23,6 +24,13 @@ public class TestApp : WebApplicationFactory<Program>, IAsyncLifetime
         Environment.SetEnvironmentVariable("Seed__AdminPassword", AdminPass);
         Environment.SetEnvironmentVariable("Storage__RootPath", StorageDir);
         Environment.SetEnvironmentVariable("Authentication__Mode", "Local");
+        Environment.SetEnvironmentVariable("Authentication__Windows__AllowedDomains__0", null);
+        Environment.SetEnvironmentVariable("ASPNETCORE_IIS_HTTPAUTH", null);
+        Environment.SetEnvironmentVariable("Logging__File__Enabled", "false");
+        // small limits so the "oversized upload" failure tests are cheap
+        Environment.SetEnvironmentVariable("Storage__MaxImageMB", "1");
+        Environment.SetEnvironmentVariable("Storage__MaxDocumentMB", "1");
+        Environment.SetEnvironmentVariable("Storage__MaxVideoMB", "2");
     }
 
     public Task InitializeAsync() => Task.CompletedTask;

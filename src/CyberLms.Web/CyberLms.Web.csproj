@@ -16,10 +16,13 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="System.DirectoryServices" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Update="web.config" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Development-only settings must never be part of a production package -->
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
     <Content Update="appsettings.Production.sample.json" CopyToPublishDirectory="PreserveNewest" />
     <Content Remove="storage-dev/**" />
     <None Remove="storage-dev/**" />
