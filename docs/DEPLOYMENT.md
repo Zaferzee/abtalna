@@ -91,6 +91,8 @@ Secrets can alternatively be set as machine environment variables (`ConnectionSt
 ```
 The script puts up `app_offline.htm` (Arabic maintenance page), replaces application files, **keeps `appsettings.Production.json`, storage and logs**, and starts the site. If the release contains a new migration: run the new `sql\02-migrate.sql` and `sql\03-grants.sql` as `cyberlms_owner` before step "bring the site back" (the application logs a CRITICAL message and `/health` returns 503 until the schema is current). Take a backup first.
 
+> Releases from the content-authoring update onwards contain the migration `20261006173411_AddContentAcknowledgmentText` (one nullable column, no data change). Apply the new `sql\02-migrate.sql` (it skips what is already applied) and re-run `sql\03-grants.sql`; `04-verify.sql` then lists both migrations.
+
 ## 8. Logs and monitoring
 * Application log: `Logging:File:Path\cyberlms-YYYYMMDD.log` (30 days). Contains errors, warnings (failed sign-ins with user name + IP, rejected domains, SMTP failures, missing files) and start-up messages. It never contains passwords, connection strings, request bodies or SMTP credentials.
 * IIS logs: `%SystemDrive%\inetpub\logs\LogFiles`. ASP.NET Core Module startup failures: Windows Event Log (Application) and, if you set `stdoutLogEnabled="true"` temporarily, `C:\inetpub\cyberlms\logs\stdout*`.

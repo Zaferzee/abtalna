@@ -123,6 +123,9 @@
       }
     });
     if (rtl) q.root.setAttribute('dir', 'rtl');
+    // Pasted <script>/<style>/<title> blocks (e.g. from web pages or Word) are dropped entirely, not kept as text.
+    var Delta = Quill.import('delta');
+    ['SCRIPT', 'STYLE', 'TITLE', 'META', 'XML'].forEach(function (tag) { q.clipboard.addMatcher(tag, function () { return new Delta(); }); });
     var bar = q.container.previousSibling;
     if (bar) {
       bar.setAttribute('aria-label', t('quill'));

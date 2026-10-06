@@ -62,20 +62,21 @@
         </div>
     </section>
 
-    <form method="post" asp-action="Publish" asp-route-id="@c.Id" class="publish-actions">
-        @if (!published)
-        {
-            <button class="btn btn-outline-secondary btn-lg" name="go" value="draft"><i class="bi bi-save"></i> @L["Save as draft"]</button>
-            <button class="btn btn-success btn-lg" name="go" value="publish" disabled="@(Model.Blockers.Count > 0)" data-confirm-click="@L[a != null ? "Publish the content and its assessment now? Employees will see them immediately." : "Publish the content now? Employees will see it immediately."]"><i class="bi bi-rocket-takeoff"></i> @L["Publish now"]</button>
-        }
-        else
-        {
-            @if (a != null && !asmPublished && Model.Blockers.Count == 0) { <button class="btn btn-success btn-lg" name="go" value="publish"><i class="bi bi-rocket-takeoff"></i> @L["Publish the assessment too"]</button> }
-            <button class="btn btn-outline-danger" name="go" value="unpublish" data-confirm-click="@L["Unpublish this material (and its assessment)? Employees will no longer see it. Acknowledgments and results are kept."]"><i class="bi bi-pause-circle"></i> @L["Unpublish"]</button>
-            <a class="btn btn-outline-secondary btn-lg" asp-controller="Content" asp-action="Index"><i class="bi bi-list-ul"></i> @L["Back to Content Management"]</a>
-        }
-    </form>
+
 </div>
 <div class="wz-nav"><div class="wz-nav-inner">
     <a class="btn btn-outline-secondary" asp-action="Preview" asp-route-id="@c.Id"><i class="bi bi-arrow-right-short flip-rtl"></i> @L["Previous"]</a>
+    <form method="post" asp-action="Publish" asp-route-id="@c.Id" class="wz-nav-end">
+            @if (!published)
+            {
+                <button class="btn btn-outline-secondary btn-lg" name="go" value="draft"><i class="bi bi-save"></i> @L["Save as draft"]</button>
+                <button class="btn btn-success btn-lg" name="go" value="publish" disabled="@(Model.Blockers.Count > 0)" data-confirm-click="@L[a != null ? "Publish the content and its assessment now? Employees will see them immediately." : "Publish the content now? Employees will see it immediately."]"><i class="bi bi-rocket-takeoff"></i> @L["Publish now"]</button>
+            }
+            else
+            {
+                @if (a != null && !asmPublished && Model.Blockers.Count == 0) { <button class="btn btn-success btn-lg" name="go" value="publish"><i class="bi bi-rocket-takeoff"></i> @L["Publish the assessment too"]</button> }
+                <button class="btn btn-outline-danger" name="go" value="unpublish" data-confirm-click="@L["Unpublish this material (and its assessment)? Employees will no longer see it. Acknowledgments and results are kept."]"><i class="bi bi-pause-circle"></i> @L["Unpublish"]</button>
+                <a class="btn btn-outline-secondary btn-lg" asp-controller="Content" asp-action="Index"><i class="bi bi-list-ul"></i> @L["Back to Content Management"]</a>
+            }
+    </form>
 </div></div>

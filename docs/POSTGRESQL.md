@@ -19,7 +19,7 @@ Files (in the package `sql\`): `01-create-roles-and-database.sql`, `02-migrate.s
    psql -U cyberlms_owner -h <host> -d cyberlms -v ON_ERROR_STOP=1 -f 02-migrate.sql
    psql -U cyberlms_owner -h <host> -d cyberlms -v ON_ERROR_STOP=1 -f 03-grants.sql
    ```
-3. Verify: `psql -U cyberlms_owner -h <host> -d cyberlms -f 04-verify.sql` - expect: both roles `rolsuper = f`; owner `cyberlms_owner`; migration `20261006104958_InitialCreate` listed; the application role holds only `INSERT, SELECT` on `AuditLogs`; no table owned by another role.
+3. Verify: `psql -U cyberlms_owner -h <host> -d cyberlms -f 04-verify.sql` - expect: both roles `rolsuper = f`; owner `cyberlms_owner`; migrations `20261006104958_InitialCreate` and `20261006173411_AddContentAcknowledgmentText` listed; the application role holds only `INSERT, SELECT` on `AuditLogs`; no table owned by another role.
 4. Connection string (in `appsettings.Production.json` or `ConnectionStrings__Default`):
    `Host=<host>;Port=5432;Database=cyberlms;Username=cyberlms_app;Password=<app password>;SSL Mode=Require;Maximum Pool Size=50`
    (`SSL Mode=Require` if the server has TLS enabled - recommended when the database is on another host; `Prefer`/`Disable` for a local server.)

@@ -55,6 +55,15 @@ Reserved for state; never reused as brand colors.
 
 Tokens are declared on `:root, .theme-scope`. The live preview sets brand inputs on its own `.theme-scope` container, and every derived shade recomputes inside it without touching the rest of the page.
 
+## Coverage
+
+All screens use the design system:
+- The 9 reference screens.
+- The content authoring wizard: see [CONTENT_AUTHORING.md](CONTENT_AUTHORING.md).
+- The remaining employee and admin screens: content library, My Results, change password, access denied and error pages, assessments and questions, users, audit log, attempt details, and the classic content form.
+
+Motion is documented in [MOTION_DESIGN.md](MOTION_DESIGN.md).
+
 ## Arabic, RTL and numbers
 
 - Percentages and numbers are rendered as isolated LTR runs (`<bdi class="pct" dir="ltr">60%</bdi>`), so Arabic text reads **"درجة النجاح: 60%"** and never "%60". Use `@Ui.Pct(value)` in views.

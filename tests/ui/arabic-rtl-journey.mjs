@@ -86,7 +86,7 @@ await shot(a, '14-content-form-filled');
 await a.click('main button[name=publish][value=true]'); await shot(a, '15-content-list');
 // draft + delete via Arabic confirmation modal
 await a.goto(base + '/Admin/Content/Create'); await a.fill('#Title', 'مسودة للحذف'); await a.click('main button[name=publish][value=false]');
-await a.click('tr:has-text("مسودة للحذف") button[title="حذف"]'); await a.waitForSelector('#confirmModal.show'); await shot(a, '16-confirm-modal', false);
+await a.click('tr:has-text("مسودة للحذف") button[title="إجراءات أخرى"]'); await a.click('tr:has-text("مسودة للحذف") button[title="حذف"]'); await a.waitForSelector('#confirmModal.show'); await shot(a, '16-confirm-modal', false);
 await a.click('#confirmModalOk'); await a.waitForLoadState('networkidle');
 await a.goto(base + '/Admin/Content/Create'); await a.fill('#Title', 'ضوابط الأمن السيبراني للأجهزة'); await a.selectOption('#Type', '2'); await a.click('main button[name=publish][value=true]');
 
@@ -122,7 +122,7 @@ await e.click('button:has-text("بدء الاختبار")'); await shot(e, '36-t
 await e.click('[data-quiz-start]');
 for (const t of ['الإبلاغ عنها وحذفها', 'خطأ', 'تفعيل المصادقة', 'قفل الشاشة']) await e.locator('label.choice', { hasText: t }).first().evaluate(l => l.querySelector('input').click());
 await e.click('[data-qnav] button:last-child');
-await e.click('main button.btn-lg'); await e.waitForSelector('#confirmModal.show'); await shot(e, '37-submit-confirm', false); await e.click('#confirmModalOk');
+await e.click('main button[data-q-submit]'); await e.waitForSelector('#confirmModal.show'); await shot(e, '37-submit-confirm', false); await e.click('#confirmModalOk');
 await e.waitForURL('**/Result/**'); await shot(e, '38-result');
 await e.goto(base + '/MyResults'); await shot(e, '39-my-results');
 await e.goto(base + '/Content/Details/99999'); await shot(e, '40-not-found');
@@ -140,7 +140,7 @@ await a.goto(base + '/Admin/Reports/Acknowledgments');
 const [dl2] = await Promise.all([a.waitForEvent('download'), a.click('a:has-text("تصدير CSV")')]);
 console.log('CSV download:', dl2.suggestedFilename()); await dl2.saveAs(`${L}/ack.csv`);
 await a.goto(base + '/Admin/Audit'); await shot(a, '55-audit');
-await a.goto(base + '/Admin/Content'); await a.click('tr:has-text("سياسة كلمات المرور") button[title="إرسال بريد إلى الموظفين"]'); await a.waitForSelector('#confirmModal.show'); await a.click('#confirmModalOk'); await a.waitForLoadState('networkidle'); await shot(a, '55b-mail-queued');
+await a.goto(base + '/Admin/Content'); await a.click('tr:has-text("سياسة كلمات المرور") button[title="إجراءات أخرى"]'); await a.click('tr:has-text("سياسة كلمات المرور") button[title="إرسال بريد إلى الموظفين"]'); await a.waitForSelector('#confirmModal.show'); await a.click('#confirmModalOk'); await a.waitForLoadState('networkidle'); await shot(a, '55b-mail-queued');
 await a.goto(base + '/Admin/Content'); await a.click('tr:has-text("سياسة كلمات المرور") a[title="تعديل"]'); await shot(a, '56-content-edit');
 await a.goto(base + '/Admin/Assessments'); await shot(a, '57-assessments-list-final');
 // login page with branding + English toggle check

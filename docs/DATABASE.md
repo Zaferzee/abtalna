@@ -3,6 +3,15 @@
 Migrations live in `src/CyberLms.Web/Data/Migrations` and are applied automatically at startup
 (`Database:AutoMigrate`, default `true`; set to `false` and run `dotnet ef database update` / a migration bundle if your DBA prefers).
 
+## Migrations
+
+| Migration | Change |
+|---|---|
+| `20261006104958_InitialCreate` | Full schema |
+| `20261006173411_AddContentAcknowledgmentText` | Adds the nullable column `Contents.AcknowledgmentText varchar(1000)` (custom acknowledgment statement from the content wizard). Additive only: existing rows keep `NULL` and show the default statement. Content types 7 (Regulation) and 8 (Instructions) need no schema change (the column is an integer). |
+
+The idempotent script for DBAs is `deploy/sql/02-migrate.sql` (generated with `dotnet ef migrations script --idempotent`); re-running it is safe.
+
 ## ERD
 
 ```mermaid
@@ -29,7 +38,7 @@ erDiagram
 |---|---|
 | `Users` | Application identity. `Username` (unique, case-insensitive via `NormalizedUsername`), `PasswordHash` (null for AD accounts), `ExternalId` + `AuthSource` (`Local`/`Windows`) keep authentication separate from the user record. Lockout counters. |
 | `Roles`, `UserRoles` | Roles are rows (`Admin`, `User` seeded). Add roles later without schema change. |
-| `Contents` | Title, description, sanitized HTML body, `Type`, `Status` (Draft/Published), `RequiresAcknowledgment`, `Version` (reserved for future re-acknowledgment), external link. |
+| `Contents` | Title, description, sanitized HTML body (tables allowed), `Type` (int: 1 Policy, 2 Control, 3 Awareness, 4 Training, 5 Procedure, 6 General, 7 Regulation, 8 Instructions), `Status` (Draft/Published), `RequiresAcknowledgment`, `AcknowledgmentText` (statement the employee confirms; null = default text), `Version` (reserved for future re-acknowledgment), external link. |
 | `ContentAttachments` | File *metadata only*: original name, `StoredPath` (relative to the storage root), MIME type, size, kind. Binary lives on disk. |
 | `UserAcknowledgments` | One row per (User, Content, ContentVersion) - **unique index** prevents duplicates. Admin "reset" deletes the row and writes an audit entry. |
 | `Assessments` | Title, optional `ContentId`, `PassingPercentage` (CHECK 0-100), `MaxAttempts` (0 = unlimited), `IsPublished`. |
