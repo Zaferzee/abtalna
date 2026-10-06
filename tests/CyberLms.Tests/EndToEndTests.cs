@@ -322,6 +322,66 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         var vr = await admin.PostMultipart("/Admin/Content/Create", "/Admin/Content/Create", mp => { mp.Add(new StringContent(""), "Title"); mp.Add(new StringContent("1"), "Type"); });
         Assert.Contains("حقل العنوان مطلوب", await vr.Content.ReadAsStringAsync());
     }
+
+    [Fact]
+    public async Task Failures_are_controlled_Arabic_messages()
+    {
+        var admin = await AdminAsync();
+        if (!await app.Db(d => d.Users.AnyAsync(u => u.Username == "faila")))
+        {
+            (await admin.PostForm("/Admin/Users/Create", "/Admin/Users/Create", [F("Username", "faila"), F("DisplayName", "موظف"), F("AuthSource", "Local"), F("Password", UserPass), F("IsActive", "true")])).EnsureRedirect();
+            (await admin.PostForm("/Admin/Users/Create", "/Admin/Users/Create", [F("Username", "failb"), F("DisplayName", "موظف آخر"), F("AuthSource", "Local"), F("Password", UserPass), F("IsActive", "true")])).EnsureRedirect();
+        }
+        var a = await LoginAsync("faila", UserPass, "Faila#NewPass123");
+        var b2 = await LoginAsync("failb", UserPass, "Failb#NewPass123");
+
+        // --- oversized upload (limit 1 MB for images in the test configuration): refused with an Arabic message, nothing stored
+        var big = new byte[1_500_000]; Png.CopyTo(big, 0);
+        var r = await admin.PostMultipart("/Admin/Content/Create", "/Admin/Content/Create", mp => { mp.Add(new StringContent("Oversize"), "Title"); mp.Add(new StringContent("6"), "Type"); mp.Add(new StringContent("true"), "publish"); mp.AddFile("files", "big.png", big, "image/png"); });
+        Assert.Equal(HttpStatusCode.Redirect, r.StatusCode);
+        var edit = await admin.GetStringAsync(r.Headers.Location!.ToString());
+        Assert.Contains("حجم الملف كبير جداً", edit);
+        Assert.False(await app.Db(d => d.ContentAttachments.AnyAsync(x => x.Content.Title == "Oversize")));
+
+        // --- request larger than the hard limit: controlled 413 page in Arabic
+        var huge = new byte[8_000_000]; Png.CopyTo(huge, 0);
+        var r2 = await admin.PostMultipart("/Admin/Content/Create", "/Admin/Content/Create", mp => { mp.Add(new StringContent("Huge"), "Title"); mp.AddFile("files", "huge.png", huge, "image/png"); });
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, r2.StatusCode);
+        Assert.Contains("الملف كبير جداً", await r2.Content.ReadAsStringAsync());
+
+        // --- registered attachment whose file is missing on disk: 404 page, no path leaked
+        await admin.PostMultipart("/Admin/Content/Create", "/Admin/Content/Create", mp => { mp.Add(new StringContent("WithFile"), "Title"); mp.Add(new StringContent("6"), "Type"); mp.Add(new StringContent("true"), "publish"); mp.AddFile("files", "x.png", Png, "image/png"); });
+        var att = await app.Db(d => d.ContentAttachments.SingleAsync(x => x.Content.Title == "WithFile"));
+        File.Delete(Path.Combine(app.StorageDir, att.StoredPath));
+        var missing = await a.GetAsync($"/Files/Attachment/{att.Id}");
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+        var body = await missing.Content.ReadAsStringAsync();
+        Assert.Contains("الصفحة غير موجودة", body); Assert.DoesNotContain(att.StoredPath, body); Assert.DoesNotContain(app.StorageDir, body);
+
+        // --- invalid assessment submissions
+        int asmId = await app.Db(async d =>
+        {
+            var asm = new Assessment { Title = "Tamper", PassingPercentage = 50, MaxAttempts = 0, IsPublished = true };
+            var q = new Question { Text = "q", Points = 1, Type = QuestionType.SingleChoice, SortOrder = 1, Options = { new QuestionOption { Text = "a", IsCorrect = true, SortOrder = 1 }, new QuestionOption { Text = "b", SortOrder = 2 } } };
+            asm.Questions.Add(q); d.Assessments.Add(asm); await d.SaveChangesAsync(); return asm.Id;
+        });
+        var start = await a.PostForm("/Assessments", $"/Assessments/Start/{asmId}", []);
+        var attemptId = int.Parse(start.Headers.Location!.ToString().Split('/').Last());
+        // another employee cannot read/submit it
+        Assert.Equal(HttpStatusCode.NotFound, (await b2.GetAsync($"/Assessments/Take/{attemptId}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await b2.PostForm("/Assessments", $"/Assessments/Submit/{attemptId}", [F("q_1", "1")])).StatusCode);
+        // forged option ids and unknown fields score zero and do not break the attempt
+        var qid = await app.Db(d => d.Questions.Where(x => x.AssessmentId == asmId).Select(x => x.Id).SingleAsync());
+        var sub = await a.PostForm($"/Assessments/Take/{attemptId}", $"/Assessments/Submit/{attemptId}", [F($"q_{qid}", "999999"), F("q_abc", "x"), F("q_-5", "1")]);
+        Assert.Equal(HttpStatusCode.Redirect, sub.StatusCode);
+        var done = await app.Db(d => d.AssessmentAttempts.SingleAsync(x => x.Id == attemptId));
+        Assert.Equal(0m, done.Percentage); Assert.False(done.Passed);
+        // submitting the completed attempt again changes nothing
+        await a.PostForm("/Assessments", $"/Assessments/Submit/{attemptId}", [F($"q_{qid}", "1")]);
+        Assert.Equal(0m, (await app.Db(d => d.AssessmentAttempts.SingleAsync(x => x.Id == attemptId))).Percentage);
+        // starting an assessment that does not exist / is unpublished
+        Assert.Equal(HttpStatusCode.NotFound, (await a.PostForm("/Assessments", "/Assessments/Start/999999", [])).StatusCode);
+    }
 }
 
 

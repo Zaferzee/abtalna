@@ -49,6 +49,11 @@ public class HomeController(AppDbContext db, ILogger<HomeController> log) : AppC
 
     /// <summary>Friendly Arabic page for 400/403/404/500 (re-executed by the status-code middleware).</summary>
     [AllowAnonymous, IgnoreAntiforgeryToken] // re-executed for failed POSTs (e.g. CSRF 400), so it must not demand a token itself
-    public IActionResult Status(int code = 500) => View(new ErrorVm { Code = code, RequestId = HttpContext.TraceIdentifier });
+    public IActionResult Status()
+    {
+        // Read the code from the query string directly: parameter model binding would also read the (possibly huge) request body of a failed POST.
+        var code = int.TryParse(Request.Query["code"], out var c) && c is >= 400 and <= 599 ? c : 500;
+        return View(new ErrorVm { Code = code, RequestId = HttpContext.TraceIdentifier });
+    }
 }
 

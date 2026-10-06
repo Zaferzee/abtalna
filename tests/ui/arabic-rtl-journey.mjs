@@ -14,7 +14,7 @@ const b = await chromium.launch({ executablePath: process.env.CHROME || undefine
 const scan = [];
 const errors = [];
 async function newCtx() {
-  const ctx = await b.newContext({ viewport: { width: 1280, height: 850 }, acceptDownloads: true, locale: 'en-US' }); // browser locale is English on purpose
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 850 }, acceptDownloads: true, locale: 'en-US', ignoreHTTPSErrors: true }); // browser locale is English on purpose
   const p = await ctx.newPage();
   p.on('pageerror', e => errors.push('PAGEERR ' + e.message));
   p.on('console', m => { if (m.type() === 'error' && !m.text().includes('404')) errors.push('CONSOLE ' + m.text()); });

@@ -394,7 +394,6 @@
   <data name="Temporary password" xml:space="preserve"><value>كلمة مرور مؤقتة</value></data>
   <data name="Test email" xml:space="preserve"><value>رسالة تجريبية</value></data>
   <data name="Test email sent to {0}." xml:space="preserve"><value>تم إرسال رسالة تجريبية إلى {0}.</value></data>
-  <data name="Test failed: {0}" xml:space="preserve"><value>فشل الاختبار: {0}</value></data>
   <data name="The field must be a number." xml:space="preserve"><value>يجب أن يكون الحقل رقماً.</value></data>
   <data name="The field {0} is not a valid e-mail address." xml:space="preserve"><value>الحقل {0} لا يحتوي على بريد إلكتروني صحيح.</value></data>
   <data name="The field {0} must be a number." xml:space="preserve"><value>يجب أن يكون الحقل {0} رقماً.</value></data>
@@ -405,6 +404,7 @@
   <data name="The request could not be processed. Your session may have expired; please reload the page and try again." xml:space="preserve"><value>تعذّر تنفيذ الطلب. قد تكون الجلسة انتهت، يرجى إعادة تحميل الصفحة والمحاولة من جديد.</value></data>
   <data name="The saved theme is shown. Changes apply to all users immediately after saving - no rebuild or restart needed." xml:space="preserve"><value>تظهر الهوية المحفوظة. تُطبّق التغييرات على جميع المستخدمين فور الحفظ دون إعادة بناء أو إعادة تشغيل.</value></data>
   <data name="The system cannot reach its database at the moment. Please try again shortly; the details have been recorded in the server log." xml:space="preserve"><value>يتعذّر على النظام الوصول إلى قاعدة البيانات حالياً. يرجى المحاولة بعد قليل، وقد سُجّلت التفاصيل في سجل الخادم.</value></data>
+  <data name="The test e-mail could not be sent. Check the e-mail settings and the server log. Technical reason: {0}" xml:space="preserve"><value>تعذّر إرسال الرسالة التجريبية. تحقق من إعدادات البريد وسجل الخادم. السبب التقني: {0}</value></data>
   <data name="The uploaded file or request is larger than the allowed size. Choose a smaller file." xml:space="preserve"><value>حجم الملف المرفوع أو الطلب أكبر من الحد المسموح به. اختر ملفاً أصغر.</value></data>
   <data name="The user must change it at next sign-in. Also clears lockout." xml:space="preserve"><value>سيُطلب من المستخدم تغييرها عند الدخول التالي، كما يتم رفع القفل عن الحساب.</value></data>
   <data name="The value '{0}' is invalid." xml:space="preserve"><value>القيمة '{0}' غير صالحة.</value></data>

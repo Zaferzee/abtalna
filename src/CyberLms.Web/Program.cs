@@ -21,7 +21,8 @@ if (builder.Configuration.GetValue("Logging:File:Enabled", true))
 {
     try
     {
-        var logDir = builder.Configuration["Logging:File:Path"] ?? Path.Combine(builder.Environment.ContentRootPath, "logs");
+        var logDir = builder.Configuration["Logging:File:Path"];
+        if (string.IsNullOrWhiteSpace(logDir)) logDir = Path.Combine(builder.Environment.ContentRootPath, "logs");
         builder.Logging.AddProvider(new FileLoggerProvider(logDir, builder.Configuration.GetValue("Logging:File:RetentionDays", 30)));
     }
     catch (Exception ex) { Console.Error.WriteLine("File logging disabled: " + ex.Message); }
@@ -159,6 +160,12 @@ app.Use(async (ctx, next) =>
     await next();
 });
 app.UseStatusCodePagesWithReExecute("/Home/Status", "?code={0}");
+// Reject oversized requests up front with a clear 413 (shown as an Arabic page) instead of failing later inside form/antiforgery parsing.
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.ContentLength > storage.MaxRequestBytes && !ctx.Request.Path.StartsWithSegments("/Home/Status")) { ctx.Response.StatusCode = StatusCodes.Status413PayloadTooLarge; return; }
+    await next();
+});
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

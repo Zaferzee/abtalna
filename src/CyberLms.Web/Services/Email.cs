@@ -86,8 +86,9 @@ public class EmailSenderService(EmailQueue queue, SmtpConfigProvider provider, I
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                log.LogError(ex, "SMTP connection failed");
-                while (queue.Reader.TryRead(out _)) { }
+                var dropped = 0;
+                while (queue.Reader.TryRead(out _)) dropped++;
+                log.LogError(ex, "SMTP connection to {Host}:{Port} failed ({Security}); {Dropped} queued e-mail(s) in this batch were not sent.", cfg.Host, cfg.Port, cfg.Security, dropped);
             }
         }
     }

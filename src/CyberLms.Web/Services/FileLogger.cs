@@ -33,7 +33,7 @@ public sealed class FileLoggerProvider : ILoggerProvider
         {
             lock (_lock)
             {
-                File.AppendAllText(Path.Combine(_dir, $"cyberlms-{now:yyyyMMdd}.log"), sb.ToString(), Encoding.UTF8);
+                File.AppendAllText(Path.Combine(_dir, $"cyberlms-{now:yyyyMMdd}.log"), sb.ToString(), new UTF8Encoding(false));
                 if (_purgedOn.Date != now.Date) { _purgedOn = now; Purge(now); }
             }
         }

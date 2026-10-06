@@ -128,7 +128,7 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
         catch (Exception ex)
         {
             log.LogWarning(ex, "SMTP test e-mail to {Recipient} failed (host {Host}:{Port}, security {Security}).", to, c.Host, c.Port, c.Security);
-            Failure("Test failed: {0}", ex.Message);
+            Failure("The test e-mail could not be sent. Check the e-mail settings and the server log. Technical reason: {0}", ex.Message);
         }
         return RedirectToAction(nameof(Index));
     }
