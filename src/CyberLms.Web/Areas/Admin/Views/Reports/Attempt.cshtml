@@ -1,0 +1,14 @@
+@model AttemptDetailVm
+@{ ViewData["Title"] = "Attempt"; var a = Model.Attempt; var n = 0; }
+<a asp-action="Attempts" class="small">&larr; Attempts</a>
+<h1 class="h4 bidi">@a.Assessment.Title</h1>
+<p>@a.User.DisplayName (@a.User.Username) &middot; @Time.Format(a.StartedAt) &rarr; @Time.Format(a.CompletedAt) &middot; <strong>@a.Percentage.ToString("0.#")%</strong>
+    <span class="badge text-bg-@(a.Passed == true ? "success" : "danger")">@(a.Passed == true ? "Passed" : "Failed")</span> (pass mark @a.PassingPercentageSnapshot%, @a.CorrectAnswers/@a.TotalQuestions correct)</p>
+@foreach (var q in Model.Questions)
+{
+    n++; var ans = Model.Answers[q.Id];
+    <div class="card question-card mb-2"><div class="card-body">
+        <div class="d-flex justify-content-between"><div class="fw-semibold bidi">@n. @q.Text</div><span class="badge text-bg-@(ans.IsCorrect ? "success" : "danger") align-self-start">@(ans.IsCorrect ? "Correct" : "Incorrect") (@ans.PointsAwarded/@q.Points)</span></div>
+        <ul class="list-unstyled mb-0 mt-2">@foreach (var o in q.Options.OrderBy(o => o.SortOrder)) { var sel = ans.SelectedOptionIds.Contains(o.Id); <li class="bidi">@(sel ? "▣" : "☐") @o.Text @if (o.IsCorrect) { <span class="badge text-bg-success">correct answer</span> }</li> }</ul>
+    </div></div>
+}

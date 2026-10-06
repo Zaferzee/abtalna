@@ -1,0 +1,75 @@
+@model SettingsVm
+@{ ViewData["Title"] = "Settings"; }
+<h1 class="h4 mb-3">Settings</h1>
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-brand" type="button">Branding &amp; Appearance</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-general" type="button">General</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-mail" type="button">Email (SMTP)</button></li>
+</ul>
+@functions {
+    Microsoft.AspNetCore.Html.IHtmlContent Color(string label, string name, string value, string hint = "") => Html.Raw(
+        $"<div class=\"col-6 col-md-4 mb-3\"><label class=\"form-label\" for=\"{name}\">{label}</label><div class=\"input-group\">" +
+        $"<input type=\"color\" class=\"form-control form-control-color\" value=\"{value}\" data-hex-for=\"{name}\" aria-label=\"{label} picker\">" +
+        $"<input class=\"form-control\" dir=\"ltr\" id=\"{name}\" name=\"{name}\" value=\"{value}\" maxlength=\"7\" pattern=\"#[0-9a-fA-F]{{6}}\"></div></div>");
+}
+<div class="tab-content">
+<div class="tab-pane fade show active" id="t-brand">
+<form method="post" asp-action="SaveBranding" enctype="multipart/form-data">
+<div class="row g-3">
+<div class="col-lg-8">
+    <div class="card mb-3"><div class="card-header bg-white fw-semibold">Identity</div><div class="card-body row">
+        <div class="col-md-6 mb-3"><label class="form-label">Organization name</label><input class="form-control bidi" name="OrgName" value="@Model.OrgName" maxlength="150" required /></div>
+        <div class="col-md-6 mb-3"><label class="form-label">System name</label><input class="form-control bidi" name="SystemName" value="@Model.SystemName" maxlength="150" required /></div>
+        <div class="col-md-6 mb-3"><label class="form-label">Logo (PNG/JPG/WebP/GIF)</label><input type="file" class="form-control" name="logo" accept=".png,.jpg,.jpeg,.webp,.gif" />
+            @if (Model.HasLogo) { <div class="mt-2 d-flex align-items-center gap-3"><img src="~/Files/Brand?kind=logo&v=@Brand.Current.Version" style="max-height:48px;max-width:160px" alt="logo" /><div class="form-check"><input class="form-check-input" type="checkbox" name="removeLogo" value="true" id="rl" /><label class="form-check-label" for="rl">Remove</label></div></div> }</div>
+        <div class="col-md-6 mb-3"><label class="form-label">Favicon (ICO/PNG)</label><input type="file" class="form-control" name="favicon" accept=".ico,.png" />
+            @if (Model.HasFavicon) { <div class="mt-2 d-flex align-items-center gap-3"><img src="~/Files/Brand?kind=favicon&v=@Brand.Current.Version" style="max-height:32px" alt="favicon" /><div class="form-check"><input class="form-check-input" type="checkbox" name="removeFavicon" value="true" id="rf" /><label class="form-check-label" for="rf">Remove</label></div></div> }</div>
+    </div></div>
+    <div class="card mb-3"><div class="card-header bg-white fw-semibold">Colors</div><div class="card-body row">
+        @Color("Primary", "PrimaryColor", Model.PrimaryColor) @Color("Secondary", "SecondaryColor", Model.SecondaryColor) @Color("Accent", "AccentColor", Model.AccentColor)
+        @Color("Header background", "HeaderColor", Model.HeaderColor) @Color("Header text", "HeaderTextColor", Model.HeaderTextColor) <div class="col-md-4"></div>
+        @Color("Sidebar background", "SidebarColor", Model.SidebarColor) @Color("Sidebar text", "SidebarTextColor", Model.SidebarTextColor) @Color("Login page background", "LoginBackgroundColor", Model.LoginBackgroundColor)
+    </div></div>
+    <div class="card mb-3"><div class="card-header bg-white fw-semibold">Login page, welcome text &amp; footer</div><div class="card-body row">
+        <div class="col-md-6 mb-3"><label class="form-label">Login title</label><input class="form-control bidi" name="LoginTitle" value="@Model.LoginTitle" maxlength="150" /></div>
+        <div class="col-md-6 mb-3"><label class="form-label">Login background image (optional)</label><input type="file" class="form-control" name="loginBackground" accept=".png,.jpg,.jpeg,.webp" />
+            @if (Model.HasLoginBackground) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeLoginBackground" value="true" id="rb" /><label class="form-check-label" for="rb">Remove current image</label></div> }</div>
+        <div class="col-12 mb-3"><label class="form-label">Login sub-title / notice</label><textarea class="form-control bidi" name="LoginSubtitle" rows="2" maxlength="500">@Model.LoginSubtitle</textarea></div>
+        <div class="col-12 mb-3"><label class="form-label">Welcome text (employee dashboard)</label><textarea class="form-control bidi" name="WelcomeText" rows="2" maxlength="1000">@Model.WelcomeText</textarea></div>
+        <div class="col-12 mb-0"><label class="form-label">Footer text (copyright, contact, etc.)</label><input class="form-control bidi" name="FooterText" value="@Model.FooterText" maxlength="500" /></div>
+    </div></div>
+    <button class="btn btn-primary">Save branding</button>
+    <button class="btn btn-outline-danger" formaction="@Url.Action("ResetBranding")" formnovalidate data-confirm-click="Reset all branding to defaults and remove uploaded images?">Reset to defaults</button>
+</div>
+<div class="col-lg-4">
+    <div class="card"><div class="card-header bg-white fw-semibold">Preview</div><div class="card-body p-0">
+        <div class="px-3 py-2" style="background:var(--brand-header);color:var(--brand-header-text)">@Model.SystemName</div>
+        <div class="d-flex"><div class="p-2" style="width:35%;background:var(--brand-sidebar);color:var(--brand-sidebar-text)">Dashboard<br>Content</div><div class="p-2 flex-grow-1"><button type="button" class="btn btn-sm btn-primary">Primary</button> <button type="button" class="btn btn-sm btn-accent">Accent</button></div></div>
+        <div class="p-2 small text-muted">Current saved theme shown. Changes apply to all users immediately after saving - no rebuild or restart needed.</div>
+    </div></div>
+</div>
+</div></form>
+</div>
+
+<div class="tab-pane fade" id="t-general"><div class="card" style="max-width:640px"><div class="card-body">
+<form method="post" asp-action="SaveGeneral">
+    <div class="mb-3"><label class="form-label">Public base URL (used for links in emails)</label><input class="form-control" dir="ltr" name="BaseUrl" value="@Model.BaseUrl" placeholder="https://lms.company.local" /></div>
+    <div class="mb-3"><label class="form-label">Default interface language</label><select class="form-select" name="DefaultLanguage"><option value="en" selected="@(Model.DefaultLanguage == "en")">English</option><option value="ar" selected="@(Model.DefaultLanguage == "ar")">العربية (RTL)</option></select><div class="form-text">Users can switch language from the header at any time.</div></div>
+    <button class="btn btn-primary">Save</button>
+</form></div></div></div>
+
+<div class="tab-pane fade" id="t-mail"><div class="row g-3"><div class="col-lg-7"><div class="card"><div class="card-body">
+<form method="post" asp-action="SaveSmtp">
+    <div class="row"><div class="col-md-8 mb-3"><label class="form-label">SMTP server</label><input class="form-control" dir="ltr" name="SmtpHost" value="@Model.SmtpHost" /></div>
+    <div class="col-md-4 mb-3"><label class="form-label">Port</label><input type="number" class="form-control" name="SmtpPort" value="@Model.SmtpPort" /></div></div>
+    <div class="row"><div class="col-md-6 mb-3"><label class="form-label">Sender address</label><input class="form-control" dir="ltr" name="SmtpSender" value="@Model.SmtpSender" /></div>
+    <div class="col-md-6 mb-3"><label class="form-label">Sender name</label><input class="form-control bidi" name="SmtpSenderName" value="@Model.SmtpSenderName" /></div></div>
+    <div class="row"><div class="col-md-6 mb-3"><label class="form-label">Username (if required)</label><input class="form-control" dir="ltr" name="SmtpUsername" value="@Model.SmtpUsername" autocomplete="off" /></div>
+    <div class="col-md-6 mb-3"><label class="form-label">Security</label><select class="form-select" name="SmtpSecurity"><option value="Auto" selected="@(Model.SmtpSecurity == "Auto")">Auto</option><option value="None" selected="@(Model.SmtpSecurity == "None")">None</option><option value="StartTls" selected="@(Model.SmtpSecurity == "StartTls")">STARTTLS</option><option value="Ssl" selected="@(Model.SmtpSecurity == "Ssl")">SSL/TLS</option></select></div></div>
+    <div class="alert alert-@(Model.SmtpPasswordConfigured ? "success" : "secondary") py-2">SMTP password: @(Model.SmtpPasswordConfigured ? "configured on the server" : "not configured") (set via environment variable <code>Smtp__Password</code> or <code>appsettings.Production.json</code>; it is never stored in the database).</div>
+    <button class="btn btn-primary">Save</button>
+</form></div></div></div>
+<div class="col-lg-5"><div class="card"><div class="card-header bg-white fw-semibold">Send test email</div><div class="card-body">
+<form method="post" asp-action="TestEmail"><div class="input-group"><input type="email" class="form-control" dir="ltr" name="to" required placeholder="you@company.com" /><button class="btn btn-outline-primary">Send</button></div></form></div></div></div>
+</div></div>
+</div>

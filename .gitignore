@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+publish/
+storage-dev/
+src/CyberLms.Web/appsettings.Production.json
+src/CyberLms.Web/appsettings.Local.json
+*.log
+.env

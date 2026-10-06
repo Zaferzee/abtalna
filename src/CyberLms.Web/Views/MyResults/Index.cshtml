@@ -1,0 +1,15 @@
+@model List<AssessmentAttempt>
+@{ ViewData["Title"] = L["My Results"]; var acks = (List<UserAcknowledgment>)ViewBag.Acks; }
+<h1 class="h4 mb-3">@L["My Results"]</h1>
+<div class="card mb-4"><div class="card-header bg-white fw-semibold">@L["Completed assessments"]</div>
+@if (Model.Count == 0) { <div class="card-body text-muted">@L["Nothing here yet."]</div> }
+else { <div class="table-responsive"><table class="table mb-0"><thead><tr><th>@L["Assessments"]</th><th>@L["Score"]</th><th>@L["Correct answers"]</th><th>@L["Result"]</th><th>@L["Completion"]</th><th></th></tr></thead><tbody>
+@foreach (var t in Model) { <tr><td class="bidi">@t.Assessment.Title</td><td>@t.Percentage.ToString("0.#")%</td><td>@t.CorrectAnswers / @t.TotalQuestions</td><td><span class="badge text-bg-@(t.Passed == true ? "success" : "danger")">@L[t.Passed == true ? "Passed" : "Failed"]</span></td><td>@Time.Format(t.CompletedAt)</td><td><a asp-controller="Assessments" asp-action="Result" asp-route-id="@t.Id">@L["View"]</a></td></tr> }
+</tbody></table></div> }
+</div>
+<div class="card"><div class="card-header bg-white fw-semibold">@L["Acknowledged"]</div>
+@if (acks.Count == 0) { <div class="card-body text-muted">@L["Nothing here yet."]</div> }
+else { <table class="table mb-0"><thead><tr><th>@L["Title"]</th><th>@L["Date"]</th></tr></thead><tbody>
+@foreach (var a in acks) { <tr><td class="bidi"><a asp-controller="Content" asp-action="Details" asp-route-id="@a.ContentId">@a.Content.Title</a></td><td>@Time.Format(a.AcknowledgedAt)</td></tr> }
+</tbody></table> }
+</div>

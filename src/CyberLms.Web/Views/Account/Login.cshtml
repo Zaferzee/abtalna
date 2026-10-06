@@ -1,0 +1,57 @@
+@model LoginVm
+@{
+    Layout = null;
+    var b = Brand.Current;
+    var auth = (AuthService)ViewBag.Auth;
+}
+<!DOCTYPE html>
+<html lang="@L.Lang" dir="@L.Dir">
+<head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@b.LoginTitle - @b.SystemName</title>
+    @if (b.HasFavicon) { <link rel="icon" href="~/Files/Brand?kind=favicon&v=@b.Version" /> }
+    <link rel="stylesheet" href="~/lib/bootstrap/@(L.IsRtl ? "bootstrap.rtl.min.css" : "bootstrap.min.css")" />
+    <link rel="stylesheet" href="~/lib/icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/branding/theme.css?v=@b.Version" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @if (b.HasLoginBackground) { <style>.login-wrap{background-image:url('/Files/Brand?kind=loginbg&v=@b.Version')}</style> }
+</head>
+<body>
+<div class="login-wrap">
+    <div class="login-card">
+        <div class="text-center mb-3">
+            @if (b.HasLogo) { <img src="~/Files/Brand?kind=logo&v=@b.Version" alt="@b.OrgName" style="max-height:80px;max-width:240px" class="mb-2" /> }
+            <h1 class="h4 mb-0">@b.SystemName</h1>
+            <div class="text-muted">@b.OrgName</div>
+        </div>
+        <div class="card"><div class="card-body p-4">
+            <h2 class="h5">@b.LoginTitle</h2>
+            @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <p class="text-muted bidi">@b.LoginSubtitle</p> }
+            @if (TempData["Error"] is string te) { <div class="alert alert-danger">@te</div> }
+            @if (Model.Error != null) { <div class="alert alert-danger">@L[Model.Error]</div> }
+            @if (auth.LocalEnabled)
+            {
+                <form method="post" asp-action="Login">
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <div class="mb-3"><label class="form-label" asp-for="Username">@L["Username"]</label><input class="form-control" asp-for="Username" autocomplete="username" autofocus dir="ltr" /></div>
+                    <div class="mb-3"><label class="form-label" asp-for="Password">@L["Password"]</label><input class="form-control" asp-for="Password" autocomplete="current-password" dir="ltr" /></div>
+                    <button class="btn btn-primary w-100">@L["Sign in"]</button>
+                </form>
+            }
+            @if (auth.WindowsEnabled)
+            {
+                @if (auth.LocalEnabled) { <hr /> }
+                <a class="btn btn-outline-primary w-100" asp-action="WindowsLogin" asp-route-returnUrl="@Model.ReturnUrl"><i class="bi bi-windows"></i> @L["Sign in with Windows account"]</a>
+            }
+        </div></div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <form method="post" asp-action="SetLanguage" class="m-0">
+                <input type="hidden" name="lang" value="@(L.IsRtl ? "en" : "ar")" /><input type="hidden" name="returnUrl" value="/Account/Login" />
+                <button class="btn btn-sm btn-link">@(L.IsRtl ? "English" : "العربية")</button>
+            </form>
+            <span class="text-muted small">@b.FooterText</span>
+        </div>
+    </div>
+</div>
+</body>
+</html>

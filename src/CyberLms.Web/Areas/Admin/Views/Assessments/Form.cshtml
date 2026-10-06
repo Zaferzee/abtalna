@@ -1,0 +1,12 @@
+@model AssessmentFormVm
+@{ ViewData["Title"] = Model.Id == 0 ? "New assessment" : "Edit assessment"; }
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<div class="card" style="max-width:720px"><div class="card-body"><form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3"><label class="form-label" asp-for="Title"></label><input class="form-control bidi" asp-for="Title" /><span class="text-danger" asp-validation-for="Title"></span></div>
+    <div class="mb-3"><label class="form-label" asp-for="Description"></label><textarea class="form-control bidi" asp-for="Description" rows="2"></textarea></div>
+    <div class="mb-3"><label class="form-label">Linked content (optional)</label><select class="form-select" asp-for="ContentId" asp-items="(SelectList)ViewBag.Contents"><option value="">- none -</option></select></div>
+    <div class="row"><div class="col-6 mb-3"><label class="form-label" asp-for="PassingPercentage"></label><input class="form-control" type="number" asp-for="PassingPercentage" min="0" max="100" /><span class="text-danger" asp-validation-for="PassingPercentage"></span></div>
+    <div class="col-6 mb-3"><label class="form-label" asp-for="MaxAttempts"></label><input class="form-control" type="number" asp-for="MaxAttempts" min="0" max="100" /></div></div>
+    <button class="btn btn-primary">Save</button> <a class="btn btn-link" asp-action="Index">Cancel</a>
+</form></div></div>

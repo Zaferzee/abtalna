@@ -1,0 +1,12 @@
+@model List<AuditLog>
+@{ ViewData["Title"] = "Audit log"; var pager = (Pager)ViewBag.Pager; var actions = (List<string>)ViewBag.Actions; }
+<h1 class="h4 mb-3">Audit log</h1>
+<form class="row g-2 mb-3" method="get">
+    <div class="col-12 col-md-4"><input class="form-control" name="q" value="@ViewBag.Q" placeholder="Administrator or details" /></div>
+    <div class="col-8 col-md-4"><select class="form-select" name="action"><option value="">All actions</option>@foreach (var a in actions) { <option selected="@((string?)ViewBag.Action == a)">@a</option> }</select></div>
+    <div class="col-4 col-md-2"><button class="btn btn-outline-primary w-100">Filter</button></div>
+</form>
+<div class="card"><div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Time</th><th>Administrator</th><th>Action</th><th>Entity</th><th>Details</th><th>IP</th></tr></thead><tbody>
+@foreach (var a in Model) { <tr><td class="text-nowrap">@Time.Format(a.Timestamp)</td><td>@a.Username</td><td><code>@a.Action</code></td><td>@a.EntityType @a.EntityId</td><td class="bidi">@a.Details</td><td>@a.IpAddress</td></tr> }
+</tbody></table></div></div>
+<partial name="_Pager" model="pager" />

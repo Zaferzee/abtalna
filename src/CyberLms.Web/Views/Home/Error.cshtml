@@ -1,0 +1,3 @@
+@model ErrorVm
+@{ ViewData["Title"] = "Error"; Layout = User.Identity?.IsAuthenticated == true ? "_Layout" : null; }
+<div class="container py-5"><div class="alert alert-danger">An unexpected error occurred. Please try again or contact the administrator and quote this reference: <code>@Model.RequestId</code></div><a href="~/">Home</a></div>

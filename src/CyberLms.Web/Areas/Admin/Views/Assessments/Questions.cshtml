@@ -1,0 +1,26 @@
+@model QuestionsVm
+@{ ViewData["Title"] = "Questions"; var a = Model.Assessment; var n = 0; }
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div><a asp-action="Index" class="small">&larr; Assessments</a><h1 class="h4 mb-0 bidi">@a.Title</h1>
+        <small class="text-muted">Pass: @a.PassingPercentage% &middot; @(a.MaxAttempts == 0 ? "unlimited attempts" : a.MaxAttempts + " attempt(s)") &middot; <span class="badge text-bg-@(a.IsPublished ? "success" : "secondary")">@(a.IsPublished ? "Published" : "Draft")</span></small></div>
+    <div>
+        @if (Model.Attempts == 0) { <a class="btn btn-primary" asp-action="AddQuestion" asp-route-id="@a.Id"><i class="bi bi-plus-lg"></i> Add question</a> }
+        <form method="post" asp-action="SetStatus" asp-route-id="@a.Id" asp-route-publish="@(!a.IsPublished)" class="d-inline"><button class="btn btn-@(a.IsPublished ? "warning" : "success")">@(a.IsPublished ? "Unpublish" : "Publish")</button></form>
+    </div>
+</div>
+@if (Model.Attempts > 0) { <div class="alert alert-info">This assessment has attempts, so questions are locked to protect historical results. Use <strong>Duplicate</strong> on the assessments list to create an editable copy.</div> }
+@if (Model.Questions.Count == 0) { <div class="text-muted">No questions yet.</div> }
+@foreach (var q in Model.Questions)
+{
+    n++;
+    <div class="card question-card mb-2"><div class="card-body">
+        <div class="d-flex justify-content-between"><div class="fw-semibold bidi">@n. @q.Text</div>
+            <div class="text-nowrap"><span class="badge text-bg-light">@q.Type</span> <span class="badge text-bg-light">@q.Points pt</span>
+            @if (Model.Attempts == 0)
+            {
+                <a class="btn btn-sm btn-outline-primary" asp-action="EditQuestion" asp-route-id="@q.Id"><i class="bi bi-pencil"></i></a>
+                <form method="post" asp-action="DeleteQuestion" asp-route-id="@q.Id" class="d-inline" data-confirm="Delete this question?"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+            }</div></div>
+        <ul class="list-unstyled mb-0 mt-2">@foreach (var o in q.Options.OrderBy(o => o.SortOrder)) { <li class="bidi">@(o.IsCorrect ? Html.Raw("<i class=\"bi bi-check-circle-fill text-success\"></i>") : Html.Raw("<i class=\"bi bi-circle text-muted\"></i>")) @o.Text</li> }</ul>
+    </div></div>
+}
