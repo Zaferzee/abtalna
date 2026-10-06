@@ -63,20 +63,31 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
     {
         var b = Branding.From(settings);
         string C(string v, string fb) => Branding.ColorRegex.IsMatch(v) ? v : fb; // only validated #rrggbb values reach the CSS
+        var primary = C(b.PrimaryColor, "#1f4fd8"); var accent = C(b.AccentColor, "#0f9d8a");
         var css = $$"""
             :root{
-              --brand-primary:{{C(b.PrimaryColor, "#0d47a1")}};
-              --brand-secondary:{{C(b.SecondaryColor, "#546e7a")}};
-              --brand-accent:{{C(b.AccentColor, "#00897b")}};
-              --brand-header:{{C(b.HeaderColor, "#0b2a5b")}};
-              --brand-header-text:{{C(b.HeaderTextColor, "#ffffff")}};
-              --brand-sidebar:{{C(b.SidebarColor, "#f1f4f9")}};
-              --brand-sidebar-text:{{C(b.SidebarTextColor, "#1f2d3d")}};
-              --brand-login-bg:{{C(b.LoginBackgroundColor, "#e8eef7")}};
-              --bs-primary:var(--brand-primary);--bs-link-color:var(--brand-primary);--bs-secondary:var(--brand-secondary);--bs-info:var(--brand-accent);
+              --color-primary:{{primary}};
+              --color-secondary:{{C(b.SecondaryColor, "#5b6b86")}};
+              --color-accent:{{accent}};
+              --color-on-primary:{{OnColor(primary)}};
+              --color-on-accent:{{OnColor(accent)}};
+              --color-header:{{C(b.HeaderColor, "#ffffff")}};
+              --color-on-header:{{C(b.HeaderTextColor, "#14213d")}};
+              --color-sidebar:{{C(b.SidebarColor, "#0c1f4a")}};
+              --color-on-sidebar:{{C(b.SidebarTextColor, "#e9eefc")}};
+              --color-login-bg:{{C(b.LoginBackgroundColor, "#eaf0fb")}};
             }
             """;
         Response.Headers.CacheControl = "public, max-age=3600";
         return Content(css, "text/css");
+    }
+
+    /// <summary>Readable text colour (dark or white) for a given #rrggbb background (WCAG relative luminance).</summary>
+    public static string OnColor(string hex)
+    {
+        double Lin(int v) { var c = v / 255.0; return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4); }
+        var r = Convert.ToInt32(hex.Substring(1, 2), 16); var g = Convert.ToInt32(hex.Substring(3, 2), 16); var bl = Convert.ToInt32(hex.Substring(5, 2), 16);
+        var lum = 0.2126 * Lin(r) + 0.7152 * Lin(g) + 0.0722 * Lin(bl);
+        return lum > 0.42 ? "#14213d" : "#ffffff";
     }
 }

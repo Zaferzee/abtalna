@@ -82,6 +82,9 @@ public class TimeDisplay(IConfiguration cfg)
         try { return string.IsNullOrWhiteSpace(id) ? TimeZoneInfo.Local : TimeZoneInfo.FindSystemTimeZoneById(id); }
         catch { return TimeZoneInfo.Local; }
     }
+    /// <summary>Current hour (0-23) in the configured display time zone, for time-of-day greetings.</summary>
+    public int LocalHour => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _tz).Hour;
+
     /// <summary>For exports: empty (not "-") when there is no value.</summary>
     public string Export(DateTime? utc) => utc == null ? "" : Format(utc);
 
