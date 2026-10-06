@@ -1,0 +1,75 @@
+@model ContentFormVm
+@{ ViewData["Title"] = Model.Id == 0 ? L["New content"] : L["Edit content"]; }
+@functions {
+    string Q(string key) => System.Text.Json.JsonSerializer.Serialize(L[key]);
+    /// <summary>CSS string literal ("...") with non-ASCII characters written as \HEX escapes.</summary>
+    string C(string key) => "\"" + string.Concat(L[key].Select(ch => ch < 128 && ch >= 32 && ch != '"' && ch != '\\' && ch != '<' ? ch.ToString() : "\\" + ((int)ch).ToString("x") + " ")) + "\"";
+}
+@section Head {
+    <link rel="stylesheet" href="~/lib/quill/quill.snow.css" />
+    <link rel="stylesheet" href="~/css/editor.css" asp-append-version="true" />
+    <style>:root{--t-ql-visit:@Html.Raw(C("Editor: Visit link:"));--t-ql-enter:@Html.Raw(C("Editor: Enter link:"));--t-ql-edit:@Html.Raw(C("Edit"));--t-ql-remove:@Html.Raw(C("Remove"));--t-ql-save:@Html.Raw(C("Save"));--t-ql-normal:@Html.Raw(C("Editor: Normal text"));--t-ql-h2:@Html.Raw(C("Editor: Main heading"));--t-ql-h3:@Html.Raw(C("Editor: Sub heading"))}</style>
+}
+@section PreScripts { <script src="~/lib/quill/quill.js"></script> }
+<nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">@L["Content Management"]</a></li><li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li></ol></nav>
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<form method="post" enctype="multipart/form-data" novalidate data-upload-url="@Url.Action("UploadImage")">
+<div class="row g-3">
+<div class="col-lg-8">
+    <div class="card mb-3"><div class="card-body">
+        <div asp-validation-summary="All" class="text-danger mb-2"></div>
+        <div class="mb-3"><label class="form-label" asp-for="Title">@L["Title"]</label><input class="form-control bidi" asp-for="Title" maxlength="300" /></div>
+        <div class="mb-3"><label class="form-label" asp-for="Description">@L["Description"]</label><textarea class="form-control bidi" asp-for="Description" rows="2" maxlength="2000"></textarea></div>
+        <div class="mb-1"><label class="form-label">@L["Content body"]</label>
+            <input type="hidden" asp-for="Body" /><div data-quill-for="Body" dir="@L.Dir" data-quill-tips='{"ql-bold":@Html.Raw(Q("Editor: Bold")),"ql-italic":@Html.Raw(Q("Editor: Italic")),"ql-underline":@Html.Raw(Q("Editor: Underline")),"ql-blockquote":@Html.Raw(Q("Editor: Quote")),"ql-link":@Html.Raw(Q("Editor: Link")),"ql-image":@Html.Raw(Q("Editor: Image")),"ql-clean":@Html.Raw(Q("Editor: Clear formatting")),"ql-list[value=ordered]":@Html.Raw(Q("Editor: Numbered list")),"ql-list[value=bullet]":@Html.Raw(Q("Editor: Bulleted list")),"ql-direction":@Html.Raw(Q("Editor: Right-to-left text"))}'></div>
+            <div class="form-text">@L["Use the toolbar for headings, lists, links, images and right-to-left paragraphs."]</div></div>
+    </div></div>
+    <div class="card"><div class="card-header bg-white fw-semibold">@L["Attachments and links"]</div><div class="card-body">
+        @if (Model.Attachments.Count > 0)
+        {
+            <ul class="list-group mb-3">
+            @foreach (var a in Model.Attachments)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                    <span><i class="bi bi-@(a.Kind == AttachmentKind.Image ? "image" : a.Kind == AttachmentKind.Video ? "camera-video" : "file-earmark-text")"></i>
+                        <a href="@Url.Action("Attachment", "Files", new { area = "", id = a.Id })" target="_blank" class="bidi">@a.FileName</a> <small class="text-muted"><bdi dir="ltr">@Labels.Size(a.SizeBytes)</bdi></small></span>
+                    <button class="btn btn-sm btn-outline-danger" formmethod="post" formaction="@Url.Action("DeleteAttachment", new { id = a.Id })" formnovalidate data-confirm-click="@L["Remove this file?"]">@L["Remove"]</button>
+                </li>
+            }
+            </ul>
+        }
+        <div class="mb-3"><label class="form-label">@L["Upload files (images, PDF/Office documents, MP4/WebM video)"]</label>
+            <input class="form-control" type="file" name="files" multiple accept="@StorageService.AcceptList" /></div>
+        <div class="mb-0"><label class="form-label" asp-for="ExternalUrl">@L["Internal link / video URL"]</label><input class="form-control" dir="ltr" asp-for="ExternalUrl" placeholder="https://intranet/..." /></div>
+    </div></div>
+</div>
+<div class="col-lg-4">
+    <div class="card mb-3"><div class="card-body">
+        <div class="mb-3"><label class="form-label" asp-for="Type">@L["Content type"]</label>
+            <select class="form-select" asp-for="Type">@foreach (var t in Enum.GetValues<ContentType>()) { <option value="@((int)t)" selected="@(Model.Type == t)">@L[Labels.Type(t)]</option> }</select></div>
+        <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" asp-for="RequiresAcknowledgment" /><label class="form-check-label" asp-for="RequiresAcknowledgment">@L["Requires acknowledgment"]</label></div>
+        @if (Model.Id != 0) { <div class="mb-3">@L["Status"]: <span class="badge text-bg-@(Model.Status == ContentStatus.Published ? "success" : "secondary")">@L[Labels.ContentStatus(Model.Status)]</span></div> }
+        <div class="d-grid gap-2">
+        @if (Model.Id == 0)
+        {
+            <button class="btn btn-primary" name="publish" value="true">@L["Save and publish"]</button>
+            <button class="btn btn-outline-secondary" name="publish" value="false">@L["Save as draft"]</button>
+        }
+        else
+        {
+            <button class="btn btn-primary" name="command" value="save">@L["Save"]</button>
+            @if (Model.Status != ContentStatus.Published) { <button class="btn btn-success" name="command" value="publish">@L["Save and publish"]</button> }
+        }
+        <a class="btn btn-link" asp-action="Index">@L["Cancel"]</a>
+        </div>
+    </div></div>
+    @if (Model.Id != 0 && Model.RequiresAcknowledgment)
+    {
+        <div class="card"><div class="card-body"><div class="fw-semibold mb-2">@L["Acknowledgments"]</div>
+            <a class="btn btn-sm btn-outline-primary mb-2" asp-controller="Reports" asp-action="Acknowledgments" asp-route-contentId="@Model.Id">@L["View report"]</a>
+            <button class="btn btn-sm btn-outline-danger mb-2" formmethod="post" formaction="@Url.Action("ResetAcknowledgments", new { id = Model.Id })" formnovalidate data-confirm-click="@L["Reset ALL acknowledgments for this content? Users will have to acknowledge again."]">@L["Reset all"]</button>
+        </div></div>
+    }
+</div>
+</div>
+</form>

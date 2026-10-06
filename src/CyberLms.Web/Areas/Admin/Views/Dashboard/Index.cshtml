@@ -1,0 +1,26 @@
+@model DashboardVm
+@{ ViewData["Title"] = L["Dashboard"]; var s = Model.S; }
+<h1 class="h4 mb-3">@L["Dashboard"]</h1>
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Users" asp-action="Index" asp-route-role="User"><div class="card-body"><div class="text-muted small">@L["Total users"]</div><div class="stat-num">@s.Users</div></div></a></div>
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Content" asp-action="Index" asp-route-status="Published"><div class="card-body"><div class="text-muted small">@L["Published content"]</div><div class="stat-num">@s.Content</div></div></a></div>
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Assessments" asp-action="Index"><div class="card-body"><div class="text-muted small">@L["Published assessments"]</div><div class="stat-num">@s.Assessments</div></div></a></div>
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Reports" asp-action="Attempts"><div class="card-body"><div class="text-muted small">@L["Attempts and scores"]</div><div class="stat-num"><i class="bi bi-list-check"></i></div></div></a></div>
+</div>
+<h2 class="h6 text-muted">@L["Assessments (users x published assessments)"]</h2>
+<div class="row g-3 mb-3">
+    <div class="col-4"><a class="card stat-card border-success" asp-controller="Reports" asp-action="Assessments" asp-route-status="Passed"><div class="card-body"><div class="text-muted small">@L["Passed"]</div><div class="stat-num text-success">@s.Passed</div></div></a></div>
+    <div class="col-4"><a class="card stat-card border-danger" asp-controller="Reports" asp-action="Assessments" asp-route-status="Failed"><div class="card-body"><div class="text-muted small">@L["Failed"]</div><div class="stat-num text-danger">@s.Failed</div></div></a></div>
+    <div class="col-4"><a class="card stat-card" asp-controller="Reports" asp-action="Assessments" asp-route-status="NotAttempted"><div class="card-body"><div class="text-muted small">@L["Not attempted"]</div><div class="stat-num">@s.NotAttempted</div></div></a></div>
+</div>
+<h2 class="h6 text-muted">@L["Acknowledgments (users x policies requiring acknowledgment)"]</h2>
+<div class="row g-3 mb-4">
+    <div class="col-6"><a class="card stat-card border-success" asp-controller="Reports" asp-action="Acknowledgments" asp-route-status="Acknowledged"><div class="card-body"><div class="text-muted small">@L["Acknowledged"]</div><div class="stat-num text-success">@s.Acknowledged</div></div></a></div>
+    <div class="col-6"><a class="card stat-card border-warning" asp-controller="Reports" asp-action="Acknowledgments" asp-route-status="NotAcknowledged"><div class="card-body"><div class="text-muted small">@L["Not acknowledged"]</div><div class="stat-num text-warning">@s.NotAcknowledged</div></div></a></div>
+</div>
+<div class="card"><div class="card-header bg-white fw-semibold d-flex justify-content-between">@L["Recent activity"] <a asp-controller="Audit" asp-action="Index" class="small">@L["View all"]</a></div>
+@if (Model.Recent.Count == 0) { <div class="card-body text-muted">@L["No activity recorded yet."]</div> }
+else { <div class="table-responsive"><table class="table table-sm mb-0"><tbody>
+@foreach (var a in Model.Recent) { <tr><td class="text-nowrap">@Time.Html(a.Timestamp)</td><td dir="ltr" class="text-end">@a.Username</td><td>@L[a.Action]</td><td class="bidi">@a.Details</td></tr> }
+</tbody></table></div> }
+</div>

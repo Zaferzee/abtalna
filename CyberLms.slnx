@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CyberLms.Web/CyberLms.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CyberLms.Tests/CyberLms.Tests.csproj" />
+  </Folder>
+</Solution>

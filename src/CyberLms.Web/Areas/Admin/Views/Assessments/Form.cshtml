@@ -1,0 +1,13 @@
+@model AssessmentFormVm
+@{ ViewData["Title"] = Model.Id == 0 ? L["New assessment"] : L["Edit assessment"]; }
+<nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">@L["Assessments"]</a></li><li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li></ol></nav>
+<h1 class="h4 mb-3">@ViewData["Title"]</h1>
+<div class="card" style="max-width:720px"><div class="card-body"><form method="post" novalidate>
+    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+    <div class="mb-3"><label class="form-label" asp-for="Title">@L["Title"]</label><input class="form-control bidi" asp-for="Title" /></div>
+    <div class="mb-3"><label class="form-label" asp-for="Description">@L["Description / instructions"]</label><textarea class="form-control bidi" asp-for="Description" rows="3"></textarea></div>
+    <div class="mb-3"><label class="form-label" asp-for="ContentId">@L["Linked content (optional)"]</label><select class="form-select" asp-for="ContentId" asp-items="(SelectList)ViewBag.Contents"><option value="">@L["- none -"]</option></select></div>
+    <div class="row"><div class="col-6 mb-3"><label class="form-label" asp-for="PassingPercentage">@L["Passing percentage"]</label><input class="form-control" dir="ltr" type="number" asp-for="PassingPercentage" min="0" max="100" /></div>
+    <div class="col-6 mb-3"><label class="form-label" asp-for="MaxAttempts">@L["Max attempts (0 = unlimited)"]</label><input class="form-control" dir="ltr" type="number" asp-for="MaxAttempts" min="0" max="100" /></div></div>
+    <button class="btn btn-primary">@L["Save"]</button> <a class="btn btn-link" asp-action="Index">@L["Cancel"]</a>
+</form></div></div>

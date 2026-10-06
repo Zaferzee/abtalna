@@ -1,0 +1,38 @@
+@model UserDashboardVm
+@{ ViewData["Title"] = L["Dashboard"]; var b = Brand.Current; }
+<h1 class="h4">@L.Format("Welcome, {0}", User.FindFirst("display_name")?.Value)</h1>
+@if (!string.IsNullOrWhiteSpace(b.WelcomeText)) { <p class="text-muted bidi">@b.WelcomeText</p> }
+<div class="row g-3 mb-3 mt-1">
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Content" asp-action="Policies"><div class="card-body"><div class="text-muted small">@L["Required acknowledgments"]</div><div class="stat-num @(Model.PendingAcks.Count > 0 ? "text-danger" : "")">@Model.PendingAcks.Count</div></div></a></div>
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Assessments" asp-action="Index"><div class="card-body"><div class="text-muted small">@L["Available assessments"]</div><div class="stat-num">@Model.AvailableAssessments.Count</div></div></a></div>
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="MyResults" asp-action="Index"><div class="card-body"><div class="text-muted small">@L["Completed assessments"]</div><div class="stat-num">@Model.Completed.Count</div></div></a></div>
+    <div class="col-6 col-lg-3"><a class="card stat-card border-brand" asp-controller="Content" asp-action="Index"><div class="card-body"><div class="text-muted small">@L["Available content"]</div><div class="stat-num">@Model.RecentContent.Count</div></div></a></div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header bg-white fw-semibold">@L["Pending acknowledgments"]</div>
+        @if (Model.PendingAcks.Count == 0) { <div class="card-body text-muted">@L["Nothing pending."]</div> }
+        else { <ul class="list-group list-group-flush">@foreach (var c in Model.PendingAcks) { <li class="list-group-item d-flex justify-content-between align-items-center"><span class="bidi">@c.Title</span><a class="btn btn-sm btn-primary" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id">@L["Open"]</a></li> }</ul> }
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header bg-white fw-semibold">@L["Available assessments"]</div>
+        @if (Model.AvailableAssessments.Count == 0) { <div class="card-body text-muted">@L["No assessments available."]</div> }
+        else { <ul class="list-group list-group-flush">@foreach (var a in Model.AvailableAssessments) { <li class="list-group-item d-flex justify-content-between align-items-center"><span class="bidi">@a.Title</span><a class="btn btn-sm btn-primary" asp-controller="Assessments" asp-action="Index">@L["Open"]</a></li> }</ul> }
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header bg-white fw-semibold">@L["Completed assessments"]</div>
+        @if (Model.Completed.Count == 0) { <div class="card-body text-muted">@L["No completed assessments yet."]</div> }
+        else { <div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>@L["Assessment"]</th><th>@L["Score"]</th><th>@L["Result"]</th><th>@L["Assessment date"]</th></tr></thead><tbody>
+            @foreach (var t in Model.Completed) { <tr><td class="bidi"><a asp-controller="Assessments" asp-action="Result" asp-route-id="@t.Id">@t.Assessment.Title</a></td><td>@t.Percentage.ToString("0.#")%</td><td><span class="badge text-bg-@(t.Passed == true ? "success" : "danger")">@L[t.Passed == true ? "Passed" : "Failed"]</span></td><td>@Time.Html(t.CompletedAt)</td></tr> }
+        </tbody></table></div> }
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header bg-white fw-semibold">@L["Available content"]</div>
+        @if (Model.RecentContent.Count == 0) { <div class="card-body text-muted">@L["No content has been published yet."]</div> }
+        else { <ul class="list-group list-group-flush">@foreach (var c in Model.RecentContent) { <li class="list-group-item d-flex justify-content-between"><a class="bidi" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id">@c.Title</a><span class="badge text-bg-light">@L[Labels.Type(c.Type)]</span></li> }</ul> }
+        </div>
+    </div>
+</div>

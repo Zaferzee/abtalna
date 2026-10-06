@@ -1,0 +1,99 @@
+@{
+    var b = Brand.Current;
+    var isAdminArea = (string?)ViewContext.RouteData.Values["area"] == "Admin";
+    var ctl = (string?)ViewContext.RouteData.Values["controller"];
+    var act = (string?)ViewContext.RouteData.Values["action"];
+    var isAdmin = User.IsInRole(RoleNames.Admin);
+    string Active(string c, bool admin = false) => ctl == c && isAdminArea == admin ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="@L.Lang" dir="@L.Dir">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " - " : "")@b.SystemName</title>
+    @if (b.HasFavicon) { <link rel="icon" href="~/Files/Brand?kind=favicon&v=@b.Version" /> }
+    <link rel="stylesheet" href="~/lib/bootstrap/@(L.IsRtl ? "bootstrap.rtl.min.css" : "bootstrap.min.css")" />
+    <link rel="stylesheet" href="~/lib/icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/branding/theme.css?v=@b.Version" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body data-t-confirm="@L["Confirm"]" data-t-cancel="@L["Cancel"]" data-t-confirm-title="@L["Confirmation"]"
+      data-t-choose-file="@L["Choose file"]" data-t-choose-files="@L["Choose files"]" data-t-no-file="@L["No file chosen"]" data-t-files-count="@L["{0} files selected"]"
+      data-t-upload-failed="@L["Image upload failed."]" data-t-quill="@L["Editor toolbar"]">
+<header class="app-header d-flex align-items-center px-3">
+    <button class="btn btn-sm app-header-btn d-md-none me-2" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar" aria-label="@L["Menu"]"><i class="bi bi-list fs-4"></i></button>
+    <a class="d-flex align-items-center text-decoration-none app-brand" href="~/">
+        @if (b.HasLogo) { <img src="~/Files/Brand?kind=logo&v=@b.Version" alt="@b.OrgName" class="app-logo" /> }
+        <span class="ms-2"><span class="fw-semibold d-block lh-1">@b.SystemName</span><small class="opacity-75">@b.OrgName</small></span>
+    </a>
+    <div class="ms-auto d-flex align-items-center gap-2">
+        <form method="post" asp-controller="Account" asp-action="SetLanguage" asp-area="" class="m-0">
+            <input type="hidden" name="lang" value="@(L.IsRtl ? "en" : "ar")" />
+            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+            <button class="btn btn-sm app-header-btn" title="@L["Language"]" lang="@(L.IsRtl ? "en" : "ar")">@(L.IsRtl ? "English" : "العربية")</button>
+        </form>
+        <div class="dropdown">
+            <button class="btn btn-sm app-header-btn dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> @(User.FindFirst("display_name")?.Value ?? User.Identity?.Name)</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword" asp-area=""><i class="bi bi-key"></i> @L["Change password"]</a></li>
+                <li>
+                    <form method="post" asp-controller="Account" asp-action="Logout" asp-area=""><button class="dropdown-item"><i class="bi bi-box-arrow-left"></i> @L["Sign out"]</button></form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</header>
+<div class="app-body">
+    <nav id="sidebar" class="app-sidebar collapse d-md-block" aria-label="@L["Main menu"]">
+        <ul class="nav flex-column p-2">
+            @if (isAdmin && isAdminArea)
+            {
+                <li class="nav-item"><a class="nav-link @Active("Dashboard", true)" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2"></i> @L["Dashboard"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("Content", true)" asp-area="Admin" asp-controller="Content" asp-action="Index"><i class="bi bi-journal-text"></i> @L["Content Management"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("Assessments", true)" asp-area="Admin" asp-controller="Assessments" asp-action="Index"><i class="bi bi-ui-checks"></i> @L["Assessments"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("Users", true)" asp-area="Admin" asp-controller="Users" asp-action="Index"><i class="bi bi-people"></i> @L["Users"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("Reports", true)" asp-area="Admin" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart"></i> @L["Reports"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("Audit", true)" asp-area="Admin" asp-controller="Audit" asp-action="Index"><i class="bi bi-clock-history"></i> @L["Audit log"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("Settings", true)" asp-area="Admin" asp-controller="Settings" asp-action="Index"><i class="bi bi-gear"></i> @L["Settings"]</a></li>
+                <li class="nav-item mt-3"><a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-person-workspace"></i> @L["Employee portal"]</a></li>
+            }
+            else
+            {
+                <li class="nav-item"><a class="nav-link @Active("Home")" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @L["Dashboard"]</a></li>
+                <li class="nav-item"><a class="nav-link @(ctl == "Content" && act != "Policies" ? "active" : "")" asp-area="" asp-controller="Content" asp-action="Index"><i class="bi bi-journal-text"></i> @L["Content"]</a></li>
+                <li class="nav-item"><a class="nav-link @(ctl == "Content" && act == "Policies" ? "active" : "")" asp-area="" asp-controller="Content" asp-action="Policies"><i class="bi bi-shield-check"></i> @L["Policies"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("Assessments")" asp-area="" asp-controller="Assessments" asp-action="Index"><i class="bi bi-ui-checks"></i> @L["Assessments"]</a></li>
+                <li class="nav-item"><a class="nav-link @Active("MyResults")" asp-area="" asp-controller="MyResults" asp-action="Index"><i class="bi bi-award"></i> @L["My Results"]</a></li>
+                @if (isAdmin)
+                {
+                    <li class="nav-item mt-3"><a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-wrench-adjustable"></i> @L["Administration"]</a></li>
+                }
+            }
+        </ul>
+    </nav>
+    <main class="app-main">
+        <div class="container-fluid p-3 p-md-4">
+            @if (TempData["Success"] is string ok) { <div class="alert alert-success alert-dismissible fade show" role="status">@L[ok]<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@L["Close"]"></button></div> }
+            @if (TempData["Error"] is string er) { <div class="alert alert-danger alert-dismissible fade show" role="alert">@L[er]<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@L["Close"]"></button></div> }
+            @RenderBody()
+        </div>
+        @if (!string.IsNullOrWhiteSpace(b.FooterText)) { <footer class="app-footer text-center text-muted small py-3">@b.FooterText</footer> }
+    </main>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title fs-5">@L["Confirmation"]</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Close"]"></button></div>
+        <div class="modal-body" id="confirmModalText"></div>
+        <div class="modal-footer"><button type="button" class="btn btn-primary" id="confirmModalOk">@L["Confirm"]</button><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@L["Cancel"]</button></div>
+    </div></div>
+</div>
+
+<script src="~/lib/bootstrap/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("PreScripts", required: false)
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
