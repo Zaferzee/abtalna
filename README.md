@@ -18,9 +18,10 @@ Internal, on-premises LMS for publishing cybersecurity policies/controls/trainin
 ```bash
 # PostgreSQL running locally; create DB and role first (see docs/DEPLOYMENT.md section 2)
 export ConnectionStrings__Default="Host=localhost;Database=cyberlms;Username=cyberlms;Password=<pw>"
-export Seed__AdminUsername=admin Seed__AdminPassword='Change#Me12345'
+export Seed__AdminUsername=admin Seed__AdminPassword='<choose a strong password>'
 dotnet run --project src/CyberLms.Web          # http://localhost:5000 (see console), Development environment
-dotnet test                                    # integration tests use a throw-away PostgreSQL database
+export TEST_PG="Host=localhost;Username=<role that can create databases>;Password=<...>"
+dotnet test                                    # integration tests use throw-away PostgreSQL databases
 ```
 Sign in as `admin` (you must change the password), then create users under *Admin -> Users*.
 
@@ -35,12 +36,12 @@ src/CyberLms.Web/
   Views/, wwwroot/   UI and local static libraries
 tests/CyberLms.Tests unit + localization-coverage + end-to-end HTTP tests (PostgreSQL)
 tests/ui/            Playwright walk-through that screenshots every Arabic screen and lists untranslated words
-docs/                DEPLOYMENT, DATABASE, ACTIVE_DIRECTORY, BACKUP_RESTORE, LOCALIZATION, PRODUCTION_ACCEPTANCE, FUTURE_ROADMAP
-scripts/backup.ps1   nightly backup script
+docs/                HANDOVER, DEPLOYMENT, POSTGRESQL, ACTIVE_DIRECTORY, BACKUP_RESTORE, DATABASE, LOCALIZATION, PRODUCTION_ACCEPTANCE, FUTURE_ROADMAP
+deploy/              package builder, IIS/PowerShell scripts (install, deploy, verify, bootstrap admin, backup, restore) and PostgreSQL scripts
 ```
 
 ## Security notes
 No secrets in the repository (connection string, SMTP password, seed admin password come from environment/secret config). CSRF tokens on every POST, server-side role authorization, HTML sanitization of rich text, strict upload validation (extension + size + file signature, generated storage names, files outside the web root, served only via authenticated endpoints), lockout after repeated failures, secure cookies/HSTS/CSP, no stack traces in production.
 
 ## Documentation
-[Production acceptance (Arabic/RTL)](docs/PRODUCTION_ACCEPTANCE.md) - [Localization](docs/LOCALIZATION.md) - [Deployment](docs/DEPLOYMENT.md) - [Database & ERD](docs/DATABASE.md) - [Active Directory](docs/ACTIVE_DIRECTORY.md) - [Backup/restore](docs/BACKUP_RESTORE.md) - [Roadmap & limitations](docs/FUTURE_ROADMAP.md)
+[Deployment handover](docs/HANDOVER.md) - [Production acceptance](docs/PRODUCTION_ACCEPTANCE.md) - [Localization](docs/LOCALIZATION.md) - [Deployment](docs/DEPLOYMENT.md) - [Database & ERD](docs/DATABASE.md) - [Active Directory](docs/ACTIVE_DIRECTORY.md) - [Backup/restore](docs/BACKUP_RESTORE.md) - [Roadmap & limitations](docs/FUTURE_ROADMAP.md)

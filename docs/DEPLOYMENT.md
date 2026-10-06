@@ -1,82 +1,106 @@
-# Deployment on Windows Server + IIS + PostgreSQL
+# Deployment guide - Windows Server + IIS + PostgreSQL + Active Directory
 
-Target: internal Windows Server, IIS (in-process ASP.NET Core), PostgreSQL 16+, HTTPS.
-**Status of verification:** the application was built, migrated, published (`Release`) and exercised end-to-end on Linux/Kestrel against real PostgreSQL. The IIS and Windows-Authentication steps below follow Microsoft's documented procedure but were **not executed in this environment** - run the smoke test in section 10 on the real server.
+Target: one internal Windows Server (IIS, in-process ASP.NET Core), PostgreSQL 16+, Active Directory domain, HTTPS, Windows Authentication.
+Everything below is scripted in `deploy/` (PowerShell, run as Administrator). **Status:** the application, package, database scripts, backup/restore commands, logging, HTTPS behaviour and failure handling were verified in a Linux/Kestrel + PostgreSQL environment; the IIS, Windows Authentication and Active Directory steps are **NOT TESTED** until you run them (see `PRODUCTION_ACCEPTANCE.md`).
 
-## 1. Prerequisites on the server
-1. Windows Server 2019/2022 with the **Web Server (IIS)** role (include *Windows Authentication* if you will use AD sign-in).
-2. **.NET 10 Hosting Bundle** (installs the ASP.NET Core Module V2). Restart IIS afterwards (`iisreset`).
-3. **PostgreSQL 16+** (same server or another internal host).
-4. A TLS certificate for the site name (internal CA or enterprise PKI).
-
-## 2. PostgreSQL setup
-Run in `psql` as `postgres` (choose your own strong password):
-```sql
-CREATE ROLE cyberlms_app LOGIN PASSWORD '<strong-password>';
-CREATE DATABASE cyberlms OWNER cyberlms_app ENCODING 'UTF8';
-```
-The application role needs to own the database so migrations can run. If your DBA prefers a restricted runtime account, set `Database:AutoMigrate=false` and apply migrations with an owner account (section 6).
-
-## 3. Build the release package (on a build machine with the .NET 10 SDK)
-```powershell
-dotnet publish src/CyberLms.Web -c Release -o C:\inetpub\cyberlms
-```
-Copy the output folder to the server (e.g. `C:\inetpub\cyberlms`). It contains `web.config` (in-process hosting, 600 MB upload limit) and a sample production settings file.
-
-## 4. Storage folder
-```powershell
-New-Item -ItemType Directory D:\CyberLMS\Storage
-icacls D:\CyberLMS\Storage /grant "IIS AppPool\CyberLMS:(OI)(CI)M"
-```
-The path is configured with `Storage:RootPath` (never hard-coded). It is **not** inside the web root and is never served directly - files are streamed through authenticated controllers. Data-protection keys (auth cookies) are kept in `<Storage>\_keys` unless `Security:DataProtectionKeysPath` is set; back them up with the storage folder.
-
-## 5. IIS site
-1. Application pool `CyberLMS`: **.NET CLR version = No Managed Code**, identity = ApplicationPoolIdentity (or a service account), *Load User Profile* = True.
-2. Site -> physical path `C:\inetpub\cyberlms`, binding **https** (port 443) with your certificate (and optionally http 80 - the app redirects to HTTPS and sends HSTS in production).
-3. Grant `IIS AppPool\CyberLMS` *Read & execute* on `C:\inetpub\cyberlms` and *Modify* on `C:\inetpub\cyberlms\logs` (create it if you enable stdout logging).
-
-## 6. Configuration (no secrets in source control)
-Create `C:\inetpub\cyberlms\appsettings.Production.json` (start from `appsettings.Production.sample.json`) **or** use machine-level environment variables (`ConnectionStrings__Default`, `Smtp__Password`, `Seed__AdminPassword`; IIS: *Configuration Editor -> system.webServer/aspNetCore/environmentVariables*). Keep the file ACL'd to Administrators + the app-pool identity.
-
-| Setting | Meaning |
+## 1. What must be installed on the server
+| Item | Version / source |
 |---|---|
-| `ConnectionStrings:Default` | `Host=...;Database=cyberlms;Username=cyberlms_app;Password=...` |
-| `Authentication:Mode` | `Local`, `Windows` or `Both` (see ACTIVE_DIRECTORY.md) |
-| `Storage:RootPath`, `Storage:MaxVideoMB` ... | upload root and per-type size limits (keep `web.config` `maxAllowedContentLength` >= the largest) |
-| `Smtp:*` | server, port, sender, username, security; **`Smtp:Password` only here/env, never in the DB**. Host/port/sender can also be edited in *Admin -> Settings -> Email*. |
-| `Seed:AdminUsername` / `Seed:AdminPassword` | creates the first administrator **only if no admin exists**; password must change at first login. Remove `Seed:AdminPassword` after the first start. |
-| `Security:RequireHttpsCookies`, `Security:RedirectToHttps` | `true` in production (defaults) |
-| `App:DisplayTimeZone` | e.g. `Arab Standard Time` (timestamps are stored in UTC) |
-| `Database:AutoMigrate` | `true` applies pending migrations at startup |
+| Windows Server | 2019 or 2022, domain-joined, fully patched |
+| IIS + features | installed by `deploy\01-Install-Prerequisites.ps1` (Web-Server, Static Content, Default Doc, Http Errors, Http Logging, Request Filtering, **Windows Authentication**, Compression, Mgmt Console). Removes/does not install: Directory Browsing, WebDAV, FTP, CGI/ISAPI, ASP, ASP.NET 4.x, Basic/Digest auth, SSI |
+| **.NET 10 Hosting Bundle** (includes ASP.NET Core Runtime + ASP.NET Core Module V2) | download `dotnet-hosting-10.0.x-win.exe` from https://dotnet.microsoft.com/download/dotnet/10.0 and copy it to the server |
+| PostgreSQL | **16 or newer** (same server or a dedicated DB host) + client tools (`psql`, `pg_dump`, `pg_restore`) on the web server for backup scripts |
+| TLS certificate | issued by your internal CA for the site name (SAN = `lms.<domain>`), imported into `LocalMachine\My` |
 
-## 7. Migrations
-* Automatic: start the app (default).
-* Manual: on a machine with the SDK, `dotnet ef database update --project src/CyberLms.Web --connection "<connection string>"`, or generate a script: `dotnet ef migrations script --idempotent -o migrate.sql` and run it with `psql`.
+The .NET SDK is **not** needed on the server (framework-dependent package).
 
-## 8. HTTPS
-Bind the certificate in IIS (*Bindings -> Add -> https*). Test `https://<host>/`. In production the app sets `Secure` cookies, HSTS, and a CSP / security headers; stack traces are never shown (`/Home/Error` shows only a request id). Application logs go to the Windows/IIS logs (enable `stdoutLogEnabled` temporarily in `web.config` for troubleshooting).
+## 2. Values to obtain from the infrastructure team
+See the checklist in `HANDOVER.md` section 2. Minimum: site host name, certificate thumbprint, AD NetBIOS domain name, first administrator's AD account, PostgreSQL host/port/TLS policy, storage/log/backup drive paths, SMTP relay details.
 
-## 9. SMTP
-Configure `Smtp:*` (and the password via secret) then *Admin -> Settings -> Email -> Send test email*. Notifications are sent from a background queue; failures are logged, never block the UI.
-
-## 10. Smoke test after deployment
-1. Browse to `https://<host>/` -> login page appears (HTTP redirects to HTTPS).
-2. Sign in as the seeded admin, change the password.
-3. *Settings*: set organization name, logo, colors -> visible immediately.
-4. Create content with a PDF/image/video, publish; sign in as an employee and open it.
-5. Create an assessment + questions; take it as the employee; check *Reports* and export CSV/Excel.
-6. Upload a >30 MB video to confirm the upload limit configuration.
-
-## 10b. Arabic / RTL check
-After the smoke test, run section 1 of `PRODUCTION_ACCEPTANCE.md` on the server URL (login page, an admin screen, an assessment, a report export, a test e-mail) and record the results. Client PCs need an Arabic-capable font (Segoe UI/Tahoma are standard on Windows).
-
-## 11. Updating
-Stop the site (or drop `app_offline.htm` into the folder), copy the new publish output over the old one **keeping `appsettings.Production.json`**, start again. Migrations run automatically.
-
-## Local development
+## 3. Build the package (on the build machine)
 ```bash
-export ConnectionStrings__Default="Host=localhost;Database=cyberlms;Username=cyberlms;Password=..."
-export Seed__AdminUsername=admin Seed__AdminPassword='Change#Me12345'
-dotnet run --project src/CyberLms.Web        # Development environment: HTTP, files in ./storage-dev
-dotnet test                                   # needs PostgreSQL (TEST_PG env var overrides the server connection)
+git checkout <approved commit> && deploy/build-package.sh        # needs the .NET 10 SDK; produces artifacts/cyberlms-<date>-<commit>.zip
+dotnet test                                                       # (optional) needs TEST_PG, see README
+```
+The package contains **only**:
+```
+app\         the published application (CyberLms.Web.dll + libraries + web.config + wwwroot + ar\ resources + appsettings.json + appsettings.Production.sample.json)
+sql\         01-create-roles-and-database.sql, 02-migrate.sql (idempotent), 03-grants.sql, 04-verify.sql
+*.ps1        01-Install-Prerequisites, 02-Deploy-Site, 03-Verify-Deployment, Bootstrap-Admin, Backup, Restore
+*.md         this guide, POSTGRESQL, ACTIVE_DIRECTORY, BACKUP_RESTORE, HANDOVER
+VERSION.txt, SHA256SUMS.txt
+```
+It does **not** contain: `appsettings.Development.json`, `appsettings.Production.json`, any password, certificate, storage folder, log, `.pdb`, source code or test data. Verify with `SHA256SUMS.txt` after copying to the server.
+
+## 4. Deployment order (new installation)
+1. Copy the zip to the server (e.g. `C:\Deploy\`), unzip, check `SHA256SUMS.txt`.
+2. `.\01-Install-Prerequisites.ps1 -HostingBundleInstaller C:\Deploy\dotnet-hosting-10.0.x-win.exe`
+3. Prepare PostgreSQL (`POSTGRESQL.md`): roles, database, schema, grants, verification.
+4. Import the TLS certificate into `LocalMachine\My`; note the thumbprint.
+5. Create folders on a data drive **outside** the application folder, e.g. `D:\AppData\CyberLMS\Uploads`, `D:\AppData\CyberLMS\Logs`, `E:\Backups\CyberLMS` (the paths are yours to choose; nothing is hard-coded).
+6. `.\02-Deploy-Site.ps1 -PackageDir C:\Deploy\cyberlms-... -HostName lms.company.local -CertThumbprint <thumb> -StoragePath D:\AppData\CyberLMS\Uploads -LogPath D:\AppData\CyberLMS\Logs`
+   It creates the pool/site/binding, sets permissions, enables Windows Authentication and disables Anonymous. On first run it creates `C:\inetpub\cyberlms\appsettings.Production.json` from the sample and warns you to edit it.
+7. Edit `C:\inetpub\cyberlms\appsettings.Production.json` (section 6). Never commit it.
+8. `.\Bootstrap-Admin.ps1 -Identity 'CORP\first.admin'` (see `ACTIVE_DIRECTORY.md`).
+9. Recycle the pool (`Restart-WebAppPool CyberLMS`) and run `.\03-Verify-Deployment.ps1 -HostName lms.company.local -StoragePath ... -LogPath ...`.
+10. Run the smoke test (`HANDOVER.md` section 8) and record results in `PRODUCTION_ACCEPTANCE.md`.
+11. Schedule `Backup.ps1` (`BACKUP_RESTORE.md`) and run one restore test on a scratch server.
+
+## 5. IIS configuration (what `02-Deploy-Site.ps1` sets)
+| Setting | Value |
+|---|---|
+| Application pool `CyberLMS` | .NET CLR version **No Managed Code**; **64-bit** (Enable 32-bit Applications = False); Integrated pipeline; identity **ApplicationPoolIdentity** (`IIS AppPool\CyberLMS`); Load User Profile = True; Idle time-out = 0; Start mode = AlwaysRunning; periodic recycle off (recycle on deployment) |
+| Site `CyberLMS` | physical path `C:\inetpub\cyberlms`; bindings: **https :443 host `lms.company.local` + certificate (SNI)**, http :80 (the application redirects to HTTPS and sends HSTS) |
+| Authentication (site level) | **Windows Authentication = Enabled** (providers `Negotiate`, then `NTLM`), kernel mode on; **Anonymous Authentication = Disabled**; everything else disabled |
+| Hosting model | in-process (`web.config`), `ASPNETCORE_ENVIRONMENT=Production` |
+| Request limits | `maxAllowedContentLength` 629145600 (600 MB) in `web.config` - keep it above `Storage:MaxVideoMB` |
+| Hardening in `web.config` | directory browsing off, `Server` header removed, `X-Powered-By` removed, `.json/.resx/.pdb` requests denied, `logs` segment hidden |
+| HTTPS | certificate bound in IIS; application sets Secure/HttpOnly/SameSite cookies, HSTS (1 year) and security headers in Production |
+
+### Which Windows identity needs which folder (set by the script)
+| Folder | Identity | Rights | Why |
+|---|---|---|---|
+| `C:\inetpub\cyberlms` (application) | `IIS AppPool\CyberLMS` | Read & Execute | runs the code; **cannot modify** it |
+| `C:\inetpub\cyberlms\appsettings.Production.json` | `IIS AppPool\CyberLMS` (Read), `SYSTEM`, `Administrators` | Read / Full | secrets; inheritance removed so ordinary users cannot read it |
+| Storage `D:\AppData\CyberLMS\Uploads` | `IIS AppPool\CyberLMS` | **Modify** | uploaded files, branding images, data-protection keys (`_keys`) |
+| Logs `D:\AppData\CyberLMS\Logs` | `IIS AppPool\CyberLMS` | **Modify** | daily log files |
+| Backups `E:\Backups\CyberLMS` | backup service account | Modify | written by `Backup.ps1`; **not** readable by the app pool or ordinary users |
+| All of the above | `SYSTEM`, `BUILTIN\Administrators` | Full | administration |
+Domain users have **no** file-system access to any of these folders; they only reach the application through IIS.
+
+## 6. Production configuration (`appsettings.Production.json`)
+Template: `app\appsettings.Production.sample.json`. Values you must provide:
+| Key | Meaning / example |
+|---|---|
+| `AllowedHosts` | `lms.company.local` |
+| `ConnectionStrings:Default` | `Host=dbserver;Port=5432;Database=cyberlms;Username=cyberlms_app;Password=<app role password>;SSL Mode=Require;Maximum Pool Size=50` (**never** a superuser/owner account) |
+| `Database:AutoMigrate` | `false` (schema is applied by the DBA with the owner role) |
+| `Authentication:Mode` | `Windows` (production); `Both` only if you want local break-glass accounts |
+| `Authentication:Windows:AllowedDomains` | `[ "CORP" ]` - NetBIOS domain name(s) allowed to sign in |
+| `Authentication:Windows:AutoProvision` | `true`: first valid domain sign-in creates an **employee** profile |
+| `Storage:RootPath` | `D:\AppData\CyberLMS\Uploads` (required, absolute, outside the app folder; the application refuses to start without it) |
+| `Logging:File:Path` | `D:\AppData\CyberLMS\Logs` |
+| `App:BaseUrl` | `https://lms.company.local` (links in e-mails) |
+| `Smtp:*` | host, port, sender, sender name, username, security; **password via `Smtp:Password` here or the machine environment variable `Smtp__Password`** - never stored in the database or logged |
+| `App:DisplayTimeZone` | `Arab Standard Time` |
+Secrets can alternatively be set as machine environment variables (`ConnectionStrings__Default`, `Smtp__Password`) - restart the pool afterwards.
+
+## 7. Updating an existing installation
+```powershell
+.\02-Deploy-Site.ps1 -PackageDir C:\Deploy\cyberlms-NEW ... -Update
+```
+The script puts up `app_offline.htm` (Arabic maintenance page), replaces application files, **keeps `appsettings.Production.json`, storage and logs**, and starts the site. If the release contains a new migration: run the new `sql\02-migrate.sql` and `sql\03-grants.sql` as `cyberlms_owner` before step "bring the site back" (the application logs a CRITICAL message and `/health` returns 503 until the schema is current). Take a backup first.
+
+## 8. Logs and monitoring
+* Application log: `Logging:File:Path\cyberlms-YYYYMMDD.log` (30 days). Contains errors, warnings (failed sign-ins with user name + IP, rejected domains, SMTP failures, missing files) and start-up messages. It never contains passwords, connection strings, request bodies or SMTP credentials.
+* IIS logs: `%SystemDrive%\inetpub\logs\LogFiles`. ASP.NET Core Module startup failures: Windows Event Log (Application) and, if you set `stdoutLogEnabled="true"` temporarily, `C:\inetpub\cyberlms\logs\stdout*`.
+* Monitoring endpoint: `GET https://lms.company.local/health` -> `200 {"status":"healthy"}` or `503` (`database-unreachable`, `migrations-pending`). Requires Windows credentials like every other URL.
+
+## 9. Local development
+```bash
+export TEST_PG="Host=localhost;Username=<role that can create databases>;Password=<...>"   # tests create/drop throw-away databases
+export ConnectionStrings__Default="Host=localhost;Database=cyberlms;Username=...;Password=..."
+export Seed__AdminUsername=admin Seed__AdminPassword='<choose a strong password>'
+dotnet run --project src/CyberLms.Web     # Development environment: HTTP, files in ./storage-dev
+dotnet test
 ```

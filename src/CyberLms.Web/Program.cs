@@ -29,8 +29,8 @@ if (builder.Configuration.GetValue("Logging:File:Enabled", true))
 }
 
 // Secrets (DB password, SMTP password) must come from env vars / secrets / appsettings.Production.json - never from source.
-var connectionString = builder.Configuration.GetConnectionString("Default")
-    ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured.");
+var connectionString = builder.Configuration.GetConnectionString("Default");
+if (string.IsNullOrWhiteSpace(connectionString)) throw new InvalidOperationException("ConnectionStrings:Default is not configured (set it in appsettings.Production.json or the ConnectionStrings__Default environment variable).");
 
 builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(connectionString));
 builder.Services.AddMemoryCache();
