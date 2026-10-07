@@ -16,12 +16,14 @@
 {
     var a = it.Assessment;
     var passed = it.Best?.Passed == true;
-    <article class="card quiz-card @(passed ? "is-passed" : "") reveal" style="--i:@(i++)">
+    var locked = it.LockedByAck && !passed;
+    <article class="card quiz-card @(passed ? "is-passed" : "") @(locked ? "is-locked" : "") reveal" style="--i:@(i++)">
         <div class="q-band"></div>
         <div class="q-body">
             <div class="d-flex align-items-center justify-content-between gap-2">
                 <span class="icon-chip @(passed ? "success" : "accent")"><i class="bi @(passed ? "bi-patch-check-fill" : "bi-ui-checks")"></i></span>
                 @if (passed) { <span class="badge text-bg-success badge-dot">@L["Passed"]</span> }
+                else if (locked) { <span class="badge text-bg-secondary"><i class="bi bi-lock-fill"></i> @L["Locked"]</span> }
                 else if (it.HasInProgress) { <span class="badge text-bg-warning badge-dot">@L["In progress"]</span> }
                 else if (it.Best != null) { <span class="badge text-bg-danger badge-dot">@L["Failed"]</span> }
                 else { <span class="badge text-bg-secondary">@L["New"]</span> }
@@ -39,7 +41,15 @@
             }
         </div>
         <div class="q-foot">
-            @if (it.CanStart)
+            @if (locked)
+            {
+                <span class="lock-note"><i class="bi bi-lock-fill"></i> @L["Complete the acknowledgment first"]</span>
+                @if (a.Content?.Status == ContentStatus.Published)
+                {
+                    <a class="btn btn-outline-primary" asp-controller="Content" asp-action="Details" asp-route-id="@a.ContentId" asp-fragment="sec-ack"><i class="bi bi-pen"></i> @L["Read and acknowledge"]</a>
+                }
+            }
+            else if (it.CanStart)
             {
                 <form method="post" asp-action="Start" asp-route-id="@a.Id" class="m-0"><button class="btn btn-primary"><i class="bi bi-play-fill"></i> @L[it.HasInProgress ? "Continue assessment" : (it.CompletedAttempts > 0 ? "Retry" : "Start assessment")]</button></form>
                 <small class="text-muted">@(a.MaxAttempts == 0 ? L["Unlimited"] : L.Format("{0} attempt(s) left", Math.Max(0, a.MaxAttempts - it.CompletedAttempts)))</small>

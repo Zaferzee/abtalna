@@ -1,6 +1,7 @@
 @model ContentDetailsVm
 @*
     The employee reading experience: text -> embedded video -> embedded PDF -> other attachments -> acknowledgment -> related assessment.
+    When the content requires acknowledgment, the assessment stays locked until it is recorded (enforced on the server by AckGate).
     Used by the employee page (Content/Details) and, non-interactively, by the authoring wizard's "preview as employee".
 *@
 @{
@@ -58,7 +59,7 @@
                 <ol class="flow-steps">
                     <li class="is-done"><span>@(stepN++)</span>@L["Read the content"]</li>
                     @if (needsAck) { <li class="@(acked ? "is-done" : "is-todo")"><span>@(stepN++)</span>@L["Acknowledge"]</li> }
-                    @foreach (var it in Model.Related) { <li class="@(it.Best?.Passed == true ? "is-done" : "is-todo")"><span>@(stepN++)</span>@L["Complete the assessment"]</li> }
+                    @foreach (var it in Model.Related) { var stepLocked = it.Best?.Passed != true && (live ? it.LockedByAck : c.RequiresAcknowledgment); <li class="@(it.Best?.Passed == true ? "is-done" : stepLocked ? "is-todo is-locked" : "is-todo")" @(stepLocked && !live ? "data-ack-locked-step" : "")><span>@(stepN++)</span>@L["Complete the assessment"]@if (stepLocked) { <i class="bi bi-lock-fill ms-1 step-lock" aria-label="@L["Locked"]"></i> }</li> }
                 </ol>
                 @if (needsAck && !acked && live) { <p class="small text-muted mb-0 mt-2"><i class="bi bi-info-circle text-primary"></i> @L["Acknowledgment is recorded with the date and time, and is visible to administrators in reports."]</p> }
             </div>
@@ -185,14 +186,14 @@
     {
         @if (acked)
         {
-            <section class="ack-panel is-done" aria-live="polite">
+            <section id="sec-ack" class="ack-panel is-done @(Model.JustAcknowledged ? "just-done" : "")" aria-live="polite">
                 <span class="ack-icon"><i class="bi bi-patch-check-fill"></i></span>
-                <div><h2>@L["Acknowledged"]</h2><p class="bidi">@Model.AckText</p><p class="small mt-1">@L["Acknowledged on"] @Time.Html(Model.Ack!.AcknowledgedAt)</p></div>
+                <div><h2>@L[Model.JustAcknowledged ? "Acknowledgment recorded successfully" : "Acknowledged"]</h2><p class="bidi">@Model.AckText</p><p class="small mt-1">@L["Acknowledged on"] @Time.Html(Model.Ack!.AcknowledgedAt)</p></div>
             </section>
         }
         else if (live)
         {
-            <form method="post" asp-area="" asp-controller="Content" asp-action="Acknowledge" asp-route-id="@c.Id" class="ack-panel reveal-scroll">
+            <form id="sec-ack" method="post" asp-area="" asp-controller="Content" asp-action="Acknowledge" asp-route-id="@c.Id" class="ack-panel reveal-scroll">
                 <span class="ack-icon"><i class="bi bi-pen"></i></span>
                 <div>
                     <h2>@L["Your acknowledgment is required"]</h2>
@@ -204,14 +205,16 @@
         }
         else
         {
-            <div class="ack-panel" data-ack-preview>
+            @* Preview: the acknowledgment can be simulated to show the unlock; nothing is sent to the server and no acknowledgment is recorded. *@
+            <div id="sec-ack" class="ack-panel" data-ack-preview data-done-title="@L["Acknowledgment recorded successfully"]">
                 <span class="ack-icon"><i class="bi bi-pen"></i></span>
                 <div>
-                    <h2>@L["Your acknowledgment is required"]</h2>
-                    <p>@L["Please read the full content above, then confirm below."]</p>
-                    <label class="ack-check"><input type="checkbox" disabled /> <span class="bidi" data-ack-text>@Model.AckText</span></label>
+                    <h2 data-ack-title>@L["Your acknowledgment is required"]</h2>
+                    <p data-ack-instructions>@L["Please read the full content above, then confirm below."]</p>
+                    <label class="ack-check"><input type="checkbox" data-ack-sim-check /> <span class="bidi" data-ack-text>@Model.AckText</span></label>
+                    <p class="small mt-1 preview-note"><i class="bi bi-eye"></i> @L["Preview: simulate the acknowledgment to see the assessment unlock. No acknowledgment is recorded."]</p>
                 </div>
-                <button type="button" class="btn btn-primary btn-lg" disabled title="@L["Preview only"]"><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
+                <button type="button" class="btn btn-primary btn-lg" data-ack-sim disabled><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
             </div>
         }
     }
@@ -220,8 +223,11 @@
     {
         var a = it.Assessment;
         var passed = it.Best?.Passed == true;
-        <section class="next-step reveal-scroll @(passed ? "is-done" : "")" aria-label="@L["Related assessment"]">
-            <span class="ns-icon"><i class="bi @(passed ? "bi-patch-check-fill" : "bi-ui-checks")"></i></span>
+        // Mandatory acknowledgment gate: live = the server's lock for this user; preview = locked until the simulated acknowledgment.
+        var locked = live ? it.LockedByAck && !passed : c.RequiresAcknowledgment;
+        var unlocking = live && Model.JustAcknowledged && !it.LockedByAck && !passed;
+        <section class="next-step reveal-scroll @(passed ? "is-done" : "") @(locked ? "is-locked" : "") @(unlocking ? "is-unlocking" : "")" aria-label="@L["Related assessment"]" @(locked && !live ? "data-ack-locked" : "")>
+            <span class="ns-icon"><i class="bi @(passed ? "bi-patch-check-fill" : locked ? "bi-lock-fill" : "bi-ui-checks")" data-ns-icon></i></span>
             <div class="ns-main">
                 <div class="ns-kicker">@L["Next step: assessment"]</div>
                 <h2 class="bidi">@a.Title</h2>
@@ -231,13 +237,27 @@
                     <span class="chip"><i class="bi bi-bullseye"></i> @L["Passing score"]: @Ui.Pct(a.PassingPercentage)</span>
                     <span class="chip"><i class="bi bi-arrow-repeat"></i> @(a.MaxAttempts == 0 ? L["Unlimited attempts"] : L.Format("{0} attempt(s) allowed", a.MaxAttempts))</span>
                     @if (it.Best != null) { <span class="chip @(passed ? "chip-success" : "chip-danger")"><i class="bi bi-award"></i> @L["Best score"]: @Ui.Pct((double)it.Best.Percentage)</span> }
+                    @if (unlocking) { <span class="chip chip-success unlock-chip"><i class="bi bi-unlock-fill"></i> @L["Assessment unlocked"]</span> }
                 </div>
+                @if (locked) { <p class="lock-msg" data-lock-msg><i class="bi bi-lock-fill"></i> @L["Complete the acknowledgment first"]</p> }
             </div>
             <div class="ns-action">
                 @if (!live)
                 {
-                    <button type="button" class="btn btn-accent btn-lg" disabled title="@L["Preview only"]"><i class="bi bi-play-fill"></i> @L["Start assessment"]</button>
+                    @if (locked)
+                    {
+                        <span class="btn btn-lg btn-locked" aria-disabled="true" data-ns-locked><i class="bi bi-lock-fill"></i> @L["Assessment locked"]</span>
+                    }
+                    <div @(locked ? "hidden" : "") data-ns-open>
+                        <button type="button" class="btn btn-accent btn-lg" aria-disabled="true" title="@L["Preview only"]"><i class="bi bi-play-fill"></i> @L["Start assessment"]</button>
+                        <small class="text-muted d-block mt-1">@L["Preview only"]</small>
+                    </div>
                     @if (!a.IsPublished) { <small class="text-muted d-block mt-1">@L["Becomes available to employees when published."]</small> }
+                }
+                else if (locked)
+                {
+                    <span class="btn btn-lg btn-locked" aria-disabled="true"><i class="bi bi-lock-fill"></i> @L["Assessment locked"]</span>
+                    @if (c.Status == ContentStatus.Published) { <a class="d-block small mt-2" href="#sec-ack"><i class="bi bi-arrow-up-short"></i> @L["Go to the acknowledgment"]</a> }
                 }
                 else if (!a.IsPublished)
                 {

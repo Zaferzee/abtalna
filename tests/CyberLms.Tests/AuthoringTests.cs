@@ -121,9 +121,11 @@ public class AuthoringTests(TestApp app) : IClassFixture<TestApp>
         Assert.Contains("لائحة المخالفات الداخلية", await emp.GetStringAsync("/Content/Policies"));   // regulations are listed with policies
         var page = await emp.GetStringAsync($"/Content/Details/{id}");
         Assert.Contains(statement, page); Assert.Contains("<table>", page); Assert.Contains($"/Files/Attachment/{att.Id}", page);
-        Assert.Contains($"/Assessments/Start/{asm.Id}", page);
+        Assert.DoesNotContain($"/Assessments/Start/{asm.Id}", page);                         // locked until acknowledged
+        Assert.Contains("الاختبار مقفل", page);
         Assert.Equal(HttpStatusCode.OK, (await emp.GetAsync($"/Files/Attachment/{att.Id}")).StatusCode);
         Loc(await emp.PostForm($"/Content/Details/{id}", $"/Content/Acknowledge/{id}", []));
+        Assert.Contains($"/Assessments/Start/{asm.Id}", await emp.GetStringAsync($"/Content/Details/{id}"));
         Assert.Equal(1, await app.Db(d => d.UserAcknowledgments.CountAsync(a => a.ContentId == id)));
         var take = Loc(await emp.PostForm($"/Content/Details/{id}", $"/Assessments/Start/{asm.Id}", []));
         var attemptId = int.Parse(take.Split('/').Last());

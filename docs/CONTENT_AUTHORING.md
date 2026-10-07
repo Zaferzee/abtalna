@@ -33,7 +33,18 @@ The content page reads top to bottom:
 
 Video and PDF rendering is described in [MULTIMEDIA.md](MULTIMEDIA.md). **معاينة كموظف** uses the same view, so the preview shows the video and PDF exactly as employees will see them.
 
-A side card shows the steps for the item and their status. Regulations are listed on the employee's **Policies** page, together with policies. The assessment can still be started before acknowledging; this is the existing behaviour, kept unchanged.
+A side card shows the steps for the item and their status. Regulations are listed on the employee's **Policies** page, together with policies.
+
+### Mandatory acknowledgment gate
+
+When the content requires acknowledgment, its linked assessment stays **locked** for each employee until that employee has acknowledged the content (current version):
+
+- **Content page:** the assessment card shows «🔒 الاختبار مقفل» and «يتطلب إكمال الإقرار بالاطلاع أولاً», with no start button. After the acknowledgment is recorded the page returns to the acknowledgment with «تم الإقرار بنجاح», the card unlocks with a short transition («تم فتح الاختبار») and offers «ابدأ الاختبار».
+- **Assessments list and dashboard:** the assessment is shown as locked and links to the content's acknowledgment instead of starting.
+- **Server enforcement** (`Services/AckGate.cs`, used by `AssessmentsController`): starting an attempt, the question page and submitting answers are refused before acknowledgment. The user is redirected to the content (`#sec-ack`) with «يجب الإقرار بالاطلاع على المحتوى قبل بدء الاختبار.», and no attempt is created. This covers direct URLs, replayed requests and every navigation path. Viewing an already completed result is not affected.
+- Acknowledgment is per user: one employee's acknowledgment never unlocks the assessment for another. An employee who has already acknowledged is not asked again (a future re-acknowledgment would raise the content `Version`).
+- Content that does not require acknowledgment is not affected.
+- **Preview** («معاينة كموظف», and an administrator opening unpublished content): the assessment is shown locked; ticking the statement and pressing «إقرار» simulates the acknowledgment in the browser and unlocks it. Nothing is sent to the server and no acknowledgment is recorded.
 
 ## Data-integrity rules (unchanged production behaviour)
 
@@ -56,6 +67,7 @@ The new types *لائحة* (7) and *تعليمات* (8) are values of the existi
 ## Evidence
 
 - **Automated:** `tests/CyberLms.Tests/AuthoringTests.cs`, 2 tests, real HTTP against PostgreSQL. It covers the full wizard, sanitizing, table persistence, PDF attachment, statement, questions (add / invalid / reorder / edit / delete), preview, publish, the employee flow (acknowledge, attempt, 100 %), report, locking after attempts, refusal to remove the assessment, acknowledgments kept, duplicate, unpublish with history kept, and audit entries.
+- **Acknowledgment gate:** `tests/CyberLms.Tests/AckGateTests.cs` (3 tests) and the browser run `tests/ui/ack-gate-acceptance.mjs`, 17/17 checks; see [screenshots/ack-gate-v1/README.md](screenshots/ack-gate-v1/README.md).
 - **UI acceptance through the browser:** the regulation was created by the administrator only through the UI; 18/18 checks passed. See [screenshots/content-authoring-v1/README.md](screenshots/content-authoring-v1/README.md).
 
 ## Limitations

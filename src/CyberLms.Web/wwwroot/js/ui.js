@@ -98,6 +98,29 @@
     cb.addEventListener('change', sync); sync();
   });
 
+  // ---------- Acknowledgment gate in the preview: simulate the acknowledgment and unlock the assessment (nothing is sent) ----------
+  $$('[data-ack-preview]').forEach(function (panel) {
+    var cb = $('[data-ack-sim-check]', panel), btn = $('[data-ack-sim]', panel);
+    if (!cb || !btn) return;
+    var sync = function () { btn.disabled = !cb.checked; };
+    cb.addEventListener('change', sync); sync();
+    btn.addEventListener('click', function () {
+      if (!cb.checked) return;
+      panel.classList.add('is-done', 'just-done');
+      var t = $('[data-ack-title]', panel); if (t) t.textContent = panel.getAttribute('data-done-title');
+      var ic = $('.ack-icon i', panel); if (ic) ic.className = 'bi bi-patch-check-fill';
+      cb.disabled = true; btn.hidden = true;
+      var ins = $('[data-ack-instructions]', panel); if (ins) ins.hidden = true;
+      $$('[data-ack-locked]').forEach(function (ns) {
+        ns.classList.remove('is-locked'); ns.classList.add('is-unlocking');
+        var i = $('[data-ns-icon]', ns); if (i) i.className = 'bi bi-ui-checks';
+        $$('[data-ns-locked], [data-lock-msg]', ns).forEach(function (x) { x.hidden = true; });
+        $$('[data-ns-open]', ns).forEach(function (x) { x.hidden = false; });
+      });
+      $$('[data-ack-locked-step]').forEach(function (li) { li.classList.remove('is-locked'); var l = $('.step-lock', li); if (l) l.remove(); });
+    });
+  });
+
   // ---------- Assessment wizard (one question per step; without JS every question is shown) ----------
   var quiz = $('[data-quiz]');
   if (quiz) {

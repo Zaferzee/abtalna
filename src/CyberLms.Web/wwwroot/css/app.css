@@ -658,3 +658,23 @@ a.wz-link:hover, button.wz-link:hover { background: var(--color-surface-alt); }
 .reader-after { max-width: 1000px; margin: 1.75rem auto 0; }
 .reader.no-body { display: block; } .reader.no-body .doc-aside { position: static; }
 .reader.no-body .doc-aside .toc { display: none; }
+
+/* ---------- Mandatory acknowledgment gate: locked assessment and the unlock transition ---------- */
+.next-step.is-locked { background: linear-gradient(135deg, var(--color-surface-alt), var(--color-surface) 70%); border-style: dashed; border-color: var(--color-border-strong); }
+.next-step.is-locked .ns-icon { background: var(--color-neutral); box-shadow: none; }
+.next-step.is-locked .ns-kicker { color: var(--color-muted); }
+.next-step.is-locked h2, .next-step.is-locked .status-chips { opacity: .7; }
+.lock-msg { display: inline-flex; align-items: center; gap: .45rem; margin: .2rem 0 0 !important; padding: .35rem .8rem; border-radius: var(--radius-pill); background: var(--warning-bg); color: var(--warning-ink, var(--color-text)) !important; font-weight: 600; font-size: .9rem; }
+.btn-locked { background: var(--color-surface-alt); color: var(--color-muted); border: 1.5px dashed var(--color-border-strong); cursor: not-allowed; pointer-events: none; }
+.next-step.is-unlocking { animation: ns-unlock .9s var(--ease) both; }
+.next-step.is-unlocking .ns-icon { animation: check-pop .6s var(--ease-spring) .15s both; }
+.unlock-chip { animation: check-pop .5s var(--ease-spring) .35s both; }
+@keyframes ns-unlock { 0% { filter: grayscale(1); opacity: .65; box-shadow: none; } 60% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-accent) 25%, transparent); } 100% { filter: none; opacity: 1; } }
+.ack-panel.just-done { animation: ack-done .7s var(--ease) both; }
+@keyframes ack-done { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 45%, transparent); } 100% { box-shadow: 0 0 0 14px transparent, var(--shadow-md); } }
+.ack-panel .preview-note { color: var(--color-primary) !important; }
+.flow-steps li.is-locked { color: var(--color-muted); } .step-lock { font-size: .8em; opacity: .8; }
+.quiz-card.is-locked .q-band { background: var(--color-neutral); } .quiz-card.is-locked h3, .quiz-card.is-locked .status-chips { opacity: .7; }
+.lock-note { display: inline-flex; align-items: center; gap: .4rem; font-size: .88rem; font-weight: 600; color: var(--color-muted); }
+.todo-item.is-locked h3 { color: var(--color-muted); }
+@media (prefers-reduced-motion: reduce) { .next-step.is-unlocking, .next-step.is-unlocking .ns-icon, .unlock-chip, .ack-panel.just-done { animation: none; } }

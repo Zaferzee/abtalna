@@ -24,6 +24,7 @@
   <data name="Acknowledgment date" xml:space="preserve"><value>تاريخ الإقرار</value></data>
   <data name="Acknowledgment is recorded with the date and time, and is visible to administrators in reports." xml:space="preserve"><value>يُسجَّل الإقرار بالتاريخ والوقت ويظهر للمسؤولين في التقارير.</value></data>
   <data name="Acknowledgment rate" xml:space="preserve"><value>نسبة الإقرار</value></data>
+  <data name="Acknowledgment recorded successfully" xml:space="preserve"><value>تم الإقرار بنجاح</value></data>
   <data name="Acknowledgment report" xml:space="preserve"><value>تقرير الإقرارات</value></data>
   <data name="Acknowledgment required: {0}" xml:space="preserve"><value>مطلوب الإقرار: {0}</value></data>
   <data name="Acknowledgment statement" xml:space="preserve"><value>نص الإقرار</value></data>
@@ -68,10 +69,12 @@
   <data name="Assessment completion" xml:space="preserve"><value>إنجاز الاختبارات</value></data>
   <data name="Assessment created. Now add its questions." xml:space="preserve"><value>أُنشئ الاختبار. أضف أسئلته الآن.</value></data>
   <data name="Assessment date" xml:space="preserve"><value>تاريخ الاختبار</value></data>
+  <data name="Assessment locked" xml:space="preserve"><value>الاختبار مقفل</value></data>
   <data name="Assessment name" xml:space="preserve"><value>اسم الاختبار</value></data>
   <data name="Assessment report" xml:space="preserve"><value>تقرير الاختبار</value></data>
   <data name="Assessment results" xml:space="preserve"><value>نتائج الاختبارات</value></data>
   <data name="Assessment status" xml:space="preserve"><value>حالة الاختبارات</value></data>
+  <data name="Assessment unlocked" xml:space="preserve"><value>تم فتح الاختبار</value></data>
   <data name="Assessment: {0}" xml:space="preserve"><value>اختبار: {0}</value></data>
   <data name="ASSESSMENT_CREATED" xml:space="preserve"><value>إنشاء اختبار</value></data>
   <data name="ASSESSMENT_DELETED" xml:space="preserve"><value>حذف اختبار</value></data>
@@ -125,6 +128,7 @@
   <data name="Clear filters" xml:space="preserve"><value>مسح التصفية</value></data>
   <data name="Close" xml:space="preserve"><value>إغلاق</value></data>
   <data name="Colors" xml:space="preserve"><value>الألوان</value></data>
+  <data name="Complete the acknowledgment first" xml:space="preserve"><value>يتطلب إكمال الإقرار بالاطلاع أولاً</value></data>
   <data name="Complete the assessment" xml:space="preserve"><value>أكمل الاختبار</value></data>
   <data name="Completed assessments" xml:space="preserve"><value>الاختبارات المكتملة</value></data>
   <data name="Completed attempts" xml:space="preserve"><value>المحاولات المكتملة</value></data>
@@ -282,6 +286,7 @@
   <data name="General Content" xml:space="preserve"><value>محتوى عام</value></data>
   <data name="General settings saved." xml:space="preserve"><value>تم حفظ الإعدادات العامة.</value></data>
   <data name="Go to assessment" xml:space="preserve"><value>الانتقال للاختبار</value></data>
+  <data name="Go to the acknowledgment" xml:space="preserve"><value>الانتقال إلى الإقرار</value></data>
   <data name="Good afternoon" xml:space="preserve"><value>مساء الخير</value></data>
   <data name="Good evening" xml:space="preserve"><value>مساء الخير</value></data>
   <data name="Good morning" xml:space="preserve"><value>صباح الخير</value></data>
@@ -334,6 +339,7 @@
   <data name="Loading the document..." xml:space="preserve"><value>جارٍ تحميل المستند…</value></data>
   <data name="Local (initial password)" xml:space="preserve"><value>محلي (بكلمة مرور أولية)</value></data>
   <data name="Local sign-in is disabled." xml:space="preserve"><value>تسجيل الدخول المحلي معطّل.</value></data>
+  <data name="Locked" xml:space="preserve"><value>مقفل</value></data>
   <data name="Login background image" xml:space="preserve"><value>صورة خلفية صفحة الدخول</value></data>
   <data name="Login background image (optional)" xml:space="preserve"><value>صورة خلفية صفحة الدخول (اختيارية)</value></data>
   <data name="Login page" xml:space="preserve"><value>صفحة الدخول</value></data>
@@ -462,6 +468,7 @@
   <data name="Preview as employee" xml:space="preserve"><value>معاينة كموظف</value></data>
   <data name="Preview only" xml:space="preserve"><value>للمعاينة فقط</value></data>
   <data name="Preview the assessment questions" xml:space="preserve"><value>معاينة أسئلة الاختبار</value></data>
+  <data name="Preview: simulate the acknowledgment to see the assessment unlock. No acknowledgment is recorded." xml:space="preserve"><value>معاينة: يمكنك محاكاة الإقرار لرؤية فتح الاختبار. لا يُسجَّل أي إقرار.</value></data>
   <data name="Preview: this content is not published (visible to administrators only)." xml:space="preserve"><value>معاينة: هذا المحتوى غير منشور (يظهر لمديري النظام فقط).</value></data>
   <data name="Previous" xml:space="preserve"><value>السابق</value></data>
   <data name="Previous page" xml:space="preserve"><value>الصفحة السابقة</value></data>
@@ -599,7 +606,7 @@
   <data name="SMTP settings are working." xml:space="preserve"><value>إعدادات البريد تعمل بنجاح.</value></data>
   <data name="SMTP username (if required)" xml:space="preserve"><value>اسم مستخدم SMTP (إن لزم)</value></data>
   <data name="Some questions are not answered yet:" xml:space="preserve"><value>لم تتم الإجابة عن بعض الأسئلة:</value></data>
-  <data name="Start assessment" xml:space="preserve"><value>بدء الاختبار</value></data>
+  <data name="Start assessment" xml:space="preserve"><value>ابدأ الاختبار</value></data>
   <data name="Start from a palette" xml:space="preserve"><value>ابدأ من لوحة ألوان جاهزة</value></data>
   <data name="Start now" xml:space="preserve"><value>ابدأ الآن</value></data>
   <data name="Start writing here, or paste from Word..." xml:space="preserve"><value>ابدأ الكتابة هنا، أو الصق من Word...</value></data>
@@ -736,6 +743,7 @@
   <data name="You have not acknowledged any policy yet." xml:space="preserve"><value>لم تقم بالإقرار على أي سياسة بعد.</value></data>
   <data name="You have not yet attempted: {0}" xml:space="preserve"><value>لم تقم بعد بأداء الاختبار: {0}</value></data>
   <data name="You have {0} item(s) to complete" xml:space="preserve"><value>لديك {0} مهام لإكمالها</value></data>
+  <data name="You must acknowledge the content before starting the assessment." xml:space="preserve"><value>يجب الإقرار بالاطلاع على المحتوى قبل بدء الاختبار.</value></data>
   <data name="You must change your password before continuing." xml:space="preserve"><value>يجب تغيير كلمة المرور قبل المتابعة.</value></data>
   <data name="You still need to acknowledge: {0}" xml:space="preserve"><value>لا يزال مطلوباً منك الإقرار على: {0}</value></data>
   <data name="You're all caught up. Great work!" xml:space="preserve"><value>أنجزت كل المطلوب. عمل رائع!</value></data>

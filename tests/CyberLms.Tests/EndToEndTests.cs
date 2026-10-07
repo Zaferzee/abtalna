@@ -97,6 +97,13 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         Assert.Equal(HttpStatusCode.OK, bad.StatusCode);
         (await admin.PostForm("/Admin/Assessments", $"/Admin/Assessments/SetStatus/{asm.Id}?publish=true", [])).EnsureRedirect();
 
+        // 8b. Alice acknowledges the content first (twice => one record): the linked assessment is locked until she does
+        var ackUrl = $"/Content/Acknowledge/{content.Id}";
+        Assert.Contains("أقرّ بأنني قرأت هذه السياسة وفهمتها", await alice.GetStringAsync($"/Content/Details/{content.Id}"));
+        (await alice.PostForm($"/Content/Details/{content.Id}", ackUrl, [])).EnsureRedirect();
+        (await alice.PostForm($"/Content/Details/{content.Id}", ackUrl, [])).EnsureRedirect();
+        Assert.Equal(1, await app.Db(d => d.UserAcknowledgments.CountAsync(a => a.ContentId == content.Id)));
+
         // 9-11. Alice answers: Q1 correct, Q2 wrong, Q3 correct => 3/4 points = 75% => Passed
         var qs = await app.Db(d => d.Questions.Include(q => q.Options).Where(q => q.AssessmentId == asm.Id).OrderBy(q => q.SortOrder).ToListAsync());
         Assert.Equal(3, qs.Count);
@@ -134,13 +141,6 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         Assert.Contains("bob", notAttempted); Assert.DoesNotContain(">alice<", notAttempted);
         var failedOnly = await admin.GetStringAsync($"/Admin/Reports/Assessments?assessmentId={asm.Id}&status=Failed");
         Assert.DoesNotContain(">alice<", failedOnly);
-
-        // 14. Alice acknowledges (twice => one record)
-        var ackUrl = $"/Content/Acknowledge/{content.Id}";
-        Assert.Contains("أقرّ بأنني قرأت هذه السياسة وفهمتها", await alice.GetStringAsync($"/Content/Details/{content.Id}"));
-        (await alice.PostForm($"/Content/Details/{content.Id}", ackUrl, [])).EnsureRedirect();
-        (await alice.PostForm($"/Content/Details/{content.Id}", ackUrl, [])).EnsureRedirect();
-        Assert.Equal(1, await app.Db(d => d.UserAcknowledgments.CountAsync(a => a.ContentId == content.Id)));
 
         // 15. Admin acknowledgment report
         Assert.Contains(">alice<", await admin.GetStringAsync($"/Admin/Reports/Acknowledgments?contentId={content.Id}&status=Acknowledged"));

@@ -14,9 +14,23 @@ public class AssessmentsController(AppDbContext db) : AppController
     public async Task<IActionResult> Index()
     {
         var uid = User.UserId();
-        var list = await db.Assessments.AsNoTracking().Where(a => a.IsPublished && a.Questions.Any()).OrderBy(a => a.Title).ToListAsync();
+        var list = await db.Assessments.AsNoTracking().Include(a => a.Content).Where(a => a.IsPublished && a.Questions.Any()).OrderBy(a => a.Title).ToListAsync();
         var items = await AssessmentQueries.ForUser(db, uid, list);
         return View(items);
+    }
+
+    /// <summary>
+    /// Mandatory acknowledgment gate (server side). Returns a redirect to the content to acknowledge when the user may not use this
+    /// assessment yet; null when access is allowed. Applied to starting an attempt, the question page and submitting answers.
+    /// </summary>
+    private async Task<IActionResult?> AckRequired(Assessment a)
+    {
+        var c = await AckGate.BlockingContent(db, User.UserId(), a);
+        if (c == null) return null;
+        Failure("You must acknowledge the content before starting the assessment.");
+        return c.Status == ContentStatus.Published
+            ? RedirectToAction("Details", "Content", new { id = c.Id }, "sec-ack")
+            : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -25,6 +39,7 @@ public class AssessmentsController(AppDbContext db) : AppController
         var uid = User.UserId();
         var a = await db.Assessments.FirstOrDefaultAsync(x => x.Id == id && x.IsPublished && x.Questions.Any());
         if (a == null) return NotFound();
+        if (await AckRequired(a) is { } gate) return gate; // no attempt is created before the required acknowledgment
         var existing = await db.AssessmentAttempts.FirstOrDefaultAsync(t => t.UserId == uid && t.AssessmentId == id && t.Status == AttemptStatus.InProgress);
         if (existing != null) return RedirectToAction(nameof(Take), new { id = existing.Id });
         var done = await db.AssessmentAttempts.CountAsync(t => t.UserId == uid && t.AssessmentId == id && t.Status == AttemptStatus.Completed);
@@ -43,6 +58,7 @@ public class AssessmentsController(AppDbContext db) : AppController
         var attempt = await OwnAttempt(id);
         if (attempt == null) return NotFound();
         if (attempt.Status == AttemptStatus.Completed) return RedirectToAction(nameof(Result), new { id });
+        if (await AckRequired(attempt.Assessment) is { } gate) return gate;
         var qs = await db.Questions.AsNoTracking().Include(q => q.Options).Where(q => q.AssessmentId == attempt.AssessmentId).OrderBy(q => q.SortOrder).ThenBy(q => q.Id).ToListAsync();
         return View(new TakeVm { Attempt = attempt, Assessment = attempt.Assessment, Questions = qs });
     }
@@ -53,6 +69,7 @@ public class AssessmentsController(AppDbContext db) : AppController
         var attempt = await OwnAttempt(id);
         if (attempt == null) return NotFound();
         if (attempt.Status == AttemptStatus.Completed) return RedirectToAction(nameof(Result), new { id });
+        if (await AckRequired(attempt.Assessment) is { } gate) return gate;
 
         var questions = await db.Questions.Include(q => q.Options).Where(q => q.AssessmentId == attempt.AssessmentId).OrderBy(q => q.SortOrder).ThenBy(q => q.Id).ToListAsync();
         var selections = new Dictionary<int, int[]>();

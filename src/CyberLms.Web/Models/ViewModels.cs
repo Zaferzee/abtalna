@@ -23,6 +23,8 @@ public class UserDashboardVm
     public List<Content> RecentContent { get; set; } = new();
     public List<Content> PendingAcks { get; set; } = new();
     public List<Assessment> AvailableAssessments { get; set; } = new();
+    /// <summary>Content ids the user must acknowledge before the linked assessments unlock (see AckGate).</summary>
+    public HashSet<int> PendingAckContentIds { get; set; } = new();
     public List<AssessmentAttempt> Completed { get; set; } = new();
     // Progress overview (read-only counts for the dashboard)
     public int RequiredTotal { get; set; }
@@ -51,6 +53,8 @@ public class ContentDetailsVm
     /// <summary>False inside the authoring wizard's preview: buttons are shown exactly as employees see them but do nothing.</summary>
     public bool Interactive { get; set; } = true;
     public string AckText { get; set; } = "";
+    /// <summary>The acknowledgment was recorded by the request that redirected here: show the success state and the unlock.</summary>
+    public bool JustAcknowledged { get; set; }
 }
 
 public class AssessmentListItem
@@ -61,6 +65,8 @@ public class AssessmentListItem
     public bool HasInProgress { get; set; }
     public AssessmentAttempt? Best { get; set; }
     public bool CanStart { get; set; }
+    /// <summary>The linked content requires acknowledgment and this user has not acknowledged it yet (see AckGate).</summary>
+    public bool LockedByAck { get; set; }
 }
 
 public class TakeVm

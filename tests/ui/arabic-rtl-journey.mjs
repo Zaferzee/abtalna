@@ -117,7 +117,7 @@ await e.goto(base + '/Content/Policies'); await shot(e, '32-policies');
 await e.click('a:has-text("سياسة كلمات المرور")'); await shot(e, '33-content-details');
 await e.check('[data-ack-check]'); await e.click('button:has-text("إقرار")'); await shot(e, '34-acknowledged');
 await e.goto(base + '/Assessments'); await shot(e, '35-assessments');
-await e.click('button:has-text("بدء الاختبار")'); await shot(e, '36-take');
+await e.click('button:has-text("ابدأ الاختبار")'); await shot(e, '36-take');
 // The assessment is a one-question-per-step wizard: start it, then pick answers (inputs of inactive steps are hidden, so click them directly).
 await e.click('[data-quiz-start]');
 for (const t of ['الإبلاغ عنها وحذفها', 'خطأ', 'تفعيل المصادقة', 'قفل الشاشة']) await e.locator('label.choice', { hasText: t }).first().evaluate(l => l.querySelector('input').click());

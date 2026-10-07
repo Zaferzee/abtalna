@@ -50,10 +50,22 @@
                 }
                 @foreach (var a in Model.AvailableAssessments)
                 {
-                    <div class="todo-item is-quiz reveal" style="--i:@(i++)">
-                        <span class="icon-chip accent"><i class="bi bi-patch-question"></i></span>
-                        <div class="todo-main"><h3 class="bidi">@a.Title</h3><p>@L["Passing score"]: @Ui.Pct(a.PassingPercentage)</p></div>
-                        <a class="btn btn-accent btn-sm" asp-controller="Assessments" asp-action="Index">@L["Go to assessment"]</a>
+                    var locked = a.ContentId != null && Model.PendingAckContentIds.Contains(a.ContentId.Value);
+                    <div class="todo-item is-quiz @(locked ? "is-locked" : "") reveal" style="--i:@(i++)">
+                        <span class="icon-chip @(locked ? "neutral" : "accent")"><i class="bi @(locked ? "bi-lock-fill" : "bi-patch-question")"></i></span>
+                        @if (locked)
+                        {
+                            <div class="todo-main"><h3 class="bidi">@a.Title</h3><p><i class="bi bi-lock"></i> @L["Complete the acknowledgment first"]</p></div>
+                            @if (a.Content?.Status == ContentStatus.Published)
+                            {
+                                <a class="btn btn-outline-primary btn-sm" asp-controller="Content" asp-action="Details" asp-route-id="@a.ContentId" asp-fragment="sec-ack">@L["Read and acknowledge"]</a>
+                            }
+                        }
+                        else
+                        {
+                            <div class="todo-main"><h3 class="bidi">@a.Title</h3><p>@L["Passing score"]: @Ui.Pct(a.PassingPercentage)</p></div>
+                            <a class="btn btn-accent btn-sm" asp-controller="Assessments" asp-action="Index">@L["Go to assessment"]</a>
+                        }
                     </div>
                 }
             </div>

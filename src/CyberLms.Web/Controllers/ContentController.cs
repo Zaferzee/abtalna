@@ -49,6 +49,8 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
         return View(new ContentDetailsVm
         {
             Content = c, Preview = preview, AckText = authoring.AckText(c),
+            // An administrator previewing unpublished content cannot acknowledge it: the page behaves like the wizard's preview.
+            Interactive = !preview, JustAcknowledged = TempData["AckDone"] is true,
             Ack = await db.UserAcknowledgments.AsNoTracking().FirstOrDefaultAsync(a => a.UserId == uid && a.ContentId == id && a.ContentVersion == c.Version),
             Related = await AssessmentQueries.ForUser(db, uid, related),
         });
@@ -63,9 +65,9 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
         if (!await db.UserAcknowledgments.AnyAsync(a => a.UserId == uid && a.ContentId == id && a.ContentVersion == c.Version))
         {
             db.UserAcknowledgments.Add(new UserAcknowledgment { UserId = uid, ContentId = id, ContentVersion = c.Version });
-            try { await db.SaveChangesAsync(); }
+            try { await db.SaveChangesAsync(); TempData["AckDone"] = true; }
             catch (DbUpdateException) { /* double click: unique index already holds the first acknowledgment */ }
         }
-        return RedirectToAction(nameof(Details), new { id });
+        return RedirectToAction(nameof(Details), null, new { id }, "sec-ack");
     }
 }
