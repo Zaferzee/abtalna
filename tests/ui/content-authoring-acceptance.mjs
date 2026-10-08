@@ -176,12 +176,12 @@ await login(e, 'nora.harbi', 'Pass#Employee1');
 await e.goto(base + '/Content/Policies');
 await shot(e, '07a-employee-policies-list', 'الموظف: صفحة السياسات تعرض اللائحة الجديدة بانتظار الإقرار', { full: false });
 await e.click('a.c-card:has-text("لائحة المخالفات الداخلية")'); await e.waitForLoadState('networkidle');
-const emp = await e.evaluate(() => ({ table: document.querySelectorAll('.doc-body table tr').length, ol: document.querySelectorAll('.doc-body ol li').length, quote: !!document.querySelector('.doc-body blockquote'), pdf: !!document.querySelector('[data-pdf-viewer][data-src*="/Files/Attachment/"]'), link: !!document.querySelector('a.attach[href*="intranet.company.local"]'), ack: document.querySelector('.ack-check span')?.textContent, start: !!document.querySelector('form[action*="/Assessments/Start/"]') }));
+const emp = await e.evaluate(() => ({ table: document.querySelectorAll('.doc-body table tr').length, ol: document.querySelectorAll('.doc-body ol li').length, quote: !!document.querySelector('.doc-body blockquote'), pdf: !!document.querySelector('[data-pdf-viewer][data-src*="/Files/Attachment/"]'), link: !!document.querySelector('a.attach[href*="intranet.company.local"]'), ack: document.querySelector('.ack-check span')?.textContent, start: !!document.querySelector('form[action*="/Assessments/Start/"]'), locked: !!document.querySelector('.next-step.is-locked') }));
 ok(emp.table === 7, `employee sees the table with the added row (${emp.table} rows)`);
 ok(emp.ol >= 4 && emp.quote, 'numbered rules and callout rendered');
 ok(emp.pdf && emp.link, 'attachment and link shown');
 ok(emp.ack && emp.ack.includes('لائحة المخالفات الداخلية للأمن السيبراني'), 'acknowledgment statement shown: ' + emp.ack);
-ok(emp.start, 'related assessment can be started from the content page');
+ok(!emp.start && emp.locked, 'related assessment is locked until the acknowledgment (mandatory acknowledgment gate)');
 await shot(e, '07-employee-regulation-view', 'الموظف: اللائحة المنشورة (التنسيق، الجدول، القائمة المرقمة، المرفق والرابط، الإقرار، ثم الاختبار المرتبط)');
 const pdfHref = await e.getAttribute('[data-pdf-viewer]', 'data-src'); // PDFs are shown inline by the embedded viewer
 const pdfResp = await e.request.get(base + pdfHref);
@@ -189,6 +189,7 @@ ok(pdfResp.status() === 200 && (await pdfResp.body()).slice(0, 4).toString() ===
 // acknowledge
 await e.check('[data-ack-check]'); await e.click('[data-ack-submit]'); await e.waitForLoadState('networkidle');
 ok(await e.locator('.ack-panel.is-done').count() === 1, 'acknowledged');
+ok(await e.locator('.next-step form[action*="/Assessments/Start/"]').count() === 1, 'related assessment can be started from the content page after acknowledging');
 await e.evaluate(() => document.querySelector('.ack-panel').scrollIntoView({ block: 'start' }));
 await shot(e, '07b-employee-acknowledged-next-step', 'بعد الإقرار: حالة "تم الإقرار" والخطوة التالية: الاختبار', { full: false, wait: 900 });
 // assessment
