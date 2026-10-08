@@ -23,8 +23,10 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
         var items = await query.OrderByDescending(c => c.PublishedAt).Take(500).ToListAsync();
         var ids = items.Select(i => i.Id).ToList();
         var acked = await db.UserAcknowledgments.Where(a => a.UserId == uid && ids.Contains(a.ContentId)).Select(a => new { a.ContentId, a.ContentVersion }).ToListAsync();
+        var learning = (await LearningProgress.ForUser(db, uid)).Where(i => i.Content != null).ToDictionary(i => i.Content!.Id);
         return new ContentIndexVm
         {
+            Learning = learning,
             Items = items, Type = type, Q = q, PoliciesOnly = policies,
             AcknowledgedIds = items.Where(i => acked.Any(a => a.ContentId == i.Id && a.ContentVersion == i.Version)).Select(i => i.Id).ToHashSet(),
         };

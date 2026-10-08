@@ -205,8 +205,9 @@
   var burst = $('.burst');
   if (burst && !reduce) {
     var cs = getComputedStyle(root), cols = ['--color-primary', '--color-accent', '--color-success', '--color-warning'].map(function (v) { return cs.getPropertyValue(v).trim() || '#999'; });
-    for (var i = 0; i < 34; i++) {
-      var p = doc.createElement('i'), ang = Math.random() * Math.PI * 2, dist = 140 + Math.random() * 260;
+    // A small, single celebration: fewer particles and a shorter reach (meaningful completion only).
+    for (var i = 0; i < 18; i++) {
+      var p = doc.createElement('i'), ang = Math.random() * Math.PI * 2, dist = 110 + Math.random() * 170;
       p.style.setProperty('--x', Math.cos(ang) * dist + 'px'); p.style.setProperty('--y', Math.sin(ang) * dist * 0.75 - 40 + 'px');
       p.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg'); p.style.setProperty('--c', cols[i % cols.length]);
       p.style.animationDelay = (0.85 + Math.random() * 0.25) + 's';

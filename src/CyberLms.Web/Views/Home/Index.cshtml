@@ -1,92 +1,117 @@
 @model UserDashboardVm
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
     ViewData["Title"] = L["Dashboard"];
     var b = Brand.Current;
     var name = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "";
     var hour = Time.LocalHour;
     var greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-    var todo = Model.PendingAcks.Count + Model.AvailableAssessments.Count;
-    var overall = Ui.Percent(Model.RequiredDone + Model.AssessmentsPassed, Model.RequiredTotal + Model.AssessmentsTotal);
-    if (Model.RequiredTotal + Model.AssessmentsTotal == 0) { overall = 100; }
+    var todo = Model.Todo;
+    var total = Model.RequiredTotal;
+    var done = Model.RequiredDone;
+    var overall = total == 0 ? 100 : Ui.Percent(done, total);
+    var focus = todo.FirstOrDefault();
+    var rest = todo.Skip(1).ToList();
+    var compact = new ViewDataDictionary(ViewData) { ["compact"] = true };
+    var small = new ViewDataDictionary(ViewData) { ["sm"] = true };
     var i = 0;
 }
-<section class="hero reveal">
-    <div>
+<section class="hero lx-hero reveal" data-progress-key="@User.UserId()" data-progress="@overall">
+    <div class="lx-hero-main">
         <div class="hero-greet"><i class="bi bi-brightness-high"></i> @L[greet]</div>
         <h1 class="bidi">@L.Format("Welcome, {0}", name)</h1>
         <p class="hero-text bidi">@(string.IsNullOrWhiteSpace(b.WelcomeText) ? L["Your learning space for the policies, controls and safe practices that protect our organization."] : b.WelcomeText)</p>
-        @if (todo > 0)
-        {
-            <span class="hero-question"><i class="bi bi-flag"></i> @L.Format("You have {0} item(s) to complete", todo)</span>
-        }
-        else
-        {
-            <span class="hero-question"><i class="bi bi-stars"></i> @L["You're all caught up. Great work!"]</span>
-        }
+        <div class="lx-journey-title"><i class="bi bi-shield-check"></i> @L["Your cybersecurity awareness journey"]</div>
     </div>
-    <div class="text-center">
-        @Ui.Ring(overall, size: 150, stroke: 11)
-        <div class="hero-ring-cap">@L["Overall progress"]</div>
+    <div class="lx-progress">
+        <div class="lx-ring">@Ui.Ring(overall, size: 156, stroke: 10)<span class="lx-delta" data-progress-delta hidden></span></div>
+        <div class="lx-progress-text">
+            @if (total == 0)
+            {
+                <strong>@L["No requirements yet"]</strong>
+                <span>@L["New learning items will appear here when they are published."]</span>
+            }
+            else
+            {
+                <strong>@L.Format("You have completed {0} of {1} items", done, total)</strong>
+                <span>@L["Overall progress"] <bdi class="pct" dir="ltr">@overall%</bdi></span>
+                <div class="meter lx-meter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@overall" aria-label="@L["Overall progress"]"><span class="accent" data-w="@overall"></span></div>
+            }
+        </div>
     </div>
 </section>
 
 <div class="dash-cols mt-4">
     <div>
-        <div class="section-title mt-0"><h2><i class="bi bi-list-check"></i> @L["Your to-do list"]</h2>@if (todo > 0) { <span class="chip chip-primary">@L.Format("{0} remaining", todo)</span> }</div>
-        @if (todo == 0)
+        <div class="section-title mt-0"><h2><i class="bi bi-signpost-2"></i> @L["What do I need to do now?"]</h2>@if (todo.Count > 0) { <span class="chip chip-primary">@L.Format("{0} remaining", todo.Count)</span> }</div>
+        @if (focus == null)
         {
-            <div class="done-banner reveal"><span class="icon-chip"><i class="bi bi-patch-check-fill"></i></span><div><strong>@L["Nothing pending."]</strong><div class="small">@L["All required policies are acknowledged and there are no open assessments."]</div></div></div>
+            <div class="lx-empty lx-all-done reveal">
+                <span class="lx-empty-icon"><i class="bi bi-patch-check-fill"></i></span>
+                <div><h3>@L["Great, there are no pending tasks right now."]</h3><p>@L["You have completed every required item. New items will appear here when they are published."]</p></div>
+            </div>
         }
         else
         {
-            <div class="todo">
-                @foreach (var c in Model.PendingAcks)
-                {
-                    <div class="todo-item is-ack reveal" style="--i:@(i++)">
-                        <span class="icon-chip warning"><i class="bi @Ui.TypeIcon(c.Type)"></i></span>
-                        <div class="todo-main"><h3 class="bidi">@c.Title</h3><p><i class="bi bi-pen"></i> @L["Requires your acknowledgment"]</p></div>
-                        <a class="btn btn-primary btn-sm" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id">@L["Read and acknowledge"]</a>
-                    </div>
-                }
-                @foreach (var a in Model.AvailableAssessments)
-                {
-                    var locked = a.ContentId != null && Model.PendingAckContentIds.Contains(a.ContentId.Value);
-                    <div class="todo-item is-quiz @(locked ? "is-locked" : "") reveal" style="--i:@(i++)">
-                        <span class="icon-chip @(locked ? "neutral" : "accent")"><i class="bi @(locked ? "bi-lock-fill" : "bi-patch-question")"></i></span>
-                        @if (locked)
+            var st = Ui.Status(focus);
+            <article class="lx-focus reveal" style="--i:1" aria-label="@L["Next step"]">
+                <div class="lx-focus-head">
+                    <div class="lx-kicker"><i class="bi bi-arrow-left-circle flip-rtl"></i> @L["Your next step"]</div>
+                    @if (st is { } s) { <span class="chip @s.Css"><i class="bi @s.Icon"></i> @L[s.Key]</span> }
+                </div>
+                <div class="lx-focus-title">
+                    @if (focus.Content != null) { <span class="type-chip type-@((int)focus.Content.Type)"><i class="bi @Ui.TypeIcon(focus.Content.Type)"></i> @L[Labels.Type(focus.Content.Type)]</span> }
+                    <h3 class="bidi">@focus.Title</h3>
+                    @if (!string.IsNullOrWhiteSpace(focus.Content?.Description)) { <p class="bidi">@focus.Content!.Description</p> }
+                </div>
+                <partial name="_Journey" model="focus" />
+                <div class="lx-focus-foot">
+                    <span class="lx-hint">
+                        @switch (focus.State)
                         {
-                            <div class="todo-main"><h3 class="bidi">@a.Title</h3><p><i class="bi bi-lock"></i> @L["Complete the acknowledgment first"]</p></div>
-                            @if (a.Content?.Status == ContentStatus.Published)
-                            {
-                                <a class="btn btn-outline-primary btn-sm" asp-controller="Content" asp-action="Details" asp-route-id="@a.ContentId" asp-fragment="sec-ack">@L["Read and acknowledge"]</a>
-                            }
+                            case LearningState.AckRequired: <text><i class="bi bi-lock"></i> @L["The assessment unlocks after your acknowledgment."]</text> break;
+                            case LearningState.AssessmentInProgress: <text><i class="bi bi-hourglass-split"></i> @L["You have an assessment in progress."]</text> break;
+                            case LearningState.Failed: <text><i class="bi bi-info-circle"></i> @L["Review the material, then try again."]</text> break;
+                            default: <text><i class="bi bi-info-circle"></i> @L["Complete the steps in order to finish this item."]</text> break;
                         }
-                        else
-                        {
-                            <div class="todo-main"><h3 class="bidi">@a.Title</h3><p>@L["Passing score"]: @Ui.Pct(a.PassingPercentage)</p></div>
-                            <a class="btn btn-accent btn-sm" asp-controller="Assessments" asp-action="Index">@L["Go to assessment"]</a>
-                        }
-                    </div>
-                }
-            </div>
+                    </span>
+                    <partial name="_NextAction" model="focus" />
+                </div>
+            </article>
+
+            @if (rest.Count > 0)
+            {
+                <div class="lx-tasks">
+                    @foreach (var it in rest)
+                    {
+                        var s2 = Ui.Status(it);
+                        <div class="lx-task reveal" style="--i:@(Math.Min(i++, 6) + 2)">
+                            <span class="icon-chip @(it.State == LearningState.AckRequired ? "warning" : it.State == LearningState.Failed ? "danger" : "accent")"><i class="bi @(it.Content != null ? Ui.TypeIcon(it.Content.Type) : "bi-patch-question")"></i></span>
+                            <div class="lx-task-main">
+                                <h3 class="bidi">@it.Title</h3>
+                                <div class="lx-task-meta">
+                                    @if (s2 is { } x) { <span class="chip chip-sm @x.Css"><i class="bi @x.Icon"></i> @L[x.Key]</span> }
+                                    @await Html.PartialAsync("_Journey", it, compact)
+                                </div>
+                            </div>
+                            @await Html.PartialAsync("_NextAction", it, small)
+                        </div>
+                    }
+                </div>
+            }
         }
 
-        <div class="section-title"><h2><i class="bi bi-collection"></i> @L["Latest content"]</h2><a asp-controller="Content" asp-action="Index">@L["View all"] <i class="bi bi-arrow-left-short flip-rtl"></i></a></div>
+        <div class="section-title"><h2><i class="bi bi-collection"></i> @L["Available content"]</h2><a asp-controller="Content" asp-action="Index">@L["View all"] <i class="bi bi-arrow-left-short flip-rtl"></i></a></div>
         @if (Model.RecentContent.Count == 0)
         {
-            <div class="panel empty"><div class="empty-icon"><i class="bi bi-journal"></i></div><h3>@L["No content has been published yet."]</h3></div>
+            <div class="lx-empty"><span class="lx-empty-icon muted"><i class="bi bi-journal"></i></span><div><h3>@L["No content has been published yet."]</h3></div></div>
         }
         else
         {
             <div class="grid-auto" style="--min:250px">
                 @foreach (var c in Model.RecentContent)
                 {
-                    <a class="card card-lift c-card reveal-scroll" style="--i:@(i++ % 3)" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id">
-                        <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
-                        <h3 class="bidi">@c.Title</h3>
-                        @if (!string.IsNullOrWhiteSpace(c.Description)) { <p class="bidi">@c.Description</p> }
-                        <div class="c-foot"><span>@Time.Html(c.PublishedAt ?? c.CreatedAt)</span><span class="c-go">@L["Read"] <i class="bi bi-arrow-left flip-rtl"></i></span></div>
-                    </a>
+                    <partial name="_ContentCard" model="Model.Items.First(x => x.Content == c)" />
                 }
             </div>
         }
@@ -94,33 +119,42 @@
 
     <aside class="stack" aria-label="@L["Your progress"]">
         <div class="panel reveal" style="--i:2">
-            <div class="panel-head"><h2><i class="bi bi-graph-up-arrow"></i> @L["Your progress"]</h2></div>
-            <div class="panel-body progress-tiles">
-                <a class="p-tile text-decoration-none text-reset d-block" asp-controller="Content" asp-action="Policies">
-                    <div class="p-tile-top"><span class="icon-chip warning"><i class="bi bi-shield-check"></i></span><div><strong>@Ui.Num(Model.RequiredDone) <small class="text-muted fs-6 fw-normal">@L.Format("of {0}", Model.RequiredTotal)</small></strong><br /><span>@L["Policies acknowledged"]</span></div><span class="ms-auto">@Ui.Pct(Ui.Percent(Model.RequiredDone, Model.RequiredTotal))</span></div>
-                    <div class="meter"><span class="warn" data-w="@Ui.Percent(Model.RequiredDone, Model.RequiredTotal)"></span></div>
-                </a>
-                <a class="p-tile text-decoration-none text-reset d-block" asp-controller="Assessments" asp-action="Index">
-                    <div class="p-tile-top"><span class="icon-chip accent"><i class="bi bi-award"></i></span><div><strong>@Ui.Num(Model.AssessmentsPassed) <small class="text-muted fs-6 fw-normal">@L.Format("of {0}", Model.AssessmentsTotal)</small></strong><br /><span>@L["Assessments passed"]</span></div><span class="ms-auto">@Ui.Pct(Ui.Percent(Model.AssessmentsPassed, Model.AssessmentsTotal))</span></div>
-                    <div class="meter"><span class="accent" data-w="@Ui.Percent(Model.AssessmentsPassed, Model.AssessmentsTotal)"></span></div>
-                </a>
-            </div>
-        </div>
-
-        <div class="panel reveal" style="--i:3">
-            <div class="panel-head"><h2><i class="bi bi-award"></i> @L["Recent results"]</h2><a class="small fw-semibold text-decoration-none" asp-controller="MyResults" asp-action="Index">@L["View all"]</a></div>
-            @if (Model.Completed.Count == 0)
+            <div class="panel-head"><h2><i class="bi bi-award"></i> @L["Recent achievements"]</h2></div>
+            @if (Model.Achievements.Count == 0)
             {
-                <div class="empty py-4"><div class="empty-icon"><i class="bi bi-trophy"></i></div><p>@L["No completed assessments yet."]</p></div>
+                <div class="lx-empty-sm"><span class="lx-empty-icon muted"><i class="bi bi-flag"></i></span><p>@L["Your achievements will appear here after you complete your first item."]</p></div>
             }
             else
             {
-                @foreach (var t in Model.Completed.Take(5))
+                <ul class="lx-achievements">
+                    @foreach (var it in Model.Achievements.Take(5))
+                    {
+                        <li>
+                            <span class="lx-ach-icon"><i class="bi bi-patch-check-fill"></i></span>
+                            <span class="lx-ach-main">
+                                @if (it.ContentId != null) { <a class="bidi" asp-controller="Content" asp-action="Details" asp-route-id="@it.ContentId">@it.Title</a> } else { <strong class="bidi">@it.Title</strong> }
+                                <small>@L["Completed"] · @Time.Html(it.CompletedAt)@if (it.BestScore is decimal sc) { <text> · </text><bdi class="pct" dir="ltr">@sc.ToString("0.#")%</bdi> }</small>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="panel reveal" style="--i:3">
+            <div class="panel-head"><h2><i class="bi bi-clipboard-check"></i> @L["Recent results"]</h2><a class="small fw-semibold text-decoration-none" asp-controller="MyResults" asp-action="Index">@L["View all"]</a></div>
+            @if (Model.Completed.Count == 0)
+            {
+                <div class="lx-empty-sm"><span class="lx-empty-icon muted"><i class="bi bi-clipboard-data"></i></span><p>@L["Your assessment results will appear here after you complete your first assessment."]</p></div>
+            }
+            else
+            {
+                @foreach (var t in Model.Completed.Take(3))
                 {
                     <a class="result-row" asp-controller="Assessments" asp-action="Result" asp-route-id="@t.Id">
                         <span style="--ring-color:var(--color-@(t.Passed == true ? "success" : "danger"))">@Ui.Ring((double)t.Percentage, size: 44, stroke: 9)</span>
                         <span class="r-main"><strong class="bidi">@t.Assessment.Title</strong><small>@Time.Html(t.CompletedAt)</small></span>
-                        <span class="badge text-bg-@(t.Passed == true ? "success" : "danger")">@L[t.Passed == true ? "Passed" : "Failed"]</span>
+                        <span class="badge text-bg-@(t.Passed == true ? "success" : "danger")">@L[t.Passed == true ? "Passed" : "Not passed"]</span>
                     </a>
                 }
             }

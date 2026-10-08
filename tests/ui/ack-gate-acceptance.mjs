@@ -68,9 +68,10 @@ ok(assessmentId > 0, 'published (assessment ' + assessmentId + ')');
 const e = await newPage({ recordVideo: { dir: OUT + '/.video', size: { width: W, height: H } } });
 await login(e, 'fahad.qahtani', 'Pass#Employee1');
 // dashboard
-const dash = await e.evaluate(t => { const it = [...document.querySelectorAll('.todo-item.is-quiz')].find(x => x.innerText.includes(t)); return it && { locked: it.classList.contains('is-locked'), href: it.querySelector('a')?.getAttribute('href'), text: it.innerText }; }, 'اختبار السياسة التجريبية');
-ok(dash && dash.locked && dash.href.endsWith(`/Content/Details/${contentId}#sec-ack`) && dash.text.includes('يتطلب إكمال الإقرار بالاطلاع أولاً'), 'dashboard: assessment locked and points to the content acknowledgment');
-await e.evaluate(() => document.querySelector('.todo-item.is-locked').scrollIntoView({ block: 'center', behavior: 'instant' }));
+// (learning experience v2: one row per learning item; the assessment step of its journey shows the lock)
+const dash = await e.evaluate(t => { const it = [...document.querySelectorAll('.lx-focus, .lx-task')].find(x => x.innerText.includes(t)); return it && { locked: !!it.querySelector('.jm-locked, .j-locked[data-step="assessment"]'), start: !!it.querySelector('form[action*="/Assessments/Start/"]'), href: it.querySelector('a[href*="/Content/Details/"]')?.getAttribute('href'), text: it.innerText }; }, TITLE);
+ok(dash && dash.locked && !dash.start && dash.href.endsWith(`/Content/Details/${contentId}#sec-ack`) && dash.text.includes('مطلوب'), 'dashboard: assessment locked and points to the content acknowledgment');
+await e.evaluate(t => [...document.querySelectorAll('.lx-focus, .lx-task')].find(x => x.innerText.includes(t)).scrollIntoView({ block: 'center', behavior: 'instant' }), TITLE);
 await shot(e, '03-dashboard-locked', 'لوحة الموظف: الاختبار مقفل ويوجّه إلى الإقرار بالاطلاع');
 // assessments list
 await e.goto(base + '/Assessments');

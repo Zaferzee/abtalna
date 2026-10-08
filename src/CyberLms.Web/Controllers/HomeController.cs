@@ -15,23 +15,14 @@ public class HomeController(AppDbContext db, ILogger<HomeController> log) : AppC
     public async Task<IActionResult> Index()
     {
         var uid = User.UserId();
-        var published = db.Contents.AsNoTracking().Where(c => c.Status == ContentStatus.Published);
-        var ackedIds = db.UserAcknowledgments.Where(a => a.UserId == uid).Select(a => new { a.ContentId, a.ContentVersion });
+        var items = await LearningProgress.ForUser(db, uid);
         var vm = new UserDashboardVm
         {
-            RecentContent = await published.OrderByDescending(c => c.PublishedAt).Take(6).ToListAsync(),
-            PendingAcks = await published.Where(c => c.RequiresAcknowledgment &&
-                !db.UserAcknowledgments.Any(a => a.UserId == uid && a.ContentId == c.Id && a.ContentVersion == c.Version)).OrderBy(c => c.Title).ToListAsync(),
+            Items = items,
+            RecentContent = items.Where(i => i.Content != null).Select(i => i.Content!).OrderByDescending(c => c.PublishedAt).Take(6).ToList(),
             Completed = await db.AssessmentAttempts.AsNoTracking().Include(a => a.Assessment)
-                .Where(a => a.UserId == uid && a.Status == AttemptStatus.Completed).OrderByDescending(a => a.CompletedAt).Take(10).ToListAsync(),
+                .Where(a => a.UserId == uid && a.Status == AttemptStatus.Completed).OrderByDescending(a => a.CompletedAt).Take(5).ToListAsync(),
         };
-        var passedIds = await db.AssessmentAttempts.Where(a => a.UserId == uid && a.Passed == true).Select(a => a.AssessmentId).Distinct().ToListAsync();
-        vm.AvailableAssessments = await db.Assessments.AsNoTracking().Include(a => a.Content)
-            .Where(a => a.IsPublished && a.Questions.Any() && !passedIds.Contains(a.Id)).OrderBy(a => a.Title).ToListAsync();
-        vm.PendingAckContentIds = await AckGate.PendingContentIds(db, uid, vm.AvailableAssessments.Select(a => a.ContentId));
-        vm.RequiredTotal = await published.CountAsync(c => c.RequiresAcknowledgment);
-        vm.AssessmentsTotal = await db.Assessments.CountAsync(a => a.IsPublished && a.Questions.Any());
-        vm.AssessmentsPassed = await db.Assessments.CountAsync(a => a.IsPublished && a.Questions.Any() && passedIds.Contains(a.Id));
         return View(vm);
     }
 

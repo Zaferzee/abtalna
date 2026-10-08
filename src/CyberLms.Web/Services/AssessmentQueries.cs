@@ -24,6 +24,7 @@ public static class AssessmentQueries
                 Assessment = a, QuestionCount = counts.GetValueOrDefault(a.Id), CompletedAttempts = done.Count, HasInProgress = inProg,
                 Best = done.OrderByDescending(t => t.Percentage).FirstOrDefault(),
                 CanStart = inProg || a.MaxAttempts == 0 || done.Count < a.MaxAttempts,
+                FirstPassedAt = done.Where(t => t.Passed == true).Min(t => t.CompletedAt),
                 LockedByAck = a.ContentId != null && pendingAck.Contains(a.ContentId.Value),
             };
         }).ToList();

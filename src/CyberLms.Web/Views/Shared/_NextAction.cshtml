@@ -1,0 +1,37 @@
+@model LearningItem
+@*
+    The one action that moves this learning item forward. Assessment buttons post to the existing Start endpoint, which still
+    enforces the acknowledgment gate on the server.
+*@
+@{
+    var sm = ViewData["sm"] as bool? == true;
+    var size = sm ? "btn-sm" : "";
+    var next = Model.NextAssessment;
+    var cid = Model.ContentId;
+}
+@switch (Model.State)
+{
+    case LearningState.AckRequired:
+        <a class="btn btn-primary @size" asp-controller="Content" asp-action="Details" asp-route-id="@cid" asp-fragment="sec-ack"><i class="bi bi-pen"></i> @L["Read and acknowledge"]</a>
+        break;
+    case LearningState.AssessmentAvailable when cid != null && !Model.Started:
+        <a class="btn btn-primary @size" asp-controller="Content" asp-action="Details" asp-route-id="@cid"><i class="bi bi-book"></i> @L["Start reading"]</a>
+        break;
+    case LearningState.AssessmentAvailable:
+    case LearningState.AssessmentInProgress:
+        <form method="post" asp-controller="Assessments" asp-action="Start" asp-route-id="@next!.Assessment.Id" class="m-0 d-inline" data-busy>
+            <button class="btn btn-accent @size"><i class="bi bi-play-fill"></i> @L[Model.State == LearningState.AssessmentInProgress ? "Continue assessment" : "Start assessment"]</button>
+        </form>
+        break;
+    case LearningState.Failed when Model.CanRetry:
+        <form method="post" asp-controller="Assessments" asp-action="Start" asp-route-id="@next!.Assessment.Id" class="m-0 d-inline" data-busy>
+            <button class="btn btn-primary @size"><i class="bi bi-arrow-repeat"></i> @L["Retry"]</button>
+        </form>
+        break;
+    case LearningState.Failed:
+        <span class="text-muted small"><i class="bi bi-lock"></i> @L["Maximum attempts reached"]</span>
+        break;
+    default:
+        @if (cid != null) { <a class="btn btn-outline-primary @size" asp-controller="Content" asp-action="Details" asp-route-id="@cid"><i class="bi bi-eye"></i> @L["View"]</a> }
+        break;
+}

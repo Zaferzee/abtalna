@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="~/css/ds.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/branding/theme.css?v=@b.Version" />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/learning.css" asp-append-version="true" />
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="app @(isAdminArea ? "is-admin" : "is-portal")" data-t-confirm="@L["Confirm"]" data-t-cancel="@L["Cancel"]" data-t-confirm-title="@L["Confirmation"]"
@@ -123,6 +124,7 @@
 @await RenderSectionAsync("PreScripts", required: false)
 <script src="~/js/site.js" asp-append-version="true"></script>
 <script src="~/js/ui.js" asp-append-version="true"></script>
+<script src="~/js/learning.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

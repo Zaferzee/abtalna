@@ -24,15 +24,6 @@
 <div class="grid-auto" style="--min:290px">
 @foreach (var c in Model.Items)
 {
-    var acked = Model.AcknowledgedIds.Contains(c.Id);
-    <a class="card card-lift c-card reveal" style="--i:@(Math.Min(i++, 8))" asp-action="Details" asp-route-id="@c.Id">
-        <div class="d-flex align-items-center justify-content-between gap-2">
-            <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
-            @if (c.RequiresAcknowledgment) { <span class="badge badge-dot text-bg-@(acked ? "success" : "warning")">@L[acked ? "Acknowledged" : "Not acknowledged"]</span> }
-        </div>
-        <h3 class="bidi">@c.Title</h3>
-        @if (!string.IsNullOrWhiteSpace(c.Description)) { <p class="bidi">@c.Description</p> }
-        <div class="c-foot"><span>@Time.Html(c.PublishedAt)</span><span class="c-go">@L[c.RequiresAcknowledgment && !acked ? "Read and acknowledge" : "Read"] <i class="bi bi-arrow-left flip-rtl"></i></span></div>
-    </a>
+    <div class="reveal" style="--i:@(Math.Min(i++, 8))"><partial name="_ContentCard" model="Model.Learning[c.Id]" /></div>
 }
 </div>

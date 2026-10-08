@@ -9,7 +9,7 @@
 </div>
 @if (Model.Count == 0)
 {
-    <div class="panel empty"><div class="empty-icon"><i class="bi bi-patch-question"></i></div><h3>@L["No assessments available."]</h3><p>@L["New assessments will appear here when they are published."]</p></div>
+    <div class="lx-empty"><span class="lx-empty-icon muted"><i class="bi bi-patch-question"></i></span><div><h3>@L["There are no assessments available right now."]</h3><p>@L["New assessments will appear here when they are published."]</p></div></div>
 }
 <div class="grid-auto" style="--min:320px">
 @foreach (var it in Model)
@@ -25,10 +25,11 @@
                 @if (passed) { <span class="badge text-bg-success badge-dot">@L["Passed"]</span> }
                 else if (locked) { <span class="badge text-bg-secondary"><i class="bi bi-lock-fill"></i> @L["Locked"]</span> }
                 else if (it.HasInProgress) { <span class="badge text-bg-warning badge-dot">@L["In progress"]</span> }
-                else if (it.Best != null) { <span class="badge text-bg-danger badge-dot">@L["Failed"]</span> }
+                else if (it.Best != null) { <span class="badge text-bg-danger badge-dot">@L["Not passed yet"]</span> }
                 else { <span class="badge text-bg-secondary">@L["New"]</span> }
             </div>
             <h3 class="bidi">@a.Title</h3>
+            @if (a.Content?.Status == ContentStatus.Published) { <a class="lx-linked bidi" asp-controller="Content" asp-action="Details" asp-route-id="@a.ContentId"><i class="bi bi-link-45deg"></i> @a.Content.Title</a> }
             @if (!string.IsNullOrWhiteSpace(a.Description)) { <p class="bidi">@a.Description</p> }
             <div class="status-chips mt-auto">
                 <span class="chip"><i class="bi bi-question-circle"></i> @L.Format("{0} question(s)", it.QuestionCount)</span>

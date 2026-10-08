@@ -60,7 +60,8 @@ public class AssessmentsController(AppDbContext db) : AppController
         if (attempt.Status == AttemptStatus.Completed) return RedirectToAction(nameof(Result), new { id });
         if (await AckRequired(attempt.Assessment) is { } gate) return gate;
         var qs = await db.Questions.AsNoTracking().Include(q => q.Options).Where(q => q.AssessmentId == attempt.AssessmentId).OrderBy(q => q.SortOrder).ThenBy(q => q.Id).ToListAsync();
-        return View(new TakeVm { Attempt = attempt, Assessment = attempt.Assessment, Questions = qs });
+        var previous = await db.AssessmentAttempts.CountAsync(t => t.UserId == attempt.UserId && t.AssessmentId == attempt.AssessmentId && t.Status == AttemptStatus.Completed);
+        return View(new TakeVm { Attempt = attempt, Assessment = attempt.Assessment, Questions = qs, AttemptNumber = previous + 1 });
     }
 
     [HttpPost]
@@ -97,6 +98,15 @@ public class AssessmentsController(AppDbContext db) : AppController
         var qs = await db.Questions.AsNoTracking().Include(q => q.Options).Where(q => answers.Keys.Contains(q.Id)).OrderBy(q => q.SortOrder).ThenBy(q => q.Id).ToListAsync();
         var done = await db.AssessmentAttempts.CountAsync(t => t.UserId == attempt.UserId && t.AssessmentId == attempt.AssessmentId && t.Status == AttemptStatus.Completed);
         var a = attempt.Assessment;
-        return View(new ResultVm { Attempt = attempt, Answers = answers, Questions = qs, CanRetry = a.IsPublished && attempt.Passed != true && (a.MaxAttempts == 0 || done < a.MaxAttempts) });
+        // Presentation only: where this result leaves the learning item (content + acknowledgment + assessment).
+        var item = a.ContentId == null ? null : (await LearningProgress.ForUser(db, attempt.UserId, a.ContentId)).FirstOrDefault();
+        var mine = item?.Assessments.FirstOrDefault(x => x.Assessment.Id == a.Id);
+        return View(new ResultVm
+        {
+            Attempt = attempt, Answers = answers, Questions = qs, AttemptsUsed = done,
+            CanRetry = a.IsPublished && attempt.Passed != true && (a.MaxAttempts == 0 || done < a.MaxAttempts),
+            Item = item,
+            JustCompleted = attempt.Passed == true && item?.IsCompleted == true && mine?.FirstPassedAt == attempt.CompletedAt && item.CompletedAt == attempt.CompletedAt,
+        });
     }
 }

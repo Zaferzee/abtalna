@@ -42,6 +42,23 @@ public static class Ui
             $"<span class=\"ring-label\"><strong><bdi class=\"pct\" dir=\"ltr\"><span data-count=\"{shown}\">{Math.Round(Math.Clamp(value, 0, 100)).ToString(CultureInfo.InvariantCulture)}</span>%</bdi></strong>{cap}</span></span>");
     }
 
+    /// <summary>Card status for a learning item: (resource key, chip class, icon), or null when there is nothing to say.
+    /// "New" marks recently published informational content and untouched required items.</summary>
+    public static (string Key, string Css, string Icon)? Status(LearningItem i)
+    {
+        var recent = i.Content?.PublishedAt is DateTime p && p > DateTime.UtcNow.AddDays(-14);
+        return i.State switch
+        {
+            LearningState.Completed => ("Completed", "chip-success", "bi-patch-check-fill"),
+            LearningState.AckRequired => ("Required", "chip-warning", "bi-pen"),
+            LearningState.AssessmentInProgress => ("In progress", "chip-primary", "bi-hourglass-split"),
+            LearningState.Failed => ("Not passed yet", "chip-danger", "bi-arrow-counterclockwise"),
+            LearningState.AssessmentAvailable when i.Ack != null => ("Acknowledged", "chip-info", "bi-check2-circle"),
+            LearningState.AssessmentAvailable => ("Required", "chip-warning", "bi-ui-checks"),
+            _ => recent ? ("New", "chip-primary", "bi-stars") : null,
+        };
+    }
+
     public static string TypeIcon(ContentType t) => t switch
     {
         ContentType.Policy => "bi-shield-check", ContentType.Control => "bi-sliders2-vertical", ContentType.Awareness => "bi-lightbulb",

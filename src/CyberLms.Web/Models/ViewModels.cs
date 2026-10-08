@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using CyberLms.Web.Domain;
+using CyberLms.Web.Services;
 
 namespace CyberLms.Web.Models;
 
@@ -20,23 +21,24 @@ public class ChangePasswordVm
 
 public class UserDashboardVm
 {
+    /// <summary>Every learning item of the user (see LearningProgress).</summary>
+    public List<LearningItem> Items { get; set; } = new();
     public List<Content> RecentContent { get; set; } = new();
-    public List<Content> PendingAcks { get; set; } = new();
-    public List<Assessment> AvailableAssessments { get; set; } = new();
-    /// <summary>Content ids the user must acknowledge before the linked assessments unlock (see AckGate).</summary>
-    public HashSet<int> PendingAckContentIds { get; set; } = new();
     public List<AssessmentAttempt> Completed { get; set; } = new();
-    // Progress overview (read-only counts for the dashboard)
-    public int RequiredTotal { get; set; }
-    public int AssessmentsTotal { get; set; }
-    public int AssessmentsPassed { get; set; }
-    public int RequiredDone => Math.Max(0, RequiredTotal - PendingAcks.Count);
+    public List<LearningItem> Required => Items.Where(i => i.HasRequirements).ToList();
+    /// <summary>Open items, most urgent first ("what should I do now?").</summary>
+    public List<LearningItem> Todo => Items.Where(i => i.HasRequirements && !i.IsCompleted).OrderBy(LearningProgress.Priority).ThenBy(i => i.Content?.PublishedAt).ToList();
+    public List<LearningItem> Achievements => Items.Where(i => i.IsCompleted).OrderByDescending(i => i.CompletedAt).ToList();
+    public int RequiredTotal => Required.Count;
+    public int RequiredDone => Required.Count(i => i.IsCompleted);
 }
 
 public class ContentIndexVm
 {
     public List<Content> Items { get; set; } = new();
     public HashSet<int> AcknowledgedIds { get; set; } = new();
+    /// <summary>Learning state of each listed content item (by content id).</summary>
+    public Dictionary<int, LearningItem> Learning { get; set; } = new();
     public ContentType? Type { get; set; }
     public string? Q { get; set; }
     public bool PoliciesOnly { get; set; }
@@ -67,10 +69,14 @@ public class AssessmentListItem
     public bool CanStart { get; set; }
     /// <summary>The linked content requires acknowledgment and this user has not acknowledged it yet (see AckGate).</summary>
     public bool LockedByAck { get; set; }
+    /// <summary>When the user first passed this assessment (null if not passed).</summary>
+    public DateTime? FirstPassedAt { get; set; }
 }
 
 public class TakeVm
 {
+    /// <summary>Number of this attempt (completed attempts + 1).</summary>
+    public int AttemptNumber { get; set; } = 1;
     public AssessmentAttempt Attempt { get; set; } = null!;
     public Assessment Assessment { get; set; } = null!;
     public List<Question> Questions { get; set; } = new();
@@ -82,6 +88,12 @@ public class ResultVm
     public Dictionary<int, AssessmentAnswer> Answers { get; set; } = new();
     public List<Question> Questions { get; set; } = new();
     public bool CanRetry { get; set; }
+    /// <summary>Completed attempts so far (including this one) and the limit (0 = unlimited).</summary>
+    public int AttemptsUsed { get; set; }
+    /// <summary>The learning item this assessment belongs to (published content), for the completion summary.</summary>
+    public LearningItem? Item { get; set; }
+    /// <summary>This attempt is the one that completed the learning item.</summary>
+    public bool JustCompleted { get; set; }
 }
 
 public class Pager

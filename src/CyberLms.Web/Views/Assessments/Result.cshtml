@@ -2,26 +2,66 @@
 @{
     var a = Model.Attempt; ViewData["Title"] = a.Assessment.Title; var n = 0;
     var pass = a.Passed == true;
+    var max = a.Assessment.MaxAttempts;
+    var item = Model.Item;
+    var contentId = a.Assessment.ContentId;
 }
-<div class="quiz-layout">
-    <section class="result-hero @(pass ? "pass" : "fail") reveal">
+<div class="quiz-layout lx-result">
+    <section class="lx-result-hero @(pass ? "pass" : "fail") reveal" aria-labelledby="result-title">
         @if (pass) { <div class="burst" aria-hidden="true"></div> }
-        <h1 class="bidi">@a.Assessment.Title</h1>
-        @Ui.Ring((double)a.Percentage, L["Your result"], size: 196, stroke: 12, mark: a.PassingPercentageSnapshot)
-        <div><span class="result-status" role="status"><i class="bi @(pass ? "bi-patch-check-fill" : "bi-x-octagon-fill")"></i> @L[pass ? "Passed" : "Failed"]</span></div>
-        <p class="result-msg">@L[pass ? "Congratulations, you passed this assessment." : "You did not reach the passing score. Review the material and try again if attempts remain."]</p>
-        <div class="result-stats">
-            <div><strong>@Ui.Num(a.CorrectAnswers) <small class="text-muted fs-6 fw-normal">@L.Format("of {0}", a.TotalQuestions)</small></strong><span>@L["Correct answers"]</span></div>
-            <div><strong>@Ui.Pct(a.PassingPercentageSnapshot)</strong><span>@L["Passing score"]</span></div>
-            <div><strong>@Ui.Num(a.EarnedPoints) <small class="text-muted fs-6 fw-normal">@L.Format("of {0}", a.TotalPoints)</small></strong><span>@L["Points"]</span></div>
-            <div><strong class="fs-6 d-block pt-2">@Time.Html(a.CompletedAt)</strong><span>@L["Assessment date"]</span></div>
+        <div class="lx-result-top">
+            <span class="lx-result-icon" aria-hidden="true"><i class="bi @(pass ? "bi-patch-check-fill" : "bi-arrow-repeat")"></i></span>
+            <div>
+                <div class="lx-kicker bidi">@a.Assessment.Title</div>
+                <h1 id="result-title">@L[pass ? "Well done, you passed the assessment" : "You did not reach the passing score this time"]</h1>
+                <p class="lx-result-msg">@L[pass ? "Your result has been recorded. Thank you for helping keep our organization secure." : "This is part of learning. Review the material, then try again if an attempt is available."]</p>
+            </div>
         </div>
-        <div class="cluster justify-content-center">
-            @if (Model.CanRetry) { <form method="post" asp-action="Start" asp-route-id="@a.AssessmentId" class="m-0"><button class="btn btn-primary btn-lg"><i class="bi bi-arrow-repeat"></i> @L["Retry"]</button></form> }
-            @if (!pass && a.Assessment.ContentId != null) { <a class="btn btn-outline-primary btn-lg" asp-controller="Content" asp-action="Details" asp-route-id="@a.Assessment.ContentId"><i class="bi bi-journal-text"></i> @L["Review the material"]</a> }
-            <a class="btn btn-outline-secondary btn-lg" asp-action="Index">@L["Back to assessments"]</a>
+        <div class="lx-result-body">
+            <div class="lx-result-ring">
+                @Ui.Ring((double)a.Percentage, L["Your result"], size: 184, stroke: 11, mark: a.PassingPercentageSnapshot)
+                <span class="result-status" role="status"><i class="bi @(pass ? "bi-check-circle-fill" : "bi-info-circle-fill")"></i> @L[pass ? "Passed" : "Not passed"]</span>
+            </div>
+            <div class="lx-result-stats">
+                <div><span>@L["Your score"]</span><strong><bdi class="pct" dir="ltr">@a.Percentage.ToString("0.#")%</bdi></strong></div>
+                <div><span>@L["Passing score"]</span><strong>@Ui.Pct(a.PassingPercentageSnapshot)</strong></div>
+                <div><span>@L["Correct answers"]</span><strong>@Ui.Num(a.CorrectAnswers) <small>@L.Format("of {0}", a.TotalQuestions)</small></strong></div>
+                <div><span>@L["Points earned"]</span><strong>@Ui.Num(a.EarnedPoints) <small>@L.Format("of {0}", a.TotalPoints)</small></strong></div>
+                <div><span>@L["Completion date"]</span><strong class="lx-date">@Time.Html(a.CompletedAt)</strong></div>
+                <div><span>@L["Attempt"]</span><strong>@if (max == 0) { @Ui.Num(Model.AttemptsUsed) } else { @L.Format("{0} of {1}", Model.AttemptsUsed, max) }</strong></div>
+            </div>
+        </div>
+        <div class="lx-result-actions">
+            @if (!pass && contentId != null) { <a class="btn btn-primary btn-lg" asp-controller="Content" asp-action="Details" asp-route-id="@contentId"><i class="bi bi-journal-text"></i> @L["Review the content"]</a> }
+            @if (Model.CanRetry) { <form method="post" asp-action="Start" asp-route-id="@a.AssessmentId" class="m-0" data-busy><button class="btn @(contentId != null ? "btn-outline-primary" : "btn-primary") btn-lg"><i class="bi bi-arrow-repeat"></i> @L["Retry"]</button></form> }
+            @if (!pass && !Model.CanRetry) { <span class="lx-note"><i class="bi bi-info-circle"></i> @L["No attempts remain for this assessment. Please contact the security team if you need another attempt."]</span> }
+            @if (pass && item == null) { <a class="btn btn-outline-primary btn-lg" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @L["Back to my dashboard"]</a> }
+            <a class="btn btn-link" asp-action="Index">@L["Back to assessments"]</a>
         </div>
     </section>
+
+    @if (item != null && item.HasRequirements)
+    {
+        @if (item.IsCompleted)
+        {
+            <section class="lx-complete @(Model.JustCompleted ? "is-new" : "") reveal" style="--i:2" aria-live="polite">
+                <span class="lx-seal" aria-hidden="true"><i class="bi bi-award-fill"></i></span>
+                <div class="lx-complete-main">
+                    <div class="lx-kicker bidi">@item.Title</div>
+                    <h2>@L["You have successfully completed this item"]</h2>
+                    <partial name="_Journey" model="item" />
+                </div>
+                <a class="btn btn-success" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @L["Back to my dashboard"]</a>
+            </section>
+        }
+        else
+        {
+            <section class="lx-journey-band reveal" style="--i:2">
+                <div class="lx-jb-head"><h2><i class="bi bi-signpost-split"></i> @L["Your journey in this item"]</h2><span class="chip bidi">@item.Title</span></div>
+                <partial name="_Journey" model="item" />
+            </section>
+        }
+    }
 
     <div class="section-title"><h2><i class="bi bi-card-checklist"></i> @L["Answer review"]</h2><span class="chip"><span class="text-success fw-bold">@Model.Answers.Values.Count(x => x.IsCorrect)</span>&nbsp;@L["Correct"] · <span class="text-danger fw-bold">@Model.Answers.Values.Count(x => !x.IsCorrect)</span>&nbsp;@L["Incorrect"]</span></div>
     <div class="review">

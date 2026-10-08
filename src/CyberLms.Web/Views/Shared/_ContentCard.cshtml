@@ -1,0 +1,34 @@
+@model LearningItem
+@* Content card: type, title, status (from LearningProgress), what the item requires, and its completion state. *@
+@{
+    var c = Model.Content!;
+    var st = Ui.Status(Model);
+    var cta = Model.State switch
+    {
+        LearningState.AckRequired => "Read and acknowledge",
+        LearningState.Completed => "View",
+        LearningState.AssessmentAvailable or LearningState.AssessmentInProgress or LearningState.Failed when Model.Started => "Continue",
+        _ => "Read",
+    };
+}
+<a class="card card-lift c-card lx-card @(Model.IsCompleted ? "is-complete" : "") @(Model.State == LearningState.AckRequired ? "is-required" : "")" asp-controller="Content" asp-action="Details" asp-route-id="@c.Id">
+    <div class="d-flex align-items-center justify-content-between gap-2">
+        <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
+        @if (st is { } s) { <span class="chip chip-sm @s.Css"><i class="bi @s.Icon"></i> @L[s.Key]</span> }
+    </div>
+    <h3 class="bidi">@c.Title</h3>
+    @if (!string.IsNullOrWhiteSpace(c.Description)) { <p class="bidi">@c.Description</p> }
+    @if (Model.HasRequirements)
+    {
+        <div class="lx-reqs">
+            @if (Model.RequiresAck) { <span class="@(Model.Ack != null ? "ok" : "")"><i class="bi @(Model.Ack != null ? "bi-check-circle-fill" : "bi-pen")"></i> @L["Acknowledgment"]</span> }
+            @if (Model.Assessments.Count > 0)
+            {
+                var passed = Model.Assessments.All(a => a.Best?.Passed == true);
+                var locked = Model.State == LearningState.AckRequired;
+                <span class="@(passed ? "ok" : locked ? "locked" : "")"><i class="bi @(passed ? "bi-check-circle-fill" : locked ? "bi-lock-fill" : "bi-ui-checks")"></i> @L["Assessment"]</span>
+            }
+        </div>
+    }
+    <div class="c-foot"><span>@Time.Html(c.PublishedAt ?? c.CreatedAt)</span><span class="c-go">@L[cta] <i class="bi bi-arrow-left flip-rtl"></i></span></div>
+</a>

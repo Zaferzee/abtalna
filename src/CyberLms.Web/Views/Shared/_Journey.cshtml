@@ -1,0 +1,54 @@
+@model LearningItem
+@*
+    "رحلتك في الوعي السيبراني": content -> acknowledgment -> assessment -> completion as one connected, ordered list.
+    ViewData["compact"] = true renders the small dot version used in lists. ViewData["just-acked"] = true animates the
+    acknowledgment step to done and unlocks the assessment (right after the acknowledgment was recorded).
+    Steps carry data-step so the preview can simulate the acknowledgment in the browser.
+*@
+@{
+    var compact = ViewData["compact"] as bool? == true;
+    var justAcked = ViewData["just-acked"] as bool? == true;
+    string Label(string k) => k switch { "content" => "Content", "ack" => "Acknowledgment", "assessment" => "Assessment", _ => "Completion" };
+    string Icon(string k) => k switch { "content" => "bi-journal-text", "ack" => "bi-pen", "assessment" => "bi-ui-checks", _ => "bi-award" };
+    string Sub(JourneyStep s) => s.State switch
+    {
+        StepState.Done => s.Key == "done" ? "Completed" : "Done",
+        StepState.Current => s.Key == "content" ? "Read and view" : s.Key == "ack" ? "Your acknowledgment is needed" : s.Key == "assessment" ? (Model.State == LearningState.AssessmentInProgress ? "In progress" : Model.State == LearningState.Failed ? "Try again" : "Available now") : "Current step",
+        StepState.Locked => "Locked",
+        StepState.Failed => "Not passed",
+        _ => "Next",
+    };
+    // Track fill: up to the current step (or the last completed one).
+    var n = Model.Steps.Count;
+    var reach = Model.Steps.FindIndex(s => s.State is StepState.Current or StepState.Failed);
+    if (reach < 0) { reach = Model.Steps.FindLastIndex(s => s.State == StepState.Done); }
+    var pct = n <= 1 || reach < 0 ? 0 : (int)Math.Round(100.0 * reach / (n - 1));
+}
+@if (compact)
+{
+    <ol class="journey-mini" aria-label="@L["Learning journey"]">
+        @foreach (var s in Model.Steps)
+        {
+            <li class="jm-@s.State.ToString().ToLowerInvariant()" title="@L[Label(s.Key)]: @L[Sub(s)]"><span class="visually-hidden">@L[Label(s.Key)]: @L[Sub(s)]</span>@if (s.State == StepState.Locked) { <i class="bi bi-lock-fill" aria-hidden="true"></i> } else if (s.State == StepState.Done) { <i class="bi bi-check" aria-hidden="true"></i> }</li>
+        }
+    </ol>
+}
+else
+{
+    <ol class="journey @(Model.IsCompleted ? "is-complete" : "")" style="--jp:@pct;--n:@n" aria-label="@L["Learning journey"]" data-journey data-t-done="@L["Done"]" data-t-available="@L["Available now"]" data-t-completed="@L["Completed"]">
+        @foreach (var s in Model.Steps)
+        {
+            var st = s.State.ToString().ToLowerInvariant();
+            var anim = justAcked && (s.Key == "ack" || s.Key == "assessment" || s.Key == "content") ? "is-changing" : "";
+            <li class="j-step j-@st @anim" data-step="@s.Key" @(s.State == StepState.Current ? "aria-current=step" : "")>
+                <span class="j-node" aria-hidden="true">
+                    <i class="bi j-ico @(s.State switch { StepState.Done => "bi-check-lg", StepState.Locked => "bi-lock-fill", StepState.Failed => "bi-arrow-counterclockwise", _ => Icon(s.Key) })" data-icon="@Icon(s.Key)"></i>
+                </span>
+                <span class="j-text">
+                    <strong>@L[Label(s.Key)]</strong>
+                    <small data-sub>@L[Sub(s)]</small>
+                </span>
+            </li>
+        }
+    </ol>
+}

@@ -18,7 +18,9 @@
     var words = System.Text.RegularExpressions.Regex.Replace(c.Body ?? "", "<[^>]+>", " ").Split((char[])null!, StringSplitOptions.RemoveEmptyEntries).Length;
     var minutes = Math.Max(1, (int)Math.Ceiling(words / 180.0));
     var acked = Model.Ack != null;
-    var stepN = 1;
+    // Learning journey for this user (preview: as an employee who has not acknowledged yet).
+    var learning = LearningProgress.Build(c, live ? Model.Ack : null, Model.Related);
+    var stepView = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData) { ["just-acked"] = Model.JustAcknowledged };
 }
 <header class="doc-hero reveal">
     <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
@@ -39,6 +41,18 @@
     </div>
 </header>
 
+@if (learning.HasRequirements)
+{
+    var st = Ui.Status(learning);
+    <section class="lx-journey-band reveal" style="--i:1" aria-label="@L["Your journey in this item"]" @(live ? "" : "data-preview-journey")>
+        <div class="lx-jb-head">
+            <h2><i class="bi bi-signpost-split"></i> @L["Your journey in this item"]</h2>
+            @if (st is { } s) { <span class="chip @s.Css" data-journey-status><i class="bi @s.Icon"></i> @L[s.Key]</span> }
+        </div>
+        @await Html.PartialAsync("_Journey", learning, stepView)
+    </section>
+}
+
 <div class="reader @(hasBody ? "" : "no-body")">
     <div class="stack" style="--gap:1.5rem">
     @if (hasBody || (videos.Count == 0 && pdfs.Count == 0))
@@ -52,18 +66,6 @@
 
     <aside class="doc-aside">
         <nav class="panel toc" data-toc hidden aria-label="@L["On this page"]"><h2><i class="bi bi-list-ul"></i> @L["On this page"]</h2><ol></ol></nav>
-        @if (needsAck || Model.Related.Count > 0)
-        {
-            <div class="panel p-3">
-                <div class="fw-bold mb-2"><i class="bi bi-signpost-split text-primary"></i> @L["Steps for this item"]</div>
-                <ol class="flow-steps">
-                    <li class="is-done"><span>@(stepN++)</span>@L["Read the content"]</li>
-                    @if (needsAck) { <li class="@(acked ? "is-done" : "is-todo")"><span>@(stepN++)</span>@L["Acknowledge"]</li> }
-                    @foreach (var it in Model.Related) { var stepLocked = it.Best?.Passed != true && (live ? it.LockedByAck : c.RequiresAcknowledgment); <li class="@(it.Best?.Passed == true ? "is-done" : stepLocked ? "is-todo is-locked" : "is-todo")" @(stepLocked && !live ? "data-ack-locked-step" : "")><span>@(stepN++)</span>@L["Complete the assessment"]@if (stepLocked) { <i class="bi bi-lock-fill ms-1 step-lock" aria-label="@L["Locked"]"></i> }</li> }
-                </ol>
-                @if (needsAck && !acked && live) { <p class="small text-muted mb-0 mt-2"><i class="bi bi-info-circle text-primary"></i> @L["Acknowledgment is recorded with the date and time, and is visible to administrators in reports."]</p> }
-            </div>
-        }
     </aside>
 </div>
 
@@ -193,12 +195,13 @@
         }
         else if (live)
         {
-            <form id="sec-ack" method="post" asp-area="" asp-controller="Content" asp-action="Acknowledge" asp-route-id="@c.Id" class="ack-panel reveal-scroll">
+            <form id="sec-ack" data-busy method="post" asp-area="" asp-controller="Content" asp-action="Acknowledge" asp-route-id="@c.Id" class="ack-panel reveal-scroll">
                 <span class="ack-icon"><i class="bi bi-pen"></i></span>
                 <div>
                     <h2>@L["Your acknowledgment is required"]</h2>
                     <p>@L["Please read the full content above, then confirm below."]</p>
                     <label class="ack-check"><input type="checkbox" data-ack-check /> <span class="bidi">@Model.AckText</span></label>
+                    <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle"></i> @L["Acknowledgment is recorded with the date and time, and is visible to administrators in reports."]</p>
                 </div>
                 <button class="btn btn-primary btn-lg" data-ack-submit><i class="bi bi-check2-square"></i> @L["Acknowledge"]</button>
             </form>
@@ -227,7 +230,7 @@
         var locked = live ? it.LockedByAck && !passed : c.RequiresAcknowledgment;
         var unlocking = live && Model.JustAcknowledged && !it.LockedByAck && !passed;
         <section class="next-step reveal-scroll @(passed ? "is-done" : "") @(locked ? "is-locked" : "") @(unlocking ? "is-unlocking" : "")" aria-label="@L["Related assessment"]" @(locked && !live ? "data-ack-locked" : "")>
-            <span class="ns-icon"><i class="bi @(passed ? "bi-patch-check-fill" : locked ? "bi-lock-fill" : "bi-ui-checks")" data-ns-icon></i></span>
+            <span class="ns-icon"><i class="bi @(passed ? "bi-patch-check-fill" : locked ? "bi-lock-fill" : "bi-ui-checks")" data-ns-icon></i>@if (unlocking || (locked && !live)) { <i class="bi bi-unlock-fill ns-unlock" aria-hidden="true"></i> }</span>
             <div class="ns-main">
                 <div class="ns-kicker">@L["Next step: assessment"]</div>
                 <h2 class="bidi">@a.Title</h2>
@@ -276,6 +279,22 @@
                     <span class="text-muted small"><i class="bi bi-lock"></i> @L["Maximum attempts reached"]</span>
                 }
             </div>
+        </section>
+    }
+    @if (live && learning.IsCompleted && learning.HasRequirements)
+    {
+        <section id="sec-complete" class="lx-complete reveal-scroll @(Model.JustAcknowledged ? "is-new" : "")" aria-live="polite">
+            <span class="lx-seal" aria-hidden="true"><i class="bi bi-award-fill"></i></span>
+            <div class="lx-complete-main">
+                <div class="lx-kicker">@L["Learning item completed"]</div>
+                <h2>@L["You have successfully completed this item"]</h2>
+                <ul class="lx-complete-facts">
+                    @if (learning.Ack != null) { <li><i class="bi bi-pen"></i> @L["Acknowledged on"] @Time.Html(learning.Ack.AcknowledgedAt)</li> }
+                    @if (learning.BestScore is decimal sc) { <li><i class="bi bi-award"></i> @L["Best score"]: <bdi class="pct" dir="ltr">@sc.ToString("0.#")%</bdi></li> }
+                    @if (learning.CompletedAt is DateTime d) { <li><i class="bi bi-calendar-check"></i> @L["Completed on"] @Time.Html(d)</li> }
+                </ul>
+            </div>
+            <a class="btn btn-outline-success" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> @L["Back to my dashboard"]</a>
         </section>
     }
 </div>

@@ -17,6 +17,45 @@ Real-browser recordings (Chromium, 1440×900, WebM) are in [`docs/screenshots/re
 | `05-admin-content-wizard.webm` | Content wizard: step bar, type cards, editor heading + table-size picker, acknowledgment Yes/No reveal with the live statement preview, assessment reveal, question type switch, saving a question (the list item flashes, and the editor is ready for the next question) |
 | `06-reduced-motion-dashboard.webm` | The same dashboard with the operating system's *reduce motion* setting: everything is in place immediately, no movement |
 
+## Learning experience v2 (employee portal)
+
+Recordings (Chromium, 1440×900, WebM) are in [`docs/screenshots/learning-experience-v2/motion/`](screenshots/learning-experience-v2/motion/):
+
+| Recording | What it shows |
+|---|---|
+| `01-dashboard-progress.webm` | Dashboard entrance, the progress ring filling **from the value seen on the previous visit** to the current one, the "+N%" change chip, journey track drawing, hover on tasks and content cards |
+| `02-acknowledgment-unlock.webm` | Content page → acknowledgment: checkbox enables the button, loading state, "تم الإقرار بنجاح", the lock lifting off the assessment card, the card un-greying and the "ابدأ الاختبار" call to action glowing once |
+| `03-assessment-selection.webm` | Assessment intro, answer hover and selection, auto-advance and direction-aware step transition, previous/next, submission summary in the confirmation and the calm "جارٍ احتساب نتيجتك" state |
+| `04-result-pass.webm` | Passed result: ring fill and count-up, the success icon settling, "مجتاز" status, one small celebration, and the "تم إكمال هذه المادة بنجاح" card rising in |
+| `05-result-fail.webm` | Failed result: the same reveal without celebration, warm (not red) tone, "مراجعة المحتوى" and "إعادة المحاولة" |
+| `06-full-learning-journey.webm` | A fresh employee: dashboard → content with its journey → acknowledgment and unlock → assessment → passed result and completion → dashboard with the progress increase and the new achievement |
+
+### Additional tokens (`wwwroot/css/learning.css`)
+
+| Token | Value | Use |
+|---|---|---|
+| `--lx-fast` | 160 ms | Hover and press feedback (task rows, answer options) |
+| `--lx` | 260 ms | State changes: journey nodes, card states, borders and shadows |
+| `--lx-slow` | 420 ms | Journey track fill, larger reveals |
+| `--lx-ease` | `cubic-bezier(.2, .7, .2, 1)` | Ease-out without overshoot, used for all learning-experience motion. The existing spring is kept only for check marks |
+
+### Catalogue (learning experience)
+
+| Animation | Where | Duration / easing | Purpose |
+|---|---|---|---|
+| Journey track draw | Every full journey (dashboard next step, content page, result) | 420 ms after a 250 ms pause, `--lx-ease` | Shows how far along the item is, filling toward the reading direction |
+| Journey step change (`is-changing`) | Content page right after the acknowledgment | Node settles 550 ms, check mark 450 ms spring | The acknowledgment step turns done and the assessment becomes current, in the same place the employee is looking |
+| Progress since last visit | Dashboard hero ring + "+N%" chip | Ring from the previous value (1.4 s, existing fill); chip fades in and out over 2.6 s, once | Makes completing something visible on return to the dashboard. Stored per browser only; the number shown always comes from the server |
+| Lock → unlock | Assessment card after acknowledgment | Lock lifts and fades (1 s), assessment icon fades in at 0.75 s, the card leaves its greyed state (0.9 s), the CTA glows once (1.6 s) | A clear, satisfying change from "🔒 الاختبار مقفل" to "ابدأ الاختبار" |
+| Button loading (`is-loading`) | Acknowledge, start/continue/retry assessment | Until navigation | Confirms the click; prevents double submission |
+| "Calculating your result" | Assessment after confirming | 300 ms fade-in; spinner and shimmer lines until the result page | Replaces an abrupt blank wait with a calm, layout-stable state |
+| Unanswered warning | Assessment | 300 ms rise | Draws attention without shaking or flashing |
+| Result icon settle + status | Result page (pass) | Icon 700 ms at 0.5 s, status 450 ms at 1.1 s | The success moment arrives after the score is readable |
+| Celebration (`burst`) | Result page, pass only | 18 particles, once, ~1.4 s | Small and single; never on a failed result, never elsewhere |
+| Completion card rise (`is-new`) | Result page / content page when the item was just completed | 600 ms rise, seal settles 700 ms | Marks the completion of a professional training requirement |
+
+Everything above is disabled under `prefers-reduced-motion: reduce` (the journey is drawn in its final state immediately, no change chip, no unlock or completion animation, no celebration). Verified by the acceptance script (reduced-motion check).
+
 ## Tokens
 
 | Token | Value | Use |

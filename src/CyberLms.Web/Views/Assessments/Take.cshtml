@@ -14,6 +14,8 @@
             <div><strong>@Ui.Num(total)</strong><span>@L["Questions"]</span></div>
             <div><strong>@Ui.Pct(Model.Assessment.PassingPercentage)</strong><span>@L["Passing score"]</span></div>
             <div><strong>@Ui.Num(Model.Questions.Sum(q => q.Points))</strong><span>@L["Total points"]</span></div>
+            <div><strong>@(Model.Assessment.MaxAttempts == 0 ? Ui.Num(Model.AttemptNumber) : L.Format("{0} of {1}", Model.AttemptNumber, Model.Assessment.MaxAttempts))</strong><span>@L["Attempt"]</span></div>
+            <div><strong>@L.Format("~{0} min", Math.Max(1, (int)Math.Ceiling(total * 0.75)))</strong><span>@L["Estimated time"]</span></div>
         </div>
         <ul class="quiz-rules">
             <li><i class="bi bi-check2-circle"></i><span>@L.Format("Instructions: answer all {0} questions, then submit. The passing score is {1}%.", total, Model.Assessment.PassingPercentage)</span></li>
@@ -31,7 +33,7 @@
         </div>
         <nav class="qnav" data-qnav data-label="@L["Question {0}"]" aria-label="@L["Questions"]"></nav>
 
-        <form method="post" asp-action="Submit" asp-route-id="@Model.Attempt.Id" data-quiz data-confirm="@L["Submit your answers now? You cannot change them afterwards."]" novalidate>
+        <form method="post" asp-action="Submit" asp-route-id="@Model.Attempt.Id" data-quiz data-confirm="@L["Submit your answers now? You cannot change them afterwards."]" data-confirm-base="@L["Submit your answers now? You cannot change them afterwards."]" data-answered-format="@L["You answered {0} of {1} questions."]" novalidate>
         @foreach (var q in Model.Questions)
         {
             n++;
@@ -61,6 +63,11 @@
             </fieldset>
         }
             <div class="alert alert-warning unanswered-note" role="alert"><i class="bi bi-exclamation-triangle-fill"></i><span>@L["Some questions are not answered yet:"] <bdi data-missing></bdi>. @L["Unanswered questions are marked wrong. Press submit again to send anyway."]</span></div>
+            <div class="lx-submitting" data-submitting hidden role="status" aria-live="polite">
+                <span class="lx-sub-spinner" aria-hidden="true"></span>
+                <strong>@L["Calculating your result..."]</strong>
+                <div class="lx-skel"><span></span><span></span><span></span></div>
+            </div>
             <div class="quiz-foot">
                 <button type="button" class="btn btn-outline-secondary" data-q-prev><i class="bi bi-arrow-right-short flip-rtl"></i> @L["Previous"]</button>
                 <button type="button" class="btn btn-primary" data-q-next>@L["Next"] <i class="bi bi-arrow-left-short flip-rtl"></i></button>
