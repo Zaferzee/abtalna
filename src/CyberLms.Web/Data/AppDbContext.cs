@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Content> Contents => Set<Content>();
     public DbSet<ContentAttachment> ContentAttachments => Set<ContentAttachment>();
     public DbSet<UserAcknowledgment> UserAcknowledgments => Set<UserAcknowledgment>();
+    public DbSet<ContentCompletion> ContentCompletions => Set<ContentCompletion>();
     public DbSet<Assessment> Assessments => Set<Assessment>();
     public DbSet<Question> Questions => Set<Question>();
     public DbSet<QuestionOption> QuestionOptions => Set<QuestionOption>();
@@ -61,6 +62,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Content).WithMany().HasForeignKey(x => x.ContentId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.Status).HasMaxLength(32);
+        });
+        b.Entity<ContentCompletion>(e =>
+        {
+            e.HasIndex(x => new { x.UserId, x.ContentId, x.ContentVersion }).IsUnique();
+            e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Content).WithMany().HasForeignKey(x => x.ContentId).OnDelete(DeleteBehavior.Cascade);
         });
         b.Entity<Assessment>(e =>
         {

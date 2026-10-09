@@ -141,7 +141,10 @@
 .next-step { transition: background var(--lx) var(--lx-ease), border-color var(--lx) var(--lx-ease); }
 
 /* ---------- Assessment ---------- */
-.quiz-facts { grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); max-width: 46rem; }
+.quiz-facts { grid-template-columns: repeat(auto-fit, minmax(min(118px, 100%), 1fr)); max-width: 46rem; }
+/* grid children must be allowed to shrink below their content's intrinsic width (5 facts forced a 648px page on phones) */
+.quiz-layout > *, .quiz-intro { min-width: 0; }
+@media (max-width: 575.98px) { .quiz-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .quiz-intro { padding: 2rem 1.2rem; } }
 .choice { transition: border-color var(--lx-fast) var(--lx-ease), background var(--lx-fast) var(--lx-ease), box-shadow var(--lx) var(--lx-ease), transform var(--lx) var(--lx-ease); }
 .choice:active { transform: scale(.995); }
 .lx-submitting { display: grid; justify-items: center; gap: .9rem; padding: 2.2rem 1rem; text-align: center; color: var(--color-muted); }
@@ -195,3 +198,27 @@ form[data-quiz].is-submitting .qstep, form[data-quiz].is-submitting .quiz-foot, 
   .ns-unlock { display: none; }
   .js .journey:not(.is-drawn)::after { width: calc((100% - 100% / var(--n)) * var(--jp) / 100); }
 }
+
+/* ---------- Reading items: «تمت القراءة» (closure pass) ---------- */
+.lx-read-panel:not(.is-done) { border-color: color-mix(in srgb, var(--color-primary) 30%, #fff); background: linear-gradient(135deg, var(--primary-50), #fff 70%); }
+.lx-read-panel:not(.is-done) .ack-icon { color: var(--color-primary); }
+
+/* ---------- My Results (closure pass): same components as the dashboard and results ---------- */
+.lx-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .9rem; margin-bottom: 1.4rem; }
+.lx-stat { display: flex; align-items: center; gap: .9rem; padding: 1rem 1.2rem; border-radius: var(--radius-lg); background: var(--color-surface); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }
+.lx-stat strong { display: block; font-size: 1.25rem; } .lx-stat span:not(.lx-stat-icon) { color: var(--color-muted); font-size: .86rem; }
+.lx-stat-icon { width: 2.6rem; height: 2.6rem; border-radius: 14px; display: grid; place-items: center; font-size: 1.2rem; flex: none; }
+.lx-stat-icon.success { background: var(--success-bg); color: var(--color-success); } .lx-stat-icon.accent { background: var(--accent-100); color: var(--accent-600); } .lx-stat-icon.primary { background: var(--primary-50); color: var(--color-primary); }
+.lx-results { list-style: none; margin: 0; padding: .4rem 1rem 1rem; display: grid; gap: .65rem; }
+.lx-res { display: flex; align-items: center; gap: 1rem; padding: .85rem 1rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border); background: var(--color-surface);
+  transition: border-color var(--lx-fast) var(--lx-ease), box-shadow var(--lx) var(--lx-ease); }
+.lx-res:hover { border-color: var(--primary-200); box-shadow: var(--shadow-md); }
+.lx-res.pass { border-inline-start: 3px solid var(--color-success); } .lx-res.fail { border-inline-start: 3px solid color-mix(in srgb, var(--color-warning) 70%, #fff); }
+.lx-res-ring .ring-label strong { font-size: .8rem; }
+.lx-res-main { flex: 1; min-width: 0; display: grid; gap: .3rem; }
+.lx-res-title { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; } .lx-res-title strong { font-size: .98rem; }
+.lx-res-meta { display: flex; flex-wrap: wrap; gap: .25rem 1rem; color: var(--color-muted); font-size: .8rem; } .lx-res-meta i { margin-inline-end: .2rem; }
+.lx-res-go { flex: none; }
+@media (max-width: 575.98px) { .lx-res { flex-wrap: wrap; } .lx-res-go { width: 100%; } }
+/* phones: let task titles wrap instead of truncating them to a few words */
+@media (max-width: 575.98px) { .lx-task-main h3 { white-space: normal; overflow: visible; } }

@@ -30,12 +30,12 @@ A learning item is either:
 
 | State | Rule | Card status |
 |---|---|---|
-| `Available` | Informational content: no acknowledgment, no assessment | «جديد» when published in the last 14 days |
+| `Available` | Reading item (no acknowledgment, no assessment) not yet marked as read | «جديد» when published in the last 14 days |
 | `AckRequired` | Acknowledgment required and not given; any assessment is locked | «مطلوب» |
 | `AssessmentAvailable` | Acknowledged (or not required); assessment not attempted | «تم الإقرار» or «مطلوب» |
 | `AssessmentInProgress` | An attempt is in progress | «قيد التنفيذ» |
 | `Failed` | Completed attempts, none passed (retry if attempts remain) | «لم يُجتز بعد» |
-| `Completed` | Acknowledged (if required) and every linked assessment passed | «مكتمل» |
+| `Completed` | Acknowledged (if required) and every linked assessment passed; for a reading item, «تمت القراءة» recorded | «مكتمل» |
 
 ### Journey steps
 
@@ -85,3 +85,38 @@ The "next step" is chosen by `LearningProgress.Priority`, in this order:
   - `tests/CyberLms.Tests/LearningProgressTests.cs` (6 unit tests of the state model).
   - `tests/CyberLms.Tests/LearningExperienceTests.cs` (the journey, result and dashboard states over real HTTP).
 - **UI acceptance:** `tests/ui/learning-experience-acceptance.mjs`; screenshots and recordings in [screenshots/learning-experience-v2/](screenshots/learning-experience-v2/README.md).
+
+## Closure pass
+
+### Reading completion («تمت القراءة»)
+- **Applies to:** content with neither acknowledgment nor a published assessment (a "reading item").
+- **How it completes:** the employee completes the item explicitly with «تمت القراءة» at the end of the content page.
+  - `POST /Content/Complete/{id}` writes one `ContentCompletions` row for the current content version.
+  - It is idempotent (unique index) and refuses content that requires acknowledgment or has a published assessment, so there is no duplicate evidence.
+  - Opening the page writes nothing.
+- **Journey:** المحتوى → الإنجاز.
+- **Progress and tasks:** reading items count toward «أنجزت X من Y مواد». They appear in «ما المطلوب مني الآن؟» after the mandatory items.
+- **Unchanged evidence for other items:** acknowledgment and assessment rules are the same.
+- **Schema:** the additive migration `20261009014228_AddContentCompletion` (see `DATABASE.md`).
+
+### After passing an assessment
+- **Assessments list:** the primary action is «عرض النتيجة» (the best result) with «مكتمل».
+- **No retake offered:** the content page, result page and dashboard already offered no retake in the passed state.
+- **Still possible (rule unchanged):**
+  - The server still accepts a new attempt within `MaxAttempts` if it is requested directly.
+  - An attempt that is already open shows «متابعة المحاولة المفتوحة».
+  - History is kept, and the passed result remains the best one.
+  - Covered by `LearningExperienceTests`.
+
+### My Results
+- **Summary:** completed learning items, assessments passed, policies acknowledged.
+- **Completed assessments:** a score ring, status chip, date, correct answers, passing score, attempt number, the linked learning item, and «عرض النتيجة».
+- **Records:** acknowledgments and completed reading.
+- **Empty states:** use the v2 style.
+
+### Responsive verification
+`tests/ui/responsive-check.mjs` runs at 1366×768, 820×1180 and 390×844. It covers the dashboard, journey, content with video/PDF, acknowledgment, reading completion, assessment, results, My Results and the assessments list, and checks for horizontal overflow.
+
+Two defects were fixed:
+- The assessment intro forced a 648px-wide page on phones: the five facts tiles could not shrink.
+- Dashboard task titles were truncated on phones.

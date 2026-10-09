@@ -93,6 +93,8 @@ The script puts up `app_offline.htm` (Arabic maintenance page), replaces applica
 
 > Releases from the content-authoring update onwards contain the migration `20261006173411_AddContentAcknowledgmentText` (one nullable column, no data change). Apply the new `sql\02-migrate.sql` (it skips what is already applied) and re-run `sql\03-grants.sql`; `04-verify.sql` then lists both migrations.
 
+> Releases from the learning-experience closure onwards also contain `20261009014228_AddContentCompletion` (new table `ContentCompletions`, no change to existing data). Same procedure: back up, apply `sql\02-migrate.sql` and `sql\03-grants.sql` as `cyberlms_owner` (the default privileges in `03-grants.sql` give `cyberlms_app` read/write on the new table), then bring the site back; `04-verify.sql` lists three migrations.
+
 ## 8. Logs and monitoring
 * Application log: `Logging:File:Path\cyberlms-YYYYMMDD.log` (30 days). Contains errors, warnings (failed sign-ins with user name + IP, rejected domains, SMTP failures, missing files) and start-up messages. It never contains passwords, connection strings, request bodies or SMTP credentials.
 * IIS logs: `%SystemDrive%\inetpub\logs\LogFiles`. ASP.NET Core Module startup failures: Windows Event Log (Application) and, if you set `stdoutLogEnabled="true"` temporarily, `C:\inetpub\cyberlms\logs\stdout*`.

@@ -57,6 +57,10 @@ public class ContentDetailsVm
     public string AckText { get; set; } = "";
     /// <summary>The acknowledgment was recorded by the request that redirected here: show the success state and the unlock.</summary>
     public bool JustAcknowledged { get; set; }
+    /// <summary>The user's «تمت القراءة» record for the current version (reading items only).</summary>
+    public ContentCompletion? Reading { get; set; }
+    /// <summary>The reading completion was recorded by the request that redirected here.</summary>
+    public bool JustRead { get; set; }
 }
 
 public class AssessmentListItem

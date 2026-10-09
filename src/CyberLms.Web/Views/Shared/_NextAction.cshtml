@@ -31,6 +31,9 @@
     case LearningState.Failed:
         <span class="text-muted small"><i class="bi bi-lock"></i> @L["Maximum attempts reached"]</span>
         break;
+    case LearningState.Available when cid != null:
+        <a class="btn btn-primary @size" asp-controller="Content" asp-action="Details" asp-route-id="@cid"><i class="bi bi-book"></i> @L["Start reading"]</a>
+        break;
     default:
         @if (cid != null) { <a class="btn btn-outline-primary @size" asp-controller="Content" asp-action="Details" asp-route-id="@cid"><i class="bi bi-eye"></i> @L["View"]</a> }
         break;

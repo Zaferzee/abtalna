@@ -19,8 +19,8 @@
     var minutes = Math.Max(1, (int)Math.Ceiling(words / 180.0));
     var acked = Model.Ack != null;
     // Learning journey for this user (preview: as an employee who has not acknowledged yet).
-    var learning = LearningProgress.Build(c, live ? Model.Ack : null, Model.Related);
-    var stepView = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData) { ["just-acked"] = Model.JustAcknowledged };
+    var learning = LearningProgress.Build(c, live ? Model.Ack : null, Model.Related, live ? Model.Reading : null);
+    var stepView = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData) { ["just-acked"] = Model.JustAcknowledged || Model.JustRead };
 }
 <header class="doc-hero reveal">
     <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
@@ -184,6 +184,37 @@
         </section>
     }
 
+    @* Reading item (no acknowledgment, no assessment): the explicit «تمت القراءة» is its completion evidence. Opening the page is not. *@
+    @if (learning.IsReadingItem)
+    {
+        @if (live && Model.Reading != null)
+        {
+            <section id="sec-read" class="ack-panel lx-read-panel is-done @(Model.JustRead ? "just-done" : "")" aria-live="polite">
+                <span class="ack-icon"><i class="bi bi-check2-circle"></i></span>
+                <div><h2>@L[Model.JustRead ? "Reading completion recorded" : "Marked as read"]</h2><p class="small mt-1">@L["Completed on"] @Time.Html(Model.Reading.CompletedAt)</p></div>
+            </section>
+        }
+        else if (live)
+        {
+            <form id="sec-read" data-busy method="post" asp-area="" asp-controller="Content" asp-action="Complete" asp-route-id="@c.Id" class="ack-panel lx-read-panel reveal-scroll">
+                <span class="ack-icon"><i class="bi bi-book"></i></span>
+                <div>
+                    <h2>@L["Have you finished reading this item?"]</h2>
+                    <p>@L["When you have read the content and viewed its attachments, record that you have completed it."]</p>
+                </div>
+                <button class="btn btn-primary btn-lg"><i class="bi bi-check2-circle"></i> @L["Mark as read"]</button>
+            </form>
+        }
+        else
+        {
+            <div id="sec-read" class="ack-panel lx-read-panel">
+                <span class="ack-icon"><i class="bi bi-book"></i></span>
+                <div><h2>@L["Have you finished reading this item?"]</h2><p>@L["When you have read the content and viewed its attachments, record that you have completed it."]</p></div>
+                <button type="button" class="btn btn-primary btn-lg" disabled title="@L["Preview only"]"><i class="bi bi-check2-circle"></i> @L["Mark as read"]</button>
+            </div>
+        }
+    }
+
     @if (needsAck)
     {
         @if (acked)
@@ -283,7 +314,7 @@
     }
     @if (live && learning.IsCompleted && learning.HasRequirements)
     {
-        <section id="sec-complete" class="lx-complete reveal-scroll @(Model.JustAcknowledged ? "is-new" : "")" aria-live="polite">
+        <section id="sec-complete" class="lx-complete reveal-scroll @(Model.JustAcknowledged || Model.JustRead ? "is-new" : "")" aria-live="polite">
             <span class="lx-seal" aria-hidden="true"><i class="bi bi-award-fill"></i></span>
             <div class="lx-complete-main">
                 <div class="lx-kicker">@L["Learning item completed"]</div>

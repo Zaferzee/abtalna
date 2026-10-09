@@ -99,6 +99,21 @@ public class UserAcknowledgment
     public string Status { get; set; } = "Acknowledged";
 }
 
+/// <summary>
+/// "تمت القراءة": the employee's explicit completion of a content item that has neither an acknowledgment nor an assessment
+/// (which would otherwise be the completion evidence). Recorded for the content version that was read.
+/// </summary>
+public class ContentCompletion
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
+    public int ContentId { get; set; }
+    public Content Content { get; set; } = null!;
+    public int ContentVersion { get; set; } = 1;
+    public DateTime CompletedAt { get; set; } = DateTime.UtcNow;
+}
+
 public class Assessment
 {
     public int Id { get; set; }

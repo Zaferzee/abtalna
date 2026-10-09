@@ -1,45 +1,82 @@
 @model List<AssessmentAttempt>
-@{ ViewData["Title"] = L["My Results"]; var acks = (List<UserAcknowledgment>)ViewBag.Acks; var passed = Model.Count(t => t.Passed == true); }
+@{
+    ViewData["Title"] = L["My Results"];
+    var acks = (List<UserAcknowledgment>)ViewBag.Acks;
+    var reads = (List<ContentCompletion>)ViewBag.Reads;
+    int itemsDone = ViewBag.ItemsDone, itemsTotal = ViewBag.ItemsTotal;
+    var passedAssessments = Model.Where(t => t.Passed == true).Select(t => t.AssessmentId).Distinct().Count();
+    // attempt number per assessment (oldest = 1)
+    var attemptNo = Model.GroupBy(t => t.AssessmentId).SelectMany(g => g.OrderBy(t => t.CompletedAt).Select((t, i) => (t.Id, N: i + 1))).ToDictionary(x => x.Id, x => x.N);
+    var records = acks.Select(a => (Title: a.Content.Title, a.ContentId, At: a.AcknowledgedAt, IsAck: true))
+        .Concat(reads.Select(r => (Title: r.Content.Title, r.ContentId, At: r.CompletedAt, IsAck: false)))
+        .OrderByDescending(x => x.At).ToList();
+    var i = 0;
+}
 <div class="page-head reveal">
     <div>
         <div class="eyebrow"><i class="bi bi-award"></i> @L["Learning"]</div>
         <h1>@L["My Results"]</h1>
         <p class="lead">@L["Your completed assessments and the policies you have acknowledged."]</p>
     </div>
-    <div class="cluster">
-        <span class="chip chip-success"><i class="bi bi-patch-check"></i> @L.Format("{0} passed", passed)</span>
-        <span class="chip chip-primary"><i class="bi bi-pen"></i> @L.Format("{0} acknowledged", acks.Count)</span>
-    </div>
 </div>
-<section class="panel mb-4 reveal" style="--i:1">
-    <div class="panel-head"><h2><i class="bi bi-clipboard-check"></i> @L["Completed assessments"]</h2></div>
+
+<div class="lx-stats reveal" style="--i:1">
+    <div class="lx-stat"><span class="lx-stat-icon success"><i class="bi bi-patch-check-fill"></i></span><div><strong>@L.Format("{0} of {1}", itemsDone, itemsTotal)</strong><span>@L["Completed learning items"]</span></div></div>
+    <div class="lx-stat"><span class="lx-stat-icon accent"><i class="bi bi-award"></i></span><div><strong>@Ui.Num(passedAssessments)</strong><span>@L["Assessments passed"]</span></div></div>
+    <div class="lx-stat"><span class="lx-stat-icon primary"><i class="bi bi-pen"></i></span><div><strong>@Ui.Num(acks.Count)</strong><span>@L["Policies acknowledged"]</span></div></div>
+</div>
+
+<section class="panel mb-4 reveal" style="--i:2">
+    <div class="panel-head"><h2><i class="bi bi-clipboard-check"></i> @L["Completed assessments"]</h2>@if (Model.Count > 0) { <span class="chip">@L.Format("{0} attempt(s)", Model.Count)</span> }</div>
     @if (Model.Count == 0)
     {
-        <div class="lx-empty-sm"><span class="lx-empty-icon muted"><i class="bi bi-clipboard-data"></i></span><p>@L["Your assessment results will appear here after you complete your first assessment."]</p><a class="btn btn-primary btn-sm mt-1" asp-controller="Assessments" asp-action="Index">@L["Assessments"]</a></div>
+        <div class="lx-empty-sm"><span class="lx-empty-icon muted"><i class="bi bi-clipboard-data"></i></span><p>@L["Your assessment results will appear here after you complete your first assessment."]</p><a class="btn btn-primary btn-sm mt-2" asp-controller="Assessments" asp-action="Index">@L["Assessments"]</a></div>
     }
     else
     {
+        <ul class="lx-results">
         @foreach (var t in Model)
         {
-            <a class="result-row" asp-controller="Assessments" asp-action="Result" asp-route-id="@t.Id">
-                <span style="--ring-color:var(--color-@(t.Passed == true ? "success" : "danger"))">@Ui.Ring((double)t.Percentage, size: 48, stroke: 9)</span>
-                <span class="r-main"><strong class="bidi">@t.Assessment.Title</strong><small>@L["Correct answers"]: @t.CorrectAnswers @L.Format("of {0}", t.TotalQuestions) · @Time.Html(t.CompletedAt)</small></span>
-                <span class="badge text-bg-@(t.Passed == true ? "success" : "danger")">@L[t.Passed == true ? "Passed" : "Not passed"]</span>
-                <span class="small fw-semibold text-primary d-none d-md-inline">@L["View details"] <i class="bi bi-arrow-left-short flip-rtl"></i></span>
-            </a>
+            var pass = t.Passed == true;
+            var content = t.Assessment.Content;
+            <li class="lx-res @(pass ? "pass" : "fail") reveal" style="--i:@(Math.Min(i++, 8) + 2)">
+                <span class="lx-res-ring" style="--ring-color:var(--color-@(pass ? "success" : "warning"))">@Ui.Ring((double)t.Percentage, size: 56, stroke: 9)</span>
+                <div class="lx-res-main">
+                    <div class="lx-res-title"><strong class="bidi">@t.Assessment.Title</strong><span class="chip chip-sm @(pass ? "chip-success" : "chip-warning")"><i class="bi @(pass ? "bi-check-circle-fill" : "bi-info-circle-fill")"></i> @L[pass ? "Passed" : "Not passed"]</span></div>
+                    <div class="lx-res-meta">
+                        <span><i class="bi bi-calendar3"></i> @Time.Html(t.CompletedAt)</span>
+                        <span><i class="bi bi-check2-square"></i> @L["Correct answers"]: @t.CorrectAnswers @L.Format("of {0}", t.TotalQuestions)</span>
+                        <span><i class="bi bi-bullseye"></i> @L["Passing score"]: @Ui.Pct(t.PassingPercentageSnapshot)</span>
+                        <span><i class="bi bi-arrow-repeat"></i> @L["Attempt"] @Ui.Num(attemptNo[t.Id])</span>
+                    </div>
+                    @if (content?.Status == ContentStatus.Published) { <a class="lx-linked bidi" asp-controller="Content" asp-action="Details" asp-route-id="@content.Id"><i class="bi bi-link-45deg"></i> @content.Title</a> }
+                </div>
+                <a class="btn btn-outline-primary btn-sm lx-res-go" asp-controller="Assessments" asp-action="Result" asp-route-id="@t.Id">@L["View result"] <i class="bi bi-arrow-left-short flip-rtl"></i></a>
+            </li>
         }
+        </ul>
     }
 </section>
-<section class="panel reveal" style="--i:2">
-    <div class="panel-head"><h2><i class="bi bi-pen"></i> @L["My acknowledgments"]</h2></div>
-    @if (acks.Count == 0)
+
+<section class="panel reveal" style="--i:3">
+    <div class="panel-head"><h2><i class="bi bi-journal-check"></i> @L["Acknowledgments and completed reading"]</h2></div>
+    @if (records.Count == 0)
     {
         <div class="lx-empty-sm"><span class="lx-empty-icon muted"><i class="bi bi-pen"></i></span><p>@L["You have not acknowledged any policy yet."]</p></div>
     }
     else
     {
-        <div class="table-responsive"><table class="table mb-0"><thead><tr><th>@L["Title"]</th><th>@L["Acknowledgment date"]</th></tr></thead><tbody>
-        @foreach (var a in acks) { <tr><td class="bidi"><i class="bi bi-check-circle-fill text-success"></i> <a asp-controller="Content" asp-action="Details" asp-route-id="@a.ContentId">@a.Content.Title</a></td><td>@Time.Html(a.AcknowledgedAt)</td></tr> }
-        </tbody></table></div>
+        <ul class="lx-achievements">
+            @foreach (var r in records)
+            {
+                <li>
+                    <span class="lx-ach-icon"><i class="bi @(r.IsAck ? "bi-pen" : "bi-book")"></i></span>
+                    <span class="lx-ach-main">
+                        <a class="bidi" asp-controller="Content" asp-action="Details" asp-route-id="@r.ContentId">@r.Title</a>
+                        <small>@L[r.IsAck ? "Acknowledged" : "Marked as read"] · @Time.Html(r.At)</small>
+                    </span>
+                </li>
+            }
+        </ul>
     }
 </section>

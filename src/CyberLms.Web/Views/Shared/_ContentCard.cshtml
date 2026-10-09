@@ -21,6 +21,7 @@
     @if (Model.HasRequirements)
     {
         <div class="lx-reqs">
+            @if (Model.IsReadingItem) { <span class="@(Model.Reading != null ? "ok" : "")"><i class="bi @(Model.Reading != null ? "bi-check-circle-fill" : "bi-book")"></i> @L["Reading"]</span> }
             @if (Model.RequiresAck) { <span class="@(Model.Ack != null ? "ok" : "")"><i class="bi @(Model.Ack != null ? "bi-check-circle-fill" : "bi-pen")"></i> @L["Acknowledgment"]</span> }
             @if (Model.Assessments.Count > 0)
             {

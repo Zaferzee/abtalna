@@ -21,11 +21,29 @@ public class LearningProgressTests
     private static string Steps(LearningItem i) => string.Join(" ", i.Steps.Select(s => $"{s.Key}:{s.State}"));
 
     [Fact]
-    public void Informational_content_has_nothing_to_complete()
+    public void Reading_item_is_completed_only_by_the_explicit_reading_completion()
     {
-        var i = LearningProgress.Build(C(false), null, []);
-        Assert.Equal(LearningState.Available, i.State);
-        Assert.False(i.HasRequirements);
+        var open = LearningProgress.Build(C(false), null, []);
+        Assert.True(open.IsReadingItem); Assert.True(open.HasRequirements);
+        Assert.Equal(LearningState.Available, open.State);
+        Assert.Equal("content:Current done:Upcoming", Steps(open));
+        var read = LearningProgress.Build(C(false), null, [], new ContentCompletion { ContentId = 1, UserId = 7, CompletedAt = new DateTime(2026, 3, 1) });
+        Assert.Equal(LearningState.Completed, read.State);
+        Assert.Equal(new DateTime(2026, 3, 1), read.CompletedAt);
+        Assert.Equal("content:Done done:Done", Steps(read));
+    }
+
+    [Fact]
+    public void Reading_completion_is_not_evidence_for_items_with_acknowledgment_or_assessment()
+    {
+        var rec = new ContentCompletion { ContentId = 1, UserId = 7 };
+        var ackItem = LearningProgress.Build(C(true), null, [], rec);
+        Assert.False(ackItem.IsReadingItem);
+        Assert.Equal(LearningState.AckRequired, ackItem.State);
+        var quizItem = LearningProgress.Build(C(false), null, [A()], rec);
+        Assert.False(quizItem.IsReadingItem);
+        Assert.Equal(LearningState.AssessmentAvailable, quizItem.State);
+        Assert.Null(quizItem.Reading);
     }
 
     [Fact]

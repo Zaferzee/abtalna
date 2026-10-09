@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberLms.Web.Services;
 
-/// <summary>Where an employee stands on one learning item (presentation only; derived from acknowledgments and attempts).</summary>
+/// <summary>Where an employee stands on one learning item (derived from acknowledgments, attempts and reading completions).</summary>
 public enum LearningState
 {
-    /// <summary>Informational content: nothing to acknowledge and no assessment.</summary>
+    /// <summary>Reading item (no acknowledgment, no assessment) that the user has not marked as read yet.</summary>
     Available,
     /// <summary>The content requires acknowledgment and the user has not acknowledged it (any linked assessment is locked).</summary>
     AckRequired,
@@ -18,7 +18,8 @@ public enum LearningState
     AssessmentInProgress,
     /// <summary>Completed attempts, none passed yet (see <see cref="LearningItem.CanRetry"/>).</summary>
     Failed,
-    /// <summary>Every requirement is met: acknowledged (if required) and every linked assessment passed.</summary>
+    /// <summary>Every requirement is met: acknowledged (if required) and every linked assessment passed; for a reading item,
+    /// the user marked it as read («تمت القراءة»).</summary>
     Completed,
 }
 
@@ -28,20 +29,24 @@ public record JourneyStep(string Key, StepState State);
 
 /// <summary>
 /// One learning item for one user: a published content item with its requirements, or a published assessment that is not linked
-/// to published content. Read-only view model; the authoritative data stays in acknowledgments and attempts.
+/// to published content. Read-only view model; the authoritative data stays in acknowledgments, attempts and reading completions.
 /// </summary>
 public class LearningItem
 {
     public Content? Content { get; init; }
     public UserAcknowledgment? Ack { get; init; }
+    /// <summary>The user's «تمت القراءة» record; only meaningful for a reading item.</summary>
+    public ContentCompletion? Reading { get; init; }
     public List<AssessmentListItem> Assessments { get; init; } = [];
     public LearningState State { get; init; }
     public List<JourneyStep> Steps { get; init; } = [];
     public bool RequiresAck => Content?.RequiresAcknowledgment == true;
-    /// <summary>Something has to be done for this item (acknowledgment and/or assessment).</summary>
-    public bool HasRequirements => RequiresAck || Assessments.Count > 0;
-    /// <summary>The user has acknowledged or attempted something.</summary>
-    public bool Started => Ack != null || Assessments.Any(a => a.CompletedAttempts > 0 || a.HasInProgress);
+    /// <summary>Content with neither acknowledgment nor assessment: completed by the explicit «تمت القراءة» action.</summary>
+    public bool IsReadingItem => Content != null && !RequiresAck && Assessments.Count == 0;
+    /// <summary>The item has a completion path (acknowledgment, assessment, or reading completion), so it counts toward progress.</summary>
+    public bool HasRequirements => IsReadingItem || RequiresAck || Assessments.Count > 0;
+    /// <summary>The user has acknowledged, attempted or marked as read.</summary>
+    public bool Started => Ack != null || Reading != null || Assessments.Any(a => a.CompletedAttempts > 0 || a.HasInProgress);
     public bool IsCompleted => State == LearningState.Completed;
     public DateTime? CompletedAt { get; init; }
     /// <summary>The assessment to take next (first one not passed yet).</summary>
@@ -56,10 +61,22 @@ public class LearningItem
 public static class LearningProgress
 {
     /// <summary>Builds the item from data that is already loaded (no database access): content, the user's acknowledgment of its
-    /// current version, and the linked published assessments with the user's status.</summary>
-    public static LearningItem Build(Content? content, UserAcknowledgment? ack, List<AssessmentListItem> assessments)
+    /// current version, the linked published assessments with the user's status, and (reading items only) the user's
+    /// «تمت القراءة» record for the current version.</summary>
+    public static LearningItem Build(Content? content, UserAcknowledgment? ack, List<AssessmentListItem> assessments, ContentCompletion? readRecord = null)
     {
         var requiresAck = content?.RequiresAcknowledgment == true;
+        if (content != null && !requiresAck && assessments.Count == 0)
+        {
+            // Reading item: the explicit completion is the only completion evidence (opening the page is not enough).
+            var read = readRecord != null;
+            return new LearningItem
+            {
+                Content = content, Reading = readRecord, Assessments = assessments,
+                State = read ? LearningState.Completed : LearningState.Available, CompletedAt = readRecord?.CompletedAt,
+                Steps = [new("content", read ? StepState.Done : StepState.Current), new("done", read ? StepState.Done : StepState.Upcoming)],
+            };
+        }
         var acked = !requiresAck || ack != null;
         var passedAll = assessments.All(a => a.Best?.Passed == true);
         var hasReq = requiresAck || assessments.Count > 0;
@@ -110,17 +127,20 @@ public static class LearningProgress
         var assessments = await asmQuery.OrderBy(a => a.Id).ToListAsync();
         var status = await AssessmentQueries.ForUser(db, userId, assessments);
         var acks = await db.UserAcknowledgments.AsNoTracking().Where(a => a.UserId == userId && cids.Contains(a.ContentId)).ToListAsync();
+        var reads = await db.ContentCompletions.AsNoTracking().Where(r => r.UserId == userId && cids.Contains(r.ContentId)).ToListAsync();
 
         var items = contents.Select(c => Build(c,
             acks.FirstOrDefault(a => a.ContentId == c.Id && a.ContentVersion == c.Version),
-            status.Where(s => s.Assessment.ContentId == c.Id).ToList())).ToList();
+            status.Where(s => s.Assessment.ContentId == c.Id).ToList(),
+            reads.FirstOrDefault(r => r.ContentId == c.Id && r.ContentVersion == c.Version))).ToList();
         if (contentId == null)
             items.AddRange(status.Where(s => s.Assessment.ContentId == null || !cids.Contains(s.Assessment.ContentId.Value))
                 .Select(s => Build(null, null, [s])));
         return items;
     }
 
-    /// <summary>Order for "what should I do next": started items first, then acknowledgment-required, then the rest; completed last.</summary>
+    /// <summary>Order for "what should I do next": started items first, then acknowledgment-required, then the rest;
+    /// reading items after the mandatory ones; completed last.</summary>
     public static int Priority(LearningItem i) => i.State switch
     {
         LearningState.AssessmentInProgress => 0,
@@ -129,6 +149,7 @@ public static class LearningProgress
         LearningState.AckRequired => 3,
         LearningState.AssessmentAvailable => 4,
         LearningState.Failed => 6,
+        LearningState.Available => 7,
         LearningState.Completed => 8,
         _ => 9,
     };

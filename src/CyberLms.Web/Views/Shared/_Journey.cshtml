@@ -39,7 +39,7 @@ else
         @foreach (var s in Model.Steps)
         {
             var st = s.State.ToString().ToLowerInvariant();
-            var anim = justAcked && (s.Key == "ack" || s.Key == "assessment" || s.Key == "content") ? "is-changing" : "";
+            var anim = justAcked && (s.Key == "ack" || s.Key == "assessment" || s.Key == "content" || (s.Key == "done" && Model.IsCompleted)) ? "is-changing" : "";
             <li class="j-step j-@st @anim" data-step="@s.Key" @(s.State == StepState.Current ? "aria-current=step" : "")>
                 <span class="j-node" aria-hidden="true">
                     <i class="bi j-ico @(s.State switch { StepState.Done => "bi-check-lg", StepState.Locked => "bi-lock-fill", StepState.Failed => "bi-arrow-counterclockwise", _ => Icon(s.Key) })" data-icon="@Icon(s.Key)"></i>

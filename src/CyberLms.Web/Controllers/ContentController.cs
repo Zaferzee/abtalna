@@ -52,7 +52,8 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
         {
             Content = c, Preview = preview, AckText = authoring.AckText(c),
             // An administrator previewing unpublished content cannot acknowledge it: the page behaves like the wizard's preview.
-            Interactive = !preview, JustAcknowledged = TempData["AckDone"] is true,
+            Interactive = !preview, JustAcknowledged = TempData["AckDone"] is true, JustRead = TempData["ReadDone"] is true,
+            Reading = await db.ContentCompletions.AsNoTracking().FirstOrDefaultAsync(r => r.UserId == uid && r.ContentId == id && r.ContentVersion == c.Version),
             Ack = await db.UserAcknowledgments.AsNoTracking().FirstOrDefaultAsync(a => a.UserId == uid && a.ContentId == id && a.ContentVersion == c.Version),
             Related = await AssessmentQueries.ForUser(db, uid, related),
         });
@@ -71,5 +72,29 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
             catch (DbUpdateException) { /* double click: unique index already holds the first acknowledgment */ }
         }
         return RedirectToAction(nameof(Details), null, new { id }, "sec-ack");
+    }
+
+    /// <summary>
+    /// «تمت القراءة»: explicit completion of a reading item, i.e. published content with neither an acknowledgment nor a published
+    /// assessment (those remain the completion evidence of other items, so they are refused here). Idempotent per content version.
+    /// </summary>
+    [HttpPost]
+    public async Task<IActionResult> Complete(int id)
+    {
+        var c = await db.Contents.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.Status == ContentStatus.Published);
+        if (c == null) return NotFound();
+        if (c.RequiresAcknowledgment || await db.Assessments.AnyAsync(a => a.ContentId == id && a.IsPublished && a.Questions.Any()))
+        {
+            Failure("This item is completed through its acknowledgment or assessment.");
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        var uid = User.UserId();
+        if (!await db.ContentCompletions.AnyAsync(r => r.UserId == uid && r.ContentId == id && r.ContentVersion == c.Version))
+        {
+            db.ContentCompletions.Add(new ContentCompletion { UserId = uid, ContentId = id, ContentVersion = c.Version });
+            try { await db.SaveChangesAsync(); TempData["ReadDone"] = true; }
+            catch (DbUpdateException) { /* double click: the unique index already holds the first record */ }
+        }
+        return RedirectToAction(nameof(Details), null, new { id }, "sec-read");
     }
 }

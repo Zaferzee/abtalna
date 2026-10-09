@@ -104,4 +104,97 @@ public class LearningExperienceTests(TestApp app) : IClassFixture<TestApp>
         Assert.Equal(1, await app.Db(d => d.UserAcknowledgments.CountAsync(a => a.ContentId == id)));
         Assert.Equal(2, await app.Db(d => d.AssessmentAttempts.CountAsync(a => a.AssessmentId == aid && a.Status == AttemptStatus.Completed)));
     }
+
+    private async Task<int> NewContent(HttpClient admin, string title, bool ack, bool publish = true)
+    {
+        var w = (await admin.PostForm("/Admin/Authoring/New", "/Admin/Authoring/Basics", [F("Title", title), F("Type", "2"), F("go", "next")])).Headers.Location!.ToString();
+        var id = int.Parse(w.Split('/').Last());
+        (await admin.PostMultipart($"/Admin/Authoring/Write/{id}", $"/Admin/Authoring/Write/{id}", mp => { mp.Add(new StringContent("<p>محتوى توعوي.</p>"), "Body"); mp.Add(new StringContent("next"), "go"); })).EnsureRedirect();
+        var a = new List<KeyValuePair<string, string>> { F("go", "next") };
+        if (ack) a.Add(F("RequiresAcknowledgment", "true"));
+        (await admin.PostForm($"/Admin/Authoring/Acknowledgment/{id}", $"/Admin/Authoring/Acknowledgment/{id}", a)).EnsureRedirect();
+        if (publish) (await admin.PostForm($"/Admin/Authoring/Publish/{id}", $"/Admin/Authoring/Publish/{id}", [F("go", "publish")])).EnsureRedirect();
+        return id;
+    }
+
+    [Fact]
+    public async Task Reading_item_is_completed_only_by_the_explicit_server_side_action()
+    {
+        var admin = await AdminAsync();
+        var title = "Reading " + Guid.NewGuid().ToString("N")[..6];
+        var id = await NewContent(admin, title, ack: false);
+        var ackId = await NewContent(admin, "Ack " + Guid.NewGuid().ToString("N")[..6], ack: true);
+        var draftId = await NewContent(admin, "Draft " + Guid.NewGuid().ToString("N")[..6], ack: false, publish: false);
+        var name = "rd." + Guid.NewGuid().ToString("N")[..8];
+        (await admin.PostForm("/Admin/Users/Create", "/Admin/Users/Create", [F("Username", name), F("DisplayName", "موظف"), F("AuthSource", "Local"), F("Password", UserPass), F("IsActive", "true")])).EnsureRedirect();
+        var emp = await LoginAsync(name, UserPass, "Rd#NewPass1234");
+        var uid = await app.Db(d => d.Users.Where(u => u.Username == name).Select(u => u.Id).SingleAsync());
+        Task<int> Reads(int cid) => app.Db(d => d.ContentCompletions.CountAsync(r => r.UserId == uid && r.ContentId == cid));
+
+        // opening the page does not complete it; the explicit action is offered
+        var page = await emp.GetStringAsync($"/Content/Details/{id}");
+        Assert.Contains($"/Content/Complete/{id}", page);
+        Assert.Contains("تمت القراءة", page);
+        Assert.Equal("content:current done:upcoming", Journey(page));
+        Assert.Equal(0, await Reads(id));
+        Assert.Contains(title, (await emp.GetStringAsync("/"))[..]);                   // listed as a task on the dashboard
+
+        // explicit completion: persisted once, success state, journey and completion card
+        var r = await emp.PostForm($"/Content/Details/{id}", $"/Content/Complete/{id}", []);
+        Assert.Equal($"/Content/Details/{id}#sec-read", r.Headers.Location!.ToString());
+        page = await emp.GetStringAsync($"/Content/Details/{id}");
+        Assert.Contains("تم تسجيل إكمال القراءة", page);
+        Assert.Contains("id=\"sec-complete\"", page);
+        Assert.Equal("content:done done:done", Journey(page));
+        Assert.DoesNotContain($"/Content/Complete/{id}", page);
+        (await emp.PostForm($"/Content/Details/{id}", $"/Content/Complete/{id}", [])).EnsureRedirect();
+        Assert.Equal(1, await Reads(id));                                                  // no duplicate
+        var dash = await emp.GetStringAsync("/");
+        var ach = dash[dash.IndexOf("lx-achievements", StringComparison.Ordinal)..];
+        Assert.Contains(title, ach[..ach.IndexOf("</ul>", StringComparison.Ordinal)]);
+
+        // not for content whose completion is its acknowledgment (or assessment), and not for unpublished content
+        Assert.DoesNotContain($"/Content/Complete/{ackId}", await emp.GetStringAsync($"/Content/Details/{ackId}"));
+        (await emp.PostForm($"/Content/Details/{ackId}", $"/Content/Complete/{ackId}", [])).EnsureRedirect();
+        Assert.Equal(0, await Reads(ackId));
+        Assert.Equal(0, await app.Db(d => d.UserAcknowledgments.CountAsync(a => a.UserId == uid && a.ContentId == ackId)));
+        Assert.Equal(HttpStatusCode.NotFound, (await emp.PostForm($"/Content/Details/{id}", $"/Content/Complete/{draftId}", [])).StatusCode);
+        // another user is not affected
+        Assert.Equal(1, await app.Db(d => d.ContentCompletions.CountAsync(x => x.ContentId == id)));
+    }
+
+    [Fact]
+    public async Task After_passing_the_assessment_list_offers_the_result_not_another_attempt()
+    {
+        var admin = await AdminAsync();
+        var id = await NewContent(admin, "Passed " + Guid.NewGuid().ToString("N")[..6], ack: false, publish: false);
+        var aUrl = $"/Admin/Authoring/Assessment/{id}";
+        (await admin.PostForm(aUrl, $"/Admin/Authoring/AssessmentSettings/{id}", [F("include", "true"), F("Settings.Title", "اختبار بعد النجاح"), F("Settings.PassingPercentage", "50"), F("Settings.MaxAttempts", "0"), F("go", "stay")])).EnsureRedirect();
+        (await admin.PostForm(aUrl, $"/Admin/Authoring/SaveQuestion/{id}", [F("Question.Text", "يجوز مشاركة كلمة المرور."), F("Question.Type", "2"), F("Question.Points", "1"), F("Question.TrueIsCorrect", "false")])).EnsureRedirect();
+        (await admin.PostForm($"/Admin/Authoring/Publish/{id}", $"/Admin/Authoring/Publish/{id}", [F("go", "publish")])).EnsureRedirect();
+        var aid = await app.Db(d => d.Assessments.Where(a => a.ContentId == id).Select(a => a.Id).SingleAsync());
+        var q = await app.Db(d => d.Questions.Include(x => x.Options).SingleAsync(x => x.AssessmentId == aid));
+        var name = "ps." + Guid.NewGuid().ToString("N")[..8];
+        (await admin.PostForm("/Admin/Users/Create", "/Admin/Users/Create", [F("Username", name), F("DisplayName", "موظف"), F("AuthSource", "Local"), F("Password", UserPass), F("IsActive", "true")])).EnsureRedirect();
+        var emp = await LoginAsync(name, UserPass, "Ps#NewPass1234");
+
+        var take = (await emp.PostForm("/Assessments", $"/Assessments/Start/{aid}", [])).Headers.Location!.ToString();
+        var attempt = take.Split('/').Last();
+        (await emp.PostForm(take, $"/Assessments/Submit/{attempt}", [F($"q_{q.Id}", q.Options.Single(o => o.IsCorrect).Id.ToString())])).EnsureRedirect();
+
+        // passed, unlimited attempts: the list's primary action is the result; no "retry" is offered anywhere in the passed state
+        var list = await emp.GetStringAsync("/Assessments");
+        Assert.Contains($"/Assessments/Result/{attempt}", list);
+        Assert.DoesNotContain($"action=\"/Assessments/Start/{aid}\"", list);
+        Assert.DoesNotContain($"/Assessments/Start/{aid}", await emp.GetStringAsync($"/Assessments/Result/{attempt}"));
+        Assert.DoesNotContain($"/Assessments/Start/{aid}", await emp.GetStringAsync($"/Content/Details/{id}"));
+        // backend compatibility (unchanged rule): a new attempt can still be started by a direct request within MaxAttempts;
+        // history is kept and the passed result stays the best one
+        var again = await emp.PostForm("/Assessments", $"/Assessments/Start/{aid}", []);
+        Assert.Contains("/Assessments/Take/", again.Headers.Location!.ToString());
+        list = await emp.GetStringAsync("/Assessments");
+        Assert.Contains($"/Assessments/Result/{attempt}", list);
+        Assert.Contains("متابعة المحاولة المفتوحة", list);
+        Assert.Equal(2, await app.Db(d => d.AssessmentAttempts.CountAsync(a => a.AssessmentId == aid)));
+    }
 }
