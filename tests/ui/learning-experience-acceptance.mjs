@@ -142,7 +142,7 @@ await shot(e, '13-dashboard-after-completion', 'لوحة الموظف بعد ا�
 await e.goto(base + '/Assessments'); await e.waitForLoadState('networkidle');
 await shot(e, '14-assessments-list', 'قائمة الاختبارات: الحالة، المحتوى المرتبط، والإجراء التالي');
 await e.goto(base + '/MyResults'); await e.waitForLoadState('networkidle');
-ok((await e.locator('.result-row').count()) >= 2, 'My Results lists the failed and the passed attempt');
+ok((await e.locator('.lx-res').count()) >= 2, 'My Results lists the failed and the passed attempt');
 await e.context().close();
 
 // ================= MOTION RECORDINGS =================
