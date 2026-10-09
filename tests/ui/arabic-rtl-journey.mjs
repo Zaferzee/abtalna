@@ -50,10 +50,12 @@ await a.goto(base + '/Admin/Dashboard'); await shot(a, '05-admin-dashboard');
 await a.goto(base + '/Admin/Settings');
 await a.fill('[name=OrgName]', 'شركة الأمان الرقمي'); await a.fill('[name=SystemName]', 'منصة التوعية بالأمن السيبراني');
 await a.fill('[name=FooterText]', 'جميع الحقوق محفوظة - إدارة الأمن السيبراني'); await a.fill('[name=WelcomeText]', 'نرحب بكم في منصة التوعية والامتثال بالأمن السيبراني.');
-await a.fill('[name=LoginSubtitle]', 'للاستخدام الداخلي المصرّح به فقط.');
-await a.setInputFiles('input[name=logo]', `${L}/logo.png`);
+// the Branding & Appearance studio groups its fields in sections
+await a.click('[data-studio-tab="text"]'); await a.fill('[name=LoginSubtitle]', 'للاستخدام الداخلي المصرّح به فقط.');
+await a.click('[data-studio-tab="logos"]'); await a.setInputFiles('input[name=logo]', `${L}/logo.png`);
+await a.click('[data-studio-tab="identity"]');
 await shot(a, '06-settings-branding');
-await a.click('button:has-text("حفظ الهوية البصرية")'); await shot(a, '07-settings-saved');
+await a.click('[data-studio-save]'); await shot(a, '07-settings-saved');
 await a.click('button[data-bs-target="#t-mail"]'); await shot(a, '08-settings-smtp', false);
 await a.click('button[data-bs-target="#t-general"]'); await shot(a, '09-settings-general', false);
 

@@ -7,7 +7,6 @@
     var navPolicies = act == "Policies" || (string?)ViewData["Nav"] == "Policies";
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "";
     var initial = displayName.Trim().Length > 0 ? displayName.Trim()[0].ToString() : "؟";
-    var monogram = b.SystemName.Trim().Length > 0 ? b.SystemName.Trim()[0].ToString() : "•";
     string Active(string c, bool admin = false) => ctl == c && isAdminArea == admin ? "active" : "";
     string Aria(string c, bool admin = false) => ctl == c && isAdminArea == admin ? "page" : "false";
 }
@@ -16,8 +15,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " - " : "")@b.SystemName</title>
-    @if (b.HasFavicon) { <link rel="icon" href="~/Files/Brand?kind=favicon&v=@b.Version" /> }
+    <title>@(ViewData["Title"] != null ? ViewData["Title"] + " - " : "")@b.SystemNameInline</title>
+    @if (b.HasFavicon) { <link rel="icon" href="@b.AssetUrl("favicon")" /> }
     <link rel="stylesheet" href="~/lib/bootstrap/@(L.IsRtl ? "bootstrap.rtl.min.css" : "bootstrap.min.css")" />
     <link rel="stylesheet" href="~/lib/icons/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
@@ -25,6 +24,7 @@
     <link rel="stylesheet" href="~/branding/theme.css?v=@b.Version" />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/learning.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
     @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="app @(isAdminArea ? "is-admin" : "is-portal")" data-t-confirm="@L["Confirm"]" data-t-cancel="@L["Cancel"]" data-t-confirm-title="@L["Confirmation"]"
@@ -34,9 +34,7 @@
 <div class="shell">
     <aside class="sidebar scrollbar-soft" id="sidebar" aria-label="@L["Main menu"]">
         <a class="sb-brand" href="~/">
-            @if (b.HasLogo) { <span class="sb-logo"><img src="~/Files/Brand?kind=logo&v=@b.Version" alt="@b.OrgName" /></span> }
-            else { <span class="sb-mono" aria-hidden="true">@monogram</span> }
-            <span class="sb-names"><strong>@b.SystemName</strong><small>@b.OrgName</small></span>
+            <partial name="_SidebarBrand" model="b" />
         </a>
         <nav class="sb-nav">
             @if (isAdmin && isAdminArea)

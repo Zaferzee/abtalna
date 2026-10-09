@@ -11,15 +11,11 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
 {
     private SettingsVm Load()
     {
-        var b = Branding.From(settings);
         var s = smtp.Get();
         return new SettingsVm
         {
             BaseUrl = settings.Get("App.BaseUrl"), DefaultLanguage = settings.Get("General.DefaultLanguage", "en")!,
-            OrgName = b.OrgName, SystemName = b.SystemName, PrimaryColor = b.PrimaryColor, SecondaryColor = b.SecondaryColor, AccentColor = b.AccentColor,
-            HeaderColor = b.HeaderColor, HeaderTextColor = b.HeaderTextColor, SidebarColor = b.SidebarColor, SidebarTextColor = b.SidebarTextColor,
-            LoginTitle = b.LoginTitle, LoginSubtitle = b.LoginSubtitle, LoginBackgroundColor = b.LoginBackgroundColor, WelcomeText = b.WelcomeText, FooterText = b.FooterText,
-            HasLogo = b.HasLogo, HasFavicon = b.HasFavicon, HasLoginBackground = b.HasLoginBackground,
+            Brand = Branding.From(settings),
             SmtpHost = s.Host, SmtpPort = s.Port, SmtpSender = s.Sender, SmtpSenderName = s.SenderName, SmtpUsername = s.Username,
             SmtpSecurity = settings.Get("Smtp.Security", cfg["Smtp:Security"] ?? "Auto")!, SmtpPasswordConfigured = !string.IsNullOrEmpty(s.Password),
         };
@@ -38,62 +34,98 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Saves the Branding & Appearance studio. Every field is validated against the catalogue in <see cref="Branding"/>:
+    /// colors must be #RRGGBB, choices must be one of the allowed values, numbers are clamped, texts are trimmed and limited.
+    /// Fields that are not part of the submission keep their saved value. Uploads use the existing image checks.
+    /// </summary>
     [HttpPost]
-    public async Task<IActionResult> SaveBranding(SettingsVm vm, IFormFile? logo, IFormFile? favicon, IFormFile? loginBackground, bool removeLogo, bool removeFavicon, bool removeLoginBackground)
+    public async Task<IActionResult> SaveBranding(IFormFile? logo, IFormFile? loginLogo, IFormFile? icon, IFormFile? favicon, IFormFile? loginBackground)
     {
-        var colors = new (string Label, string Value)[]
-        {
-            (L["Primary color"], vm.PrimaryColor), (L["Secondary color"], vm.SecondaryColor), (L["Accent color"], vm.AccentColor), (L["Header background"], vm.HeaderColor),
-            (L["Header text"], vm.HeaderTextColor), (L["Sidebar background"], vm.SidebarColor), (L["Sidebar text"], vm.SidebarTextColor), (L["Login page background"], vm.LoginBackgroundColor),
-        };
-        var bad = colors.Where(c => !Branding.ColorRegex.IsMatch(c.Value ?? "")).Select(c => c.Label).ToList();
-        if (bad.Count > 0) { Failure("Invalid color for: {0} (use #RRGGBB).", string.Join(L.Sep, bad)); return RedirectToAction(nameof(Index)); }
-        if (string.IsNullOrWhiteSpace(vm.OrgName) || string.IsNullOrWhiteSpace(vm.SystemName)) { Failure("Organization name and system name are required."); return RedirectToAction(nameof(Index)); }
+        var form = Request.Form;
+        string? F(string name) => form.TryGetValue(name, out var v) ? v.ToString() : null;
+        var values = new Dictionary<string, string?>();
 
-        static string Cut(string? s, int n) { s = s?.Trim() ?? ""; return s.Length > n ? s[..n] : s; }
-        var values = new Dictionary<string, string?>
+        var bad = new List<string>();
+        foreach (var (name, def) in Branding.Colors)
         {
-            [Branding.Keys.OrgName] = Cut(vm.OrgName, 150), [Branding.Keys.SystemName] = Cut(vm.SystemName, 150),
-            [Branding.Keys.Primary] = vm.PrimaryColor, [Branding.Keys.Secondary] = vm.SecondaryColor, [Branding.Keys.Accent] = vm.AccentColor,
-            [Branding.Keys.Header] = vm.HeaderColor, [Branding.Keys.HeaderText] = vm.HeaderTextColor,
-            [Branding.Keys.Sidebar] = vm.SidebarColor, [Branding.Keys.SidebarText] = vm.SidebarTextColor, [Branding.Keys.LoginBg] = vm.LoginBackgroundColor,
-            [Branding.Keys.LoginTitle] = Cut(vm.LoginTitle, 150), [Branding.Keys.LoginSubtitle] = Cut(vm.LoginSubtitle, 500),
-            [Branding.Keys.Welcome] = Cut(vm.WelcomeText, 1000), [Branding.Keys.Footer] = Cut(vm.FooterText, 500),
-        };
+            var v = F(name)?.Trim(); if (v == null) continue;
+            if (v.Length == 0) values[Branding.Key(name)] = null;                       // back to the default (or automatic)
+            else if (Branding.ColorRegex.IsMatch(v)) values[Branding.Key(name)] = v.ToLowerInvariant();
+            else bad.Add(L[ColorLabel(name)]);
+        }
+        if (bad.Count > 0) { Failure("Invalid color for: {0} (use #RRGGBB).", string.Join(L.Sep, bad)); return RedirectToAction(nameof(Index)); }
+        if (F("OrgName") is { } on && string.IsNullOrWhiteSpace(on) || F("SystemName") is { } sn && string.IsNullOrWhiteSpace(sn))
+        { Failure("Organization name and system name are required."); return RedirectToAction(nameof(Index)); }
+
+        foreach (var (name, max, multi) in Branding.Texts)
+        {
+            var v = F(name); if (v == null) continue;
+            v = v.Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+            v = multi ? System.Text.RegularExpressions.Regex.Replace(v, "\n{3,}", "\n\n") : Branding.Inline(v);
+            values[Branding.Key(name)] = v.Length == 0 ? null : v.Length > max ? v[..max] : v;
+        }
+        foreach (var (name, allowed) in Branding.Choices)
+            if (F(name) is { } v) values[Branding.Key(name)] = allowed.Contains(v) ? v : allowed[0];
+        foreach (var (name, min, max, def) in Branding.Numbers)
+            if (F(name) is { } v) values[Branding.Key(name)] = (int.TryParse(v.Trim(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var n) ? Math.Clamp(n, min, max) : def).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        foreach (var (name, _) in Branding.Flags)
+            if (form.TryGetValue(name, out var v)) values[Branding.Key(name)] = v.Contains("true") ? "true" : "false";   // hidden "false" + checkbox "true"
+        if (F("Preset") is { } preset) values[Branding.Keys.Preset] = BrandingPresets.All.Any(p => p.Id == preset) ? preset : null;
+
+        // assets: upload replaces, "remove<Field>" clears; old files are deleted after saving
         var oldFiles = new List<string?>();
         var errors = new List<string>();
-        async Task Handle(IFormFile? file, bool remove, string key, string label)
+        var uploads = new Dictionary<string, IFormFile?> { ["logo"] = logo, ["loginLogo"] = loginLogo, ["icon"] = icon, ["favicon"] = favicon, ["loginBackground"] = loginBackground };
+        foreach (var (field, key, kind) in Branding.Assets)
         {
+            var file = uploads[field];
+            var remove = F("remove" + char.ToUpperInvariant(field[0]) + field[1..]) == "true";
             if (file is { Length: > 0 })
             {
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var allowedExt = kind == "favicon" ? new[] { ".ico", ".png" } : new[] { ".png", ".jpg", ".jpeg", ".webp", ".gif" };
+                if (!allowedExt.Contains(ext)) { errors.Add($"{L[AssetLabel(kind)]}: {L.Format("This file type is not allowed ({0}).", ext)}"); continue; }
                 var (err, stored) = await storage.SaveAsync(file, "branding", [AttachmentKind.Image]);
-                if (err != null) { errors.Add($"{label}: {L.Format(err.Key, err.Args)}"); return; }
+                if (err != null) { errors.Add($"{L[AssetLabel(kind)]}: {L.Format(err.Key, err.Args)}"); continue; }
                 oldFiles.Add(settings.Get(key)); values[key] = stored!.RelativePath;
             }
             else if (remove) { oldFiles.Add(settings.Get(key)); values[key] = null; }
         }
-        await Handle(logo, removeLogo, Branding.Keys.Logo, L["Logo"]);
-        await Handle(favicon, removeFavicon, Branding.Keys.Favicon, L["Favicon"]);
-        await Handle(loginBackground, removeLoginBackground, Branding.Keys.LoginBgImage, L["Login background image"]);
         values[Branding.Keys.Version] = DateTime.UtcNow.Ticks.ToString(); // cache-busts logo/theme URLs => visible immediately
         await settings.SaveAsync(db, values);
         oldFiles.ForEach(storage.Delete);
         audit.Add("BRANDING_UPDATED", "Settings", "Branding"); await db.SaveChangesAsync();
         TempData[errors.Count > 0 ? "Error" : "Success"] = errors.Count > 0 ? L.Format("Saved, but: {0}", string.Join(" ", errors)) : L["Branding saved and applied."];
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), null, null, "t-brand");
     }
+
+    public static string ColorLabel(string name) => name switch
+    {
+        "PrimaryColor" => "Primary color", "SecondaryColor" => "Secondary color", "AccentColor" => "Accent color",
+        "BackgroundColor" => "Page background", "SurfaceColor" => "Cards and surfaces",
+        "HeaderColor" => "Header background", "HeaderTextColor" => "Header text", "SidebarColor" => "Sidebar background", "SidebarTextColor" => "Sidebar text",
+        "ButtonColor" => "Button color", "ButtonTextColor" => "Button text", "HeroTextColor" => "Welcome banner text",
+        "LoginBackgroundColor" => "Login page background", "LoginTextColor" => "Login hero text", "LoginOverlayColor" => "Image overlay color",
+        _ => name,
+    };
+
+    public static string AssetLabel(string kind) => kind switch
+    {
+        "logo" => "Sidebar logo", "loginlogo" => "Login logo", "icon" => "Compact logo (icon)", "favicon" => "Favicon", _ => "Login background image",
+    };
 
     [HttpPost]
     public async Task<IActionResult> ResetBranding()
     {
-        var old = new[] { Branding.Keys.Logo, Branding.Keys.Favicon, Branding.Keys.LoginBgImage }.Select(k => settings.Get(k)).ToList();
-        var keys = typeof(Branding.Keys).GetFields().Select(f => (string)f.GetRawConstantValue()!).ToDictionary(k => k, _ => (string?)null);
+        var old = Branding.Assets.Select(a => settings.Get(a.Key)).ToList();
+        var keys = Branding.AllKeys.Distinct().ToDictionary(k => k, _ => (string?)null);
         keys[Branding.Keys.Version] = DateTime.UtcNow.Ticks.ToString();
         await settings.SaveAsync(db, keys);
         old.ForEach(storage.Delete);
         audit.Add("BRANDING_RESET", "Settings", "Branding"); await db.SaveChangesAsync();
         Success("Branding reset to defaults.");
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), null, null, "t-brand");
     }
 
     [HttpPost]

@@ -3,15 +3,14 @@
     Layout = null;
     var b = Brand.Current;
     var auth = (AuthService)ViewBag.Auth;
-    var monogram = b.SystemName.Trim().Length > 0 ? b.SystemName.Trim()[0].ToString() : "•";
     var hasErrors = !ViewData.ModelState.IsValid;
-    string? heroStyle = b.HasLoginBackground ? $"--hero-image:url('/Files/Brand?kind=loginbg&v={b.Version}')" : null;
+    var logoInCard = b.HasLoginLogo && b["LoginLogoPlacement"] is "card" or "both";
 }
 <!DOCTYPE html>
 <html lang="@L.Lang" dir="@L.Dir">
 <head>
     <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@b.LoginTitle - @b.SystemName</title>
+    <title>@b.LoginTitle - @b.SystemNameInline</title>
     @if (b.HasFavicon) { <link rel="icon" href="~/Files/Brand?kind=favicon&v=@b.Version" /> }
     <link rel="stylesheet" href="~/lib/bootstrap/@(L.IsRtl ? "bootstrap.rtl.min.css" : "bootstrap.min.css")" />
     <link rel="stylesheet" href="~/lib/icons/bootstrap-icons.min.css" />
@@ -19,36 +18,19 @@
     <link rel="stylesheet" href="~/css/ds.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/branding/theme.css?v=@b.Version" />
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
 </head>
 <body class="auth-body">
 <a class="skip-link" href="#login-form">@L["Skip to content"]</a>
-<div class="auth">
-    <section class="auth-hero @(b.HasLoginBackground ? "has-image" : "")" style="@heroStyle">
-        <span class="auth-orb o1" aria-hidden="true"></span><span class="auth-orb o2" aria-hidden="true"></span>
-        <svg class="auth-shield" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 4 112 24v40c0 34-22 60-52 72C30 124 8 98 8 64V24Z" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="m38 70 15 15 30-32" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div class="auth-brand reveal">
-            @if (b.HasLogo) { <span class="sb-logo"><img src="~/Files/Brand?kind=logo&v=@b.Version" alt="@b.OrgName" /></span> }
-            else { <span class="sb-mono" aria-hidden="true">@monogram</span> }
-            <span class="auth-brand-names"><strong class="bidi">@b.SystemName</strong><small class="bidi">@b.OrgName</small></span>
-        </div>
-        <div class="auth-hero-inner">
-            <span class="auth-kicker reveal" style="--i:1"><i class="bi bi-shield-lock"></i> @L["Cybersecurity awareness"]</span>
-            <h1 class="auth-title reveal bidi" style="--i:2">@b.SystemName</h1>
-            <p class="auth-lead reveal" style="--i:3">@L["Learn the policies, controls and safe practices that protect our organization - in short, clear lessons."]</p>
-            <ul class="auth-points">
-                <li class="reveal" style="--i:4"><i class="bi bi-journal-check"></i><span>@L["Policies and controls in one place"]</span></li>
-                <li class="reveal" style="--i:5"><i class="bi bi-ui-checks-grid"></i><span>@L["Short interactive assessments"]</span></li>
-                <li class="reveal" style="--i:6"><i class="bi bi-graph-up-arrow"></i><span>@L["Track your progress and acknowledgments"]</span></li>
-            </ul>
-        </div>
-        <div class="auth-hero-foot bidi">@b.OrgName</div>
-    </section>
+<div class="auth @b.LoginClasses">
+    <partial name="_LoginHero" model="b" />
 
     <section class="auth-panel">
         <div class="auth-card reveal" style="--i:2">
+            @if (logoInCard) { <div class="auth-card-logo"><img src="@b.LoginLogoUrl" alt="@b.OrgNameInline" /></div> }
             <h2 class="bidi">@b.LoginTitle</h2>
-            <p class="auth-sub">@L["Welcome back. Sign in to continue your learning."]</p>
-            @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <div class="alert alert-info bidi"><i class="bi bi-info-circle-fill"></i><span>@b.LoginSubtitle</span></div> }
+            <p class="auth-sub bidi">@b["LoginCardSubtitle"]</p>
+            @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <div class="alert alert-info bidi"><i class="bi bi-info-circle-fill"></i><span class="ml">@b.LoginSubtitle</span></div> }
             @if (ViewBag.SignedOut == true) { <div class="alert alert-success" role="status"><i class="bi bi-check-circle-fill"></i><span>@L["You have been signed out."]</span></div> }
             @if (TempData["Error"] is string te) { <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-octagon-fill"></i><span>@te</span></div> }
             @if (Model.Error != null) { <div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-octagon-fill"></i><span>@Model.Error</span></div> }
@@ -75,6 +57,7 @@
                 <a class="btn btn-outline-primary btn-lg w-100" asp-action="WindowsLogin" asp-route-returnUrl="@Model.ReturnUrl"><i class="bi bi-windows"></i> @L["Sign in with Windows account"]</a>
             }
             <div class="auth-secure"><i class="bi bi-shield-check"></i> @L["Protected connection - for authorized users only"]</div>
+            @if (!string.IsNullOrWhiteSpace(b["SupportText"])) { <div class="auth-support ml bidi"><i class="bi bi-headset"></i> <span>@b["SupportText"]</span></div> }
         </div>
         <div class="auth-foot">
             <form method="post" asp-action="SetLanguage" class="m-0">

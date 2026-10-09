@@ -1,0 +1,365 @@
+@model SettingsVm
+@using CyberLms.Web.Areas.Admin.Controllers
+@*
+    استوديو الهوية والمظهر (Branding & Appearance studio). Five editor sections and a live preview that renders the real login
+    and application markup (_LoginHero, _SidebarBrand, real component classes) with the values being edited.
+    Behaviour: wwwroot/js/branding-studio.js (no inline script; CSP unchanged). Saving goes through SettingsController.SaveBranding,
+    which validates every value again.
+*@
+@{
+    var b = Model.Brand;
+    var presetsJson = System.Text.Json.JsonSerializer.Serialize(BrandingPresets.All.Select(p => new { p.Id, p.Colors }));
+    var defaults = System.Text.Json.JsonSerializer.Serialize(Branding.Colors.ToDictionary(c => c.Name, c => c.Default));
+    string Ph(string field) => Branding.DefaultText(field, null, b.SystemName);
+    var previewData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData) { ["preview"] = true };
+}
+@{
+    void TextField(string name, string label, string? help = null, bool multi = false, int rows = 2)
+    {
+        var max = Branding.Texts.First(t => t.Name == name).Max;
+        <div class="st-field">
+            <label class="form-label" for="f-@name">@L[label]</label>
+            @if (multi)
+            {
+                <textarea class="form-control bidi" id="f-@name" name="@name" rows="@rows" maxlength="@max" placeholder="@Ph(name)" data-b-input="@name">@Model.Brand.Raw(name)</textarea>
+            }
+            else
+            {
+                <input class="form-control bidi" id="f-@name" name="@name" value="@Model.Brand.Raw(name)" maxlength="@max" placeholder="@Ph(name)" data-b-input="@name" />
+            }
+            @if (help != null) { <div class="form-text">@L[help]</div> }
+        </div>
+    }
+    void Toggle(string name, string label, string? help = null)
+    {
+        <div class="st-toggle form-check form-switch">
+            <input type="hidden" name="@name" value="false" />
+            <input class="form-check-input" type="checkbox" role="switch" id="f-@name" name="@name" value="true" checked="@Model.Brand.Flag(name)" data-b-flag="@name" />
+            <label class="form-check-label" for="f-@name">@L[label]@if (help != null) { <small class="d-block text-muted">@L[help]</small> }</label>
+        </div>
+    }
+    void Swatch(string name, bool optional = false)
+    {
+        var raw = Model.Brand.Raw(name); var shown = Branding.ColorRegex.IsMatch(Model.Brand[name]) ? Model.Brand[name] : (name == "ButtonColor" ? Model.Brand.ButtonColor : Model.Brand.ButtonTextColor);
+        <div class="swatch @(optional ? "is-optional" : "")" data-swatch="@name">
+            <input type="color" value="@shown" aria-label="@L[SettingsController.ColorLabel(name)]" data-color-for="@name" />
+            <div class="sw-text">
+                <label for="f-@name">@L[SettingsController.ColorLabel(name)]</label>
+                <input class="sw-hex" dir="ltr" id="f-@name" name="@name" value="@(optional ? raw : Model.Brand[name])" maxlength="7" spellcheck="false" autocomplete="off" placeholder="@(optional ? L["Automatic"] : "")" data-b-color="@name" />
+            </div>
+            @if (optional) { <button type="button" class="btn btn-ghost btn-sm sw-auto" data-color-auto="@name" title="@L["Automatic"]"><i class="bi bi-magic"></i></button> }
+        </div>
+    }
+    void Segmented(string name, string label, (string Value, string Text, string Icon)[] options)
+    {
+        <div class="st-field">
+            <div class="form-label">@L[label]</div>
+            <div class="seg-control st-seg" role="radiogroup" aria-label="@L[label]">
+                @foreach (var o in options)
+                {
+                    <label class="@(Model.Brand[name] == o.Value ? "active" : "")"><input type="radio" name="@name" value="@o.Value" checked="@(Model.Brand[name] == o.Value)" data-b-choice="@name" /><i class="bi @o.Icon"></i> @L[o.Text]</label>
+                }
+            </div>
+        </div>
+    }
+    void Asset(string field, string kind, string title, string help, string icon, string accept)
+    {
+        var has = Model.Brand.Has(kind);
+        var removeName = "remove" + char.ToUpperInvariant(field[0]) + field[1..];
+        <div class="asset-tile" data-asset="@kind" data-has="@(has ? "true" : "false")">
+            <div class="at-thumb @(kind == "loginbg" ? "is-wide" : "")">
+                @if (has) { <img src="@Model.Brand.AssetUrl(kind)" alt="" data-asset-img data-saved="@Model.Brand.AssetUrl(kind)" /> } else { <img alt="" data-asset-img data-saved="" hidden /> }
+                <i class="bi @icon at-empty" @(has ? "hidden" : "")></i>
+            </div>
+            <div class="at-main">
+                <strong>@L[title]</strong>
+                <small>@L[help]</small>
+                <span class="at-state" data-asset-state data-t-none="@L["Not uploaded - the default is used."]" data-t-saved="@L["Uploaded"]" data-t-new="@L["New file - applied when you save."]" data-t-remove="@L["Will be removed when you save."]">@L[has ? "Uploaded" : "Not uploaded - the default is used."]</span>
+                <div class="at-actions">
+                    <label class="btn btn-outline-primary btn-sm"><i class="bi bi-upload"></i> <span>@L[has ? "Replace" : "Upload"]</span><input type="file" name="@field" accept="@accept" class="visually-hidden" data-asset-file data-native /></label>
+                    <button type="button" class="btn btn-ghost btn-sm" data-asset-remove @(has ? "" : "hidden")><i class="bi bi-trash3"></i> @L["Remove"]</button>
+                    <button type="button" class="btn btn-ghost btn-sm" data-asset-revert hidden><i class="bi bi-arrow-counterclockwise"></i> @L["Revert"]</button>
+                    <input type="hidden" name="@removeName" value="" data-asset-remove-flag />
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<form method="post" asp-action="SaveBranding" enctype="multipart/form-data" class="studio" data-studio novalidate
+      data-presets="@presetsJson" data-defaults="@defaults"
+      data-t-dirty="@L["Unsaved changes"]" data-t-clean="@L["All changes saved"]" data-t-leave="@L["You have unsaved changes. Leave this page?"]"
+      data-t-low="@L["Low contrast"]" data-t-ok="@L["Readable"]" data-t-weak="@L["Weak"]">
+    <input type="hidden" name="Preset" value="@b.Preset" data-b-preset data-initial="@b.Preset" />
+
+    <div class="studio-head">
+        <div>
+            <div class="eyebrow"><i class="bi bi-palette2"></i> @L["Branding & Appearance Studio"]</div>
+            <p class="text-muted mb-0">@L["Customize the identity, login page and colors of the platform. The preview shows the result before anything is published."]</p>
+        </div>
+        <span class="studio-status" data-studio-status><i class="bi bi-check-circle"></i> <span>@L["All changes saved"]</span></span>
+    </div>
+
+    <div class="studio-grid">
+        <div class="studio-editor">
+            <nav class="studio-tabs" role="tablist" aria-label="@L["Branding sections"]">
+                <button type="button" class="active" data-studio-tab="identity" role="tab"><i class="bi bi-building"></i> @L["General identity"]</button>
+                <button type="button" data-studio-tab="logos" role="tab"><i class="bi bi-images"></i> @L["Logos & icons"]</button>
+                <button type="button" data-studio-tab="text" role="tab"><i class="bi bi-fonts"></i> @L["Login page text"]</button>
+                <button type="button" data-studio-tab="media" role="tab"><i class="bi bi-image"></i> @L["Login page media"]</button>
+                <button type="button" data-studio-tab="colors" role="tab"><i class="bi bi-palette"></i> @L["Colors & theme"]</button>
+            </nav>
+
+            @* ---------- 1. identity ---------- *@
+            <section class="panel studio-section" data-studio-panel="identity">
+                <div class="panel-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="st-field">
+                                <label class="form-label" for="f-OrgName">@L["Organization name"]</label>
+                                <textarea class="form-control bidi" id="f-OrgName" name="OrgName" rows="2" maxlength="200" data-b-input="OrgName" required>@b.OrgName</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="st-field">
+                                <label class="form-label" for="f-SystemName">@L["System name"]</label>
+                                <textarea class="form-control bidi" id="f-SystemName" name="SystemName" rows="2" maxlength="200" data-b-input="SystemName" required>@b.SystemName</textarea>
+                            </div>
+                        </div>
+                        <div class="col-12"><div class="form-text mt-n2"><i class="bi bi-text-paragraph"></i> @L["Both names can span several lines (press Enter). The line breaks are kept on the login page and in the sidebar; page titles and e-mails use one line."]</div></div>
+                        <div class="col-md-6">@{ Toggle("ShowOrgInSidebar", "Show the organization name in the sidebar"); }</div>
+                        <div class="col-md-6">@{ Toggle("ShowNamesOnLogin", "Show the names next to the logo on the login page"); }</div>
+                        <div class="col-12">@{ TextField("WelcomeText", "Welcome text (employee dashboard)", null, true); }</div>
+                        <div class="col-md-6">@{ TextField("FooterText", "Footer text (copyright, contact, etc.)"); }</div>
+                        <div class="col-md-6">@{ TextField("SupportText", "Support text (login page)", "For example: IT service desk extension or e-mail.", true, 2); }</div>
+                    </div>
+                </div>
+            </section>
+
+            @* ---------- 2. logos ---------- *@
+            <section class="panel studio-section" data-studio-panel="logos" hidden>
+                <div class="panel-body stack" style="--gap:1rem">
+                    @{ Asset("logo", "logo", "Sidebar logo", "Shown at the top of the navigation. PNG/JPG/WebP/GIF.", "bi-layout-sidebar-inset", ".png,.jpg,.jpeg,.webp,.gif"); }
+                    @{ Toggle("LogoPlate", "Show the sidebar logo on a white plate", "Turn off for a logo designed for dark backgrounds."); }
+                    <hr class="my-1" />
+                    @{ Asset("loginLogo", "loginlogo", "Login logo", "Used on the login page. If empty, the sidebar logo is used.", "bi-box-arrow-in-left", ".png,.jpg,.jpeg,.webp,.gif"); }
+                    <div class="row g-3">
+                        <div class="col-md-7">@{ Segmented("LoginLogoPlacement", "Login logo placement", [("hero", "Visual panel", "bi-image"), ("card", "Sign-in card", "bi-person-badge"), ("both", "Both", "bi-layers")]); }</div>
+                        <div class="col-md-5 pt-md-4">@{ Toggle("LoginLogoPlate", "White plate behind the login logo"); }</div>
+                    </div>
+                    <hr class="my-1" />
+                    @{ Asset("icon", "icon", "Compact logo (icon)", "A square mark used where the full logo does not fit. PNG/JPG/WebP.", "bi-app-indicator", ".png,.jpg,.jpeg,.webp,.gif"); }
+                    @{ Asset("favicon", "favicon", "Favicon", "The small icon in the browser tab. ICO or PNG.", "bi-app", ".ico,.png"); }
+                </div>
+            </section>
+
+            @* ---------- 3. login texts ---------- *@
+            <section class="panel studio-section" data-studio-panel="text" hidden>
+                <div class="panel-body">
+                    <p class="form-text mt-0"><i class="bi bi-info-circle"></i> @L["Leave a field empty to use the default text shown in grey."]</p>
+                    <h3 class="st-h">@L["Visual panel"]</h3>
+                    <div class="row g-3">
+                        <div class="col-md-7">@{ TextField("LoginBadge", "Login hero badge"); }</div>
+                        <div class="col-md-5 pt-md-4">@{ Toggle("ShowLoginBadge", "Show the badge"); }</div>
+                        <div class="col-12">@{ TextField("LoginHeroTitle", "Login hero title", "Several lines are allowed.", true, 2); }</div>
+                        <div class="col-12">@{ TextField("LoginHeroDescription", "Login hero description", null, true, 3); }</div>
+                        <div class="col-md-4">@{ TextField("LoginFeature1", "Login hero feature 1"); }</div>
+                        <div class="col-md-4">@{ TextField("LoginFeature2", "Login hero feature 2"); }</div>
+                        <div class="col-md-4">@{ TextField("LoginFeature3", "Login hero feature 3"); }</div>
+                        <div class="col-12">@{ Toggle("ShowLoginFeatures", "Show the feature points"); }</div>
+                    </div>
+                    <h3 class="st-h mt-4">@L["Sign-in card"]</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">@{ TextField("LoginTitle", "Login card title"); }</div>
+                        <div class="col-md-6">@{ TextField("LoginCardSubtitle", "Login card subtitle"); }</div>
+                        <div class="col-12">@{ TextField("LoginSubtitle", "Login notice", "Shown as a highlighted notice above the sign-in fields. Leave empty for none.", true, 2); }</div>
+                    </div>
+                </div>
+            </section>
+
+            @* ---------- 4. login media ---------- *@
+            <section class="panel studio-section" data-studio-panel="media" hidden>
+                <div class="panel-body stack" style="--gap:1.1rem">
+                    @{ Asset("loginBackground", "loginbg", "Login background image", "Shown in the visual panel of the login page. PNG/JPG/WebP; landscape images work best.", "bi-card-image", ".png,.jpg,.jpeg,.webp"); }
+                    @{ Segmented("LoginImageFit", "Image fit", [("cover", "Cover", "bi-arrows-fullscreen"), ("contain", "Contain", "bi-aspect-ratio"), ("fill", "Fill (stretch)", "bi-arrows-angle-expand"), ("auto", "Original size", "bi-image")]); }
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <div class="form-label">@L["Image position"]</div>
+                            <div class="pos-grid" role="radiogroup" aria-label="@L["Image position"]">
+                                @foreach (var (v, t) in new[] { ("top-left", "Top left"), ("top", "Top"), ("top-right", "Top right"), ("left", "Left"), ("center", "Center"), ("right", "Right"), ("bottom-left", "Bottom left"), ("bottom", "Bottom"), ("bottom-right", "Bottom right") })
+                                {
+                                    <label title="@L[t]" class="@(b["LoginImagePosition"] == v ? "active" : "")"><input type="radio" name="LoginImagePosition" value="@v" checked="@(b["LoginImagePosition"] == v)" data-b-choice="LoginImagePosition" /><span class="visually-hidden">@L[t]</span><i></i></label>
+                                }
+                            </div>
+                            <label class="pos-custom mt-2 @(b["LoginImagePosition"] == "custom" ? "active" : "")"><input type="radio" name="LoginImagePosition" value="custom" checked="@(b["LoginImagePosition"] == "custom")" data-b-choice="LoginImagePosition" /> <i class="bi bi-crosshair"></i> @L["Custom focal point"]</label>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="form-label">@L["Focal point"] <small class="text-muted">@L["(click the image)"]</small></div>
+                            <div class="focal" data-focal>
+                                <img alt="" data-focal-img @(b.HasLoginBackground ? "" : "hidden") src="@(b.HasLoginBackground ? b.AssetUrl("loginbg") : null)" />
+                                <span class="focal-empty" @(b.HasLoginBackground ? "hidden" : "")><i class="bi bi-image"></i> @L["Upload an image to choose a focal point."]</span>
+                                <span class="focal-dot" data-focal-dot></span>
+                            </div>
+                            <input type="hidden" name="LoginFocusX" value="@b["LoginFocusX"]" data-b-number="LoginFocusX" />
+                            <input type="hidden" name="LoginFocusY" value="@b["LoginFocusY"]" data-b-number="LoginFocusY" />
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="f-LoginImageZoom">@L["Zoom"] <output class="st-out" data-out-for="LoginImageZoom">@(b["LoginImageZoom"])%</output></label>
+                            <input type="range" class="form-range" id="f-LoginImageZoom" name="LoginImageZoom" min="100" max="200" step="5" value="@b["LoginImageZoom"]" data-b-number="LoginImageZoom" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="f-LoginOverlayOpacity">@L["Overlay opacity"] <output class="st-out" data-out-for="LoginOverlayOpacity">@(b["LoginOverlayOpacity"])%</output></label>
+                            <input type="range" class="form-range" id="f-LoginOverlayOpacity" name="LoginOverlayOpacity" min="0" max="95" step="5" value="@b["LoginOverlayOpacity"]" data-b-number="LoginOverlayOpacity" />
+                        </div>
+                    </div>
+                    <div class="swatch-grid">@{ Swatch("LoginOverlayColor"); Swatch("LoginTextColor"); Swatch("LoginBackgroundColor"); }</div>
+                    @{ Segmented("LoginLayout", "Login layout", [("split", "Visual panel first", "bi-layout-split"), ("split-reverse", "Sign-in card first", "bi-layout-sidebar-inset-reverse"), ("full", "Full-screen image", "bi-fullscreen")]); }
+                    <div class="row g-3">
+                        <div class="col-md-6">@{ Segmented("LoginTextAlign", "Text placement", [("start", "Aligned to the side", "bi-text-right"), ("center", "Centered", "bi-text-center")]); }</div>
+                        <div class="col-md-6 pt-md-4">@{ Toggle("LoginDecor", "Decorative shapes (shield, light orbs)"); }</div>
+                    </div>
+                    <div><button type="button" class="btn btn-outline-secondary btn-sm" data-revert-group="media"><i class="bi bi-arrow-counterclockwise"></i> @L["Revert image settings"]</button></div>
+                </div>
+            </section>
+
+            @* ---------- 5. colors ---------- *@
+            <section class="panel studio-section" data-studio-panel="colors" hidden>
+                <div class="panel-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2 gap-2 flex-wrap">
+                        <h3 class="st-h m-0">@L["Theme presets"]</h3>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-revert-group="colors"><i class="bi bi-arrow-counterclockwise"></i> @L["Revert theme"]</button>
+                    </div>
+                    <div class="preset-grid mb-4">
+                        @foreach (var p in BrandingPresets.All)
+                        {
+                            <button type="button" class="preset-card @(b.Preset == p.Id ? "active" : "")" data-preset-id="@p.Id">
+                                <span class="pc-stripes" aria-hidden="true"><i style="background:@p.Colors["SidebarColor"]"></i><i style="background:@p.Colors["PrimaryColor"]"></i><i style="background:@p.Colors["AccentColor"]"></i><i style="background:@p.Colors["LoginBackgroundColor"]"></i></span>
+                                <strong>@L[p.Name]</strong><small>@L[p.Description]</small>
+                                <i class="bi bi-check-circle-fill pc-check" aria-hidden="true"></i>
+                            </button>
+                        }
+                    </div>
+                    <p class="form-text"><i class="bi bi-sliders"></i> @L["Choose a preset, then fine-tune any color below."]</p>
+                    <h3 class="st-h">@L["Brand"]</h3>
+                    <div class="swatch-grid mb-3">@{ Swatch("PrimaryColor"); Swatch("SecondaryColor"); Swatch("AccentColor"); }</div>
+                    <h3 class="st-h">@L["Page and cards"]</h3>
+                    <div class="swatch-grid mb-3">@{ Swatch("BackgroundColor"); Swatch("SurfaceColor"); }</div>
+                    <h3 class="st-h">@L["Header and sidebar"]</h3>
+                    <div class="swatch-grid mb-3">@{ Swatch("HeaderColor"); Swatch("HeaderTextColor"); Swatch("SidebarColor"); Swatch("SidebarTextColor"); }</div>
+                    <h3 class="st-h">@L["Buttons and banners"]</h3>
+                    <div class="swatch-grid">@{ Swatch("ButtonColor", true); Swatch("ButtonTextColor", true); Swatch("HeroTextColor"); }</div>
+                    <p class="form-text mt-2"><i class="bi bi-magic"></i> @L["Button colors left on automatic follow the primary color, and the text color is chosen for readability."]</p>
+                </div>
+            </section>
+        </div>
+
+        <aside class="studio-preview" aria-label="@L["Live preview"]" data-preview-panel>
+            <div class="panel">
+                <div class="panel-head">
+                    <h2><i class="bi bi-eye"></i> @L["Live preview"]</h2>
+                    <div class="d-flex gap-1">
+                        <div class="seg-mini" role="tablist">
+                            <button type="button" class="active" data-pv-tab="login"><i class="bi bi-box-arrow-in-left"></i> @L["Login page"]</button>
+                            <button type="button" data-pv-tab="app"><i class="bi bi-window-sidebar"></i> @L["Application"]</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="pv-toolbar">
+                        <div class="seg-mini" data-device-switch>
+                            <button type="button" class="active" data-device="desktop"><i class="bi bi-display"></i> @L["Desktop"]</button>
+                            <button type="button" data-device="mobile"><i class="bi bi-phone"></i> @L["Mobile"]</button>
+                        </div>
+                        <button type="button" class="btn btn-ghost btn-sm" data-pv-expand><i class="bi bi-arrows-fullscreen"></i> <span>@L["Enlarge"]</span></button>
+                    </div>
+
+                    <div class="pv-stage theme-scope" data-pv-scope>
+                        @* login page: the real hero partial + a non-functional copy of the sign-in card *@
+                        <div class="pv-device" data-pv="login" data-device-frame="desktop">
+                            <div class="pv-viewport" data-pv-viewport style="--vw:1280px;--vh:800px">
+                                <div class="auth @b.LoginClasses" data-pv-auth>
+                                    @await Html.PartialAsync("_LoginHero", b, previewData)
+                                    <section class="auth-panel">
+                                        <div class="auth-card">
+                                            <div class="auth-card-logo" data-b-logo="card" @(b.HasLoginLogo && b["LoginLogoPlacement"] is "card" or "both" ? "" : "hidden")>@if (b.HasLoginLogo) { <img src="@b.LoginLogoUrl" alt="" /> } else { <img alt="" /> }</div>
+                                            <h2 class="bidi" data-b="LoginTitle">@b.LoginTitle</h2>
+                                            <p class="auth-sub bidi" data-b="LoginCardSubtitle">@b["LoginCardSubtitle"]</p>
+                                            <div class="alert alert-info bidi" data-b-wrap="LoginSubtitle" @(string.IsNullOrWhiteSpace(b.LoginSubtitle) ? "hidden" : "")><i class="bi bi-info-circle-fill"></i><span class="ml" data-b="LoginSubtitle">@b.LoginSubtitle</span></div>
+                                            <div class="mb-3"><span class="form-label d-block">@L["Username"]</span><div class="field-icon"><i class="bi bi-person"></i><span class="form-control pv-fake-input"></span></div></div>
+                                            <div class="mb-4"><span class="form-label d-block">@L["Password"]</span><div class="field-icon"><i class="bi bi-lock"></i><span class="form-control pv-fake-input"></span></div></div>
+                                            <span class="btn btn-primary btn-lg w-100">@L["Sign in"] <i class="bi bi-arrow-left-short flip-rtl"></i></span>
+                                            <div class="auth-secure"><i class="bi bi-shield-check"></i> @L["Protected connection - for authorized users only"]</div>
+                                            <div class="auth-support ml bidi" data-b-wrap="SupportText" @(string.IsNullOrWhiteSpace(b["SupportText"]) ? "hidden" : "")><i class="bi bi-headset"></i> <span data-b="SupportText">@b["SupportText"]</span></div>
+                                        </div>
+                                        <div class="auth-foot"><span class="btn btn-ghost btn-sm"><i class="bi bi-translate"></i> English</span><span class="bidi" data-b="FooterText">@b.FooterText</span></div>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+
+                        @* application: real sidebar brand, top bar, banner, cards, buttons and status badges *@
+                        <div class="pv-device" data-pv="app" data-device-frame="desktop" hidden>
+                            <div class="pv-viewport" data-pv-viewport style="--vw:1280px;--vh:800px">
+                                <div class="shell pv-shell">
+                                    <aside class="sidebar">
+                                        <span class="sb-brand">@await Html.PartialAsync("_SidebarBrand", b, previewData)</span>
+                                        <nav class="sb-nav">
+                                            <div class="sb-label">@L["Learning"]</div>
+                                            <span class="sb-link active"><i class="bi bi-house-heart"></i><span>@L["Dashboard"]</span></span>
+                                            <span class="sb-link"><i class="bi bi-journal-text"></i><span>@L["Content"]</span></span>
+                                            <span class="sb-link"><i class="bi bi-shield-check"></i><span>@L["Policies"]</span></span>
+                                            <span class="sb-link"><i class="bi bi-patch-question"></i><span>@L["Assessments"]</span></span>
+                                            <span class="sb-link"><i class="bi bi-award"></i><span>@L["My Results"]</span></span>
+                                        </nav>
+                                    </aside>
+                                    <div class="shell-main">
+                                        <header class="topbar"><div class="topbar-title"><span class="topbar-section">@L["Employee portal"]</span><i class="bi bi-chevron-left topbar-sep flip-rtl"></i><span class="topbar-page">@L["Dashboard"]</span></div><span class="ms-auto avatar avatar-sm">م</span></header>
+                                        <main class="pv-content">
+                                            <section class="hero pv-hero2">
+                                                <div><div class="hero-greet"><i class="bi bi-brightness-high"></i> @L["Good morning"]</div><h1>@L.Format("Welcome, {0}", L["Employee"])</h1><p class="hero-text bidi" data-b="WelcomeText">@(string.IsNullOrWhiteSpace(b.WelcomeText) ? L["Your learning space for the policies, controls and safe practices that protect our organization."] : b.WelcomeText)</p></div>
+                                                <div class="text-center">@Ui.Ring(70, size: 110, stroke: 9)</div>
+                                            </section>
+                                            <div class="pv-row">
+                                                <div class="panel pv-card"><div class="panel-head"><h2><i class="bi bi-list-check"></i> @L["What do I need to do now?"]</h2></div><div class="panel-body"><p class="mb-2">@L["Password policy"]</p><span class="chip chip-warning"><i class="bi bi-pen"></i> @L["Required"]</span> <span class="chip chip-success"><i class="bi bi-patch-check-fill"></i> @L["Completed"]</span> <span class="chip chip-primary"><i class="bi bi-stars"></i> @L["New"]</span></div></div>
+                                                <div class="panel pv-card"><div class="panel-head"><h2><i class="bi bi-ui-radios"></i> @L["Buttons"]</h2></div><div class="panel-body d-flex flex-wrap gap-2">
+                                                    <span class="btn btn-primary">@L["Start assessment"]</span><span class="btn btn-accent">@L["Read and acknowledge"]</span><span class="btn btn-outline-primary">@L["View"]</span><span class="btn btn-outline-secondary">@L["Cancel"]</span>
+                                                </div></div>
+                                            </div>
+                                            <div class="panel pv-card"><div class="panel-head"><h2><i class="bi bi-tags"></i> @L["Status badges"]</h2></div><div class="panel-body d-flex flex-wrap gap-2">
+                                                <span class="badge text-bg-success badge-dot">@L["Passed"]</span><span class="badge text-bg-danger badge-dot">@L["Not passed"]</span><span class="badge text-bg-warning badge-dot">@L["In progress"]</span><span class="badge text-bg-secondary">@L["Locked"]</span>
+                                                <span class="chip chip-info"><i class="bi bi-check2-circle"></i> @L["Acknowledged"]</span>
+                                            </div></div>
+                                        </main>
+                                        <footer class="app-footer bidi" data-b="FooterText">@b.FooterText</footer>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contrast-list" data-contrast-list aria-live="polite">
+                        <div class="cl-head"><i class="bi bi-universal-access-circle"></i> @L["Readability check"]</div>
+                        @foreach (var (key, label) in new[] { ("header", "Header text"), ("sidebar", "Sidebar text"), ("button", "Button text"), ("hero", "Welcome banner text"), ("login", "Login hero text"), ("page", "Page text"), ("surface", "Text on cards") })
+                        {
+                            <div class="cl-row" data-check="@key"><span class="cl-label">@L[label]</span><span class="cl-ratio" dir="ltr"></span><span class="cl-state"></span></div>
+                        }
+                        <div class="cl-note" data-check-note="image" hidden><i class="bi bi-exclamation-triangle-fill"></i> @L["Text over the image may be hard to read - increase the overlay opacity."]</div>
+                        <div class="cl-note" data-check-note="any" hidden><i class="bi bi-exclamation-triangle-fill"></i> @L["Some color combinations have low contrast. You can still save, but consider adjusting them."]</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="studio-bar">
+        <span class="studio-bar-state" data-studio-bar-state><i class="bi bi-check-circle"></i> <span>@L["All changes saved"]</span></span>
+        <div class="d-flex flex-wrap gap-2 ms-auto">
+            <button type="submit" class="btn btn-outline-danger" formnovalidate data-studio-reset data-confirm-click="@L["Reset all branding to defaults and remove uploaded images?"]" formaction="@Url.Action("ResetBranding")"><i class="bi bi-arrow-counterclockwise"></i> @L["Reset to default"]</button>
+            <button type="button" class="btn btn-outline-secondary" data-studio-discard disabled><i class="bi bi-x-lg"></i> @L["Discard changes"]</button>
+            <button type="submit" class="btn btn-primary btn-lg" data-studio-save><i class="bi bi-check2"></i> @L["Save changes"]</button>
+        </div>
+    </div>
+</form>
+<script src="~/js/branding-studio.js" asp-append-version="true"></script>

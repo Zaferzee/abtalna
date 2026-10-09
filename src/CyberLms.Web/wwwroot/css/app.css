@@ -73,7 +73,6 @@
 .auth { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); background: var(--color-bg); }
 .auth-hero { position: relative; overflow: hidden; color: #fff; padding: 3.5rem 4rem; display: flex; flex-direction: column; justify-content: space-between;
   background: var(--gradient-brand); background-size: cover; background-position: center; }
-.auth-hero.has-image { background: linear-gradient(160deg, color-mix(in srgb, var(--primary-900) 82%, transparent), color-mix(in srgb, var(--color-primary) 60%, transparent)), var(--hero-image) center/cover; }
 .auth-hero::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(color-mix(in srgb, #fff 18%, transparent) 1px, transparent 1px); background-size: 26px 26px; mask-image: radial-gradient(80% 70% at 30% 40%, #000 30%, transparent 75%); opacity: .6; }
 .auth-orb { position: absolute; border-radius: 50%; filter: blur(2px); opacity: .5; animation: float-y 9s ease-in-out infinite; }
 .auth-orb.o1 { width: 340px; height: 340px; background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--color-accent) 90%, #fff), transparent 70%); bottom: -90px; inset-inline-end: -60px; }

@@ -101,24 +101,8 @@ public class SettingsVm
     // General
     public string? BaseUrl { get; set; }
     public string DefaultLanguage { get; set; } = "en";
-    // Branding
-    public string OrgName { get; set; } = "";
-    public string SystemName { get; set; } = "";
-    public string PrimaryColor { get; set; } = "";
-    public string SecondaryColor { get; set; } = "";
-    public string AccentColor { get; set; } = "";
-    public string HeaderColor { get; set; } = "";
-    public string HeaderTextColor { get; set; } = "";
-    public string SidebarColor { get; set; } = "";
-    public string SidebarTextColor { get; set; } = "";
-    public string LoginTitle { get; set; } = "";
-    public string? LoginSubtitle { get; set; }
-    public string LoginBackgroundColor { get; set; } = "";
-    public string? WelcomeText { get; set; }
-    public string? FooterText { get; set; }
-    public bool HasLogo { get; set; }
-    public bool HasFavicon { get; set; }
-    public bool HasLoginBackground { get; set; }
+    // Branding (resolved values + saved raw values; see Services/Branding.cs)
+    public Branding Brand { get; set; } = null!;
     // SMTP
     public string? SmtpHost { get; set; }
     public int SmtpPort { get; set; } = 25;

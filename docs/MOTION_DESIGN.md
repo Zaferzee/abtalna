@@ -96,7 +96,7 @@ Distances stay small: 2–4 px for hover lifts, 14–16 px for entrances, and 28
 | Table-size picker (`pop-in`) | Rich-text editor | 180 ms | Small, quick popover |
 | Reading progress bar | Content page | Scroll-linked (no timing) | Shows how much of a long policy is left |
 | Loading spinner (`.is-loading`) | Sign-in and other submit buttons with `data-busy` | `spin`, continuous until navigation | Shows that the request is in progress |
-| `badge-live` pulse | "Not saved yet" badge on the branding preview | 2 s, infinite | The only looping indicator; marks unsaved state |
+| `pv-flash` | Branding studio preview after applying a preset or reverting | 0.6 s, once | Confirms that the preview changed; the unsaved state is shown by a static "Unsaved changes" chip (no looping animation) |
 
 ## Rules
 

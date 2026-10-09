@@ -10,7 +10,9 @@ Presentation layer only. No controller, service, scoring, auth, localization or 
 | `wwwroot/css/ds.css` | Design tokens and the re-skin of Bootstrap components: buttons, cards, forms, tables, badges, chips, alerts, tabs, pagination, dropdowns, modal, meters, empty states, page header, motion utilities. |
 | `wwwroot/css/app.css` | Application shell (sidebar, topbar), the 9 reference screens, and a small compatibility block for screens that have not been redesigned yet. |
 | `/branding/theme.css` | Generated per request from the Branding settings. It overrides only the brand tokens below. |
-| `wwwroot/js/ui.js` | Progressive enhancement: sidebar toggle, count-up, rings and meters, scroll reveal, reading progress, generated table of contents, acknowledgment checkbox, assessment wizard, result celebration, password toggle, and the Branding **live preview**. There are no inline scripts, so CSP `script-src 'self'` is unchanged. |
+| `wwwroot/js/ui.js` | Progressive enhancement: sidebar toggle, count-up, rings and meters, scroll reveal, reading progress, generated table of contents, acknowledgment checkbox, assessment wizard, result celebration, password toggle, . There are no inline scripts, so CSP `script-src 'self'` is unchanged. |
+| `wwwroot/css/brand.css` | Branding-driven presentation: multi-line names (`.ml`), login media/overlay layers and layouts, logo placements, sidebar logo/icon, and the Branding & Appearance studio. See [BRANDING.md](BRANDING.md). |
+| `wwwroot/js/branding-studio.js` | The studio: sections, live preview (login and application, desktop and mobile), presets, readability checks, unsaved-changes / discard / revert. |
 | `wwwroot/js/pdf-viewer.mjs` | Embedded PDF reader built on the locally bundled PDF.js (`wwwroot/lib/pdfjs`); see [MULTIMEDIA.md](MULTIMEDIA.md). |
 | `Services/Ui.cs` | View helpers: `Ui.Pct` (isolated LTR percentage), `Ui.Num`, `Ui.Ring` (SVG progress ring), and type, attachment and audit icons. |
 
@@ -24,7 +26,12 @@ These are overridden by `/branding/theme.css`, so nothing organization-specific 
 - `--color-on-primary`, `--color-on-accent`: computed on the server from WCAG luminance (`FilesController.OnColor`), so button text stays readable for any brand color.
 - `--color-header`, `--color-on-header`
 - `--color-sidebar`, `--color-on-sidebar`
-- `--color-login-bg`
+- `--color-bg`, `--color-surface` (page and card backgrounds)
+- `--color-button`, `--color-on-button` (primary buttons; automatic = primary and its readable text)
+- `--color-on-hero` (text on the welcome banner)
+- `--color-login-bg`, `--color-login-text`
+
+The login hero also receives per-page CSS variables from `Branding.LoginHeroStyle` (`--img`, `--img-size`, `--img-pos`, `--img-zoom`, `--ov`, `--ov-op`, `--hero-text`); only validated values are written.
 
 ### Derived scales
 
@@ -83,7 +90,7 @@ Motion is documented in [MOTION_DESIGN.md](MOTION_DESIGN.md).
 - **Focus:** a visible focus ring on every control (`:focus-visible`), plus a skip link.
 - **Keyboard:** choice cards keep real radio and checkbox inputs, so the keyboard works natively. Keys 1–9 pick an answer, and Esc closes the mobile sidebar.
 - **Contrast:**
-  - The Branding page warns when header or sidebar text contrast is below 4.5:1.
+  - The Branding & Appearance studio lists the contrast of every text/background pair (header, sidebar, buttons, banner, login, page, cards): clear ≥ 4.5:1, weak ≥ 3:1, otherwise low. All built-in presets meet 4.5:1 (checked by `BrandingTests`).
   - Text on primary and accent buttons is chosen automatically.
 - **Without JavaScript:** every page still works; the assessment shows all questions on one page.
 

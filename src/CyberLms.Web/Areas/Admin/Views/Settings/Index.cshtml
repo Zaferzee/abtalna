@@ -1,28 +1,6 @@
 @model SettingsVm
-@using CyberLms.Web.Controllers
 @{
     ViewData["Title"] = L["Settings"];
-    var v = Brand.Current.Version;
-    var mono = Model.SystemName.Trim().Length > 0 ? Model.SystemName.Trim()[0].ToString() : "•";
-    string Hex(string s) => Branding.ColorRegex.IsMatch(s ?? "") ? s! : "#000000";
-    var pvStyle = $"--color-primary:{Hex(Model.PrimaryColor)};--color-secondary:{Hex(Model.SecondaryColor)};--color-accent:{Hex(Model.AccentColor)};" +
-                  $"--color-on-primary:{FilesController.OnColor(Hex(Model.PrimaryColor))};--color-on-accent:{FilesController.OnColor(Hex(Model.AccentColor))};" +
-                  $"--color-header:{Hex(Model.HeaderColor)};--color-on-header:{Hex(Model.HeaderTextColor)};--color-sidebar:{Hex(Model.SidebarColor)};" +
-                  $"--color-on-sidebar:{Hex(Model.SidebarTextColor)};--color-login-bg:{Hex(Model.LoginBackgroundColor)}";
-    var presets = new (string Name, string Json, string[] Dots)[]
-    {
-        ("Classic blue", "{\"PrimaryColor\":\"#1f4fd8\",\"SecondaryColor\":\"#5b6b86\",\"AccentColor\":\"#0f9d8a\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#14213d\",\"SidebarColor\":\"#0c1f4a\",\"SidebarTextColor\":\"#e9eefc\",\"LoginBackgroundColor\":\"#eaf0fb\"}", new[] { "#1f4fd8", "#0f9d8a", "#0c1f4a" }),
-        ("Emerald", "{\"PrimaryColor\":\"#0b7a5c\",\"SecondaryColor\":\"#4f6b63\",\"AccentColor\":\"#b8860b\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#10302a\",\"SidebarColor\":\"#0b2e26\",\"SidebarTextColor\":\"#e6f4ef\",\"LoginBackgroundColor\":\"#e8f3ef\"}", new[] { "#0b7a5c", "#b8860b", "#0b2e26" }),
-        ("Royal purple", "{\"PrimaryColor\":\"#5b3cc4\",\"SecondaryColor\":\"#6b6585\",\"AccentColor\":\"#d6336c\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#1f1640\",\"SidebarColor\":\"#1d1240\",\"SidebarTextColor\":\"#ece8fb\",\"LoginBackgroundColor\":\"#efecfa\"}", new[] { "#5b3cc4", "#d6336c", "#1d1240" }),
-        ("Graphite", "{\"PrimaryColor\":\"#2d3a4f\",\"SecondaryColor\":\"#64748b\",\"AccentColor\":\"#d9730d\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#1e2633\",\"SidebarColor\":\"#151b26\",\"SidebarTextColor\":\"#e5e9f0\",\"LoginBackgroundColor\":\"#eceff3\"}", new[] { "#2d3a4f", "#d9730d", "#151b26" }),
-        ("Crimson", "{\"PrimaryColor\":\"#b4233c\",\"SecondaryColor\":\"#6b5b60\",\"AccentColor\":\"#1f6feb\",\"HeaderColor\":\"#ffffff\",\"HeaderTextColor\":\"#2a1418\",\"SidebarColor\":\"#2b0f16\",\"SidebarTextColor\":\"#f7e9ec\",\"LoginBackgroundColor\":\"#f8ecee\"}", new[] { "#b4233c", "#1f6feb", "#2b0f16" }),
-    };
-}
-@functions {
-    Microsoft.AspNetCore.Html.IHtmlContent Swatch(string label, string name, string value, string cssVar, string? contrast = null) => Html.Raw(
-        $"<div class=\"swatch\"><input type=\"color\" value=\"{value}\" data-hex-for=\"{name}\" aria-label=\"{System.Net.WebUtility.HtmlEncode(label)}\">" +
-        $"<div class=\"sw-text\"><label for=\"{name}\">{System.Net.WebUtility.HtmlEncode(label)}</label>" +
-        $"<input class=\"sw-hex\" dir=\"ltr\" id=\"{name}\" name=\"{name}\" value=\"{value}\" maxlength=\"7\" spellcheck=\"false\" autocomplete=\"off\" data-var=\"{cssVar}\"></div></div>");
 }
 <div class="page-head reveal">
     <div>
@@ -32,168 +10,14 @@
     </div>
 </div>
 <ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-brand" type="button" role="tab"><i class="bi bi-palette2"></i> @L["Branding"]</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#t-brand" type="button" role="tab"><i class="bi bi-palette2"></i> @L["Branding & Appearance"]</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-general" type="button" role="tab"><i class="bi bi-sliders"></i> @L["General"]</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#t-mail" type="button" role="tab"><i class="bi bi-envelope-at"></i> @L["Email settings (SMTP)"]</button></li>
 </ul>
 
 <div class="tab-content">
 <div class="tab-pane fade show active" id="t-brand" role="tabpanel">
-<form method="post" asp-action="SaveBranding" enctype="multipart/form-data" data-brand-form novalidate>
-<div class="brand-layout">
-    <div class="stack" style="--gap:1.2rem">
-        <section class="panel">
-            <div class="panel-head"><h2><i class="bi bi-building"></i> @L["Identity"]</h2></div>
-            <div class="panel-body">
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6"><label class="form-label" for="OrgName">@L["Organization name"]</label><input class="form-control bidi" id="OrgName" name="OrgName" value="@Model.OrgName" maxlength="150" data-bind="OrgName" /></div>
-                    <div class="col-md-6"><label class="form-label" for="SystemName">@L["System name"]</label><input class="form-control bidi" id="SystemName" name="SystemName" value="@Model.SystemName" maxlength="150" data-bind="SystemName" /></div>
-                </div>
-                <div class="row g-3">
-                    <div class="col-12">
-                        <div class="upload-tile">
-                            <div class="ut-thumb" data-thumb-for="logo">@if (Model.HasLogo) { <img src="~/Files/Brand?kind=logo&v=@v" alt="@L["Logo"]" /> } else { <i class="bi bi-image"></i> }</div>
-                            <div class="ut-main"><strong>@L["Logo (PNG/JPG/WebP/GIF)"]</strong><small>@L["Shown in the sidebar and on the login page."]</small>
-                                <div class="mt-2"><input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp,.gif" data-preview-image="logo" aria-label="@L["Logo"]" /></div>
-                                @if (Model.HasLogo) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeLogo" value="true" id="rl" data-remove-image="logo" /><label class="form-check-label" for="rl">@L["Remove"]</label></div> }
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="upload-tile">
-                            <div class="ut-thumb" data-thumb-for="favicon">@if (Model.HasFavicon) { <img src="~/Files/Brand?kind=favicon&v=@v" alt="@L["Favicon"]" /> } else { <i class="bi bi-app"></i> }</div>
-                            <div class="ut-main"><strong>@L["Favicon (ICO/PNG)"]</strong><small>@L["The small icon in the browser tab."]</small>
-                                <div class="mt-2"><input type="file" name="favicon" accept=".ico,.png" data-preview-image="favicon" aria-label="@L["Favicon"]" /></div>
-                                @if (Model.HasFavicon) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeFavicon" value="true" id="rf" /><label class="form-check-label" for="rf">@L["Remove"]</label></div> }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="panel">
-            <div class="panel-head"><h2><i class="bi bi-droplet-half"></i> @L["Colors"]</h2></div>
-            <div class="panel-body">
-                <div class="form-label">@L["Start from a palette"]</div>
-                <div class="presets mb-4">
-                    @foreach (var p in presets)
-                    {
-                        <button type="button" class="preset" data-preset="@p.Json"><span class="dots" aria-hidden="true">@foreach (var d in p.Dots) { <i style="background:@d"></i> }</span>@L[p.Name]</button>
-                    }
-                </div>
-                <h3 class="h6 text-muted mb-2">@L["Brand"]</h3>
-                <div class="swatch-grid mb-4">
-                    @Swatch(L["Primary color"], "PrimaryColor", Model.PrimaryColor, "--color-primary")
-                    @Swatch(L["Secondary color"], "SecondaryColor", Model.SecondaryColor, "--color-secondary")
-                    @Swatch(L["Accent color"], "AccentColor", Model.AccentColor, "--color-accent")
-                </div>
-                <h3 class="h6 text-muted mb-2">@L["Header and sidebar"]</h3>
-                <div class="swatch-grid">
-                    @Swatch(L["Header background"], "HeaderColor", Model.HeaderColor, "--color-header")
-                    @Swatch(L["Header text"], "HeaderTextColor", Model.HeaderTextColor, "--color-on-header")
-                    @Swatch(L["Sidebar background"], "SidebarColor", Model.SidebarColor, "--color-sidebar")
-                    @Swatch(L["Sidebar text"], "SidebarTextColor", Model.SidebarTextColor, "--color-on-sidebar")
-                </div>
-                <div class="d-flex flex-column gap-1 mt-3">
-                    <div class="contrast-note" data-contrast="HeaderColor,HeaderTextColor" data-ok="@L["Header: good text contrast"]" data-bad="@L["Header: low text contrast - hard to read"]"></div>
-                    <div class="contrast-note" data-contrast="SidebarColor,SidebarTextColor" data-ok="@L["Sidebar: good text contrast"]" data-bad="@L["Sidebar: low text contrast - hard to read"]"></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="panel">
-            <div class="panel-head"><h2><i class="bi bi-door-open"></i> @L["Login page, welcome text and footer"]</h2></div>
-            <div class="panel-body">
-                <div class="row g-3">
-                    <div class="col-md-6"><label class="form-label" for="LoginTitle">@L["Login page title"]</label><input class="form-control bidi" id="LoginTitle" name="LoginTitle" value="@Model.LoginTitle" maxlength="150" data-bind="LoginTitle" /></div>
-                    <div class="col-md-6">@Swatch(L["Login page background"], "LoginBackgroundColor", Model.LoginBackgroundColor, "--color-login-bg")</div>
-                    <div class="col-12"><label class="form-label" for="LoginSubtitle">@L["Login page notice"]</label><textarea class="form-control bidi" id="LoginSubtitle" name="LoginSubtitle" rows="2" maxlength="500" data-bind="LoginSubtitle">@Model.LoginSubtitle</textarea></div>
-                    <div class="col-12">
-                        <div class="upload-tile">
-                            <div class="ut-thumb" data-thumb-for="loginBackground">@if (Model.HasLoginBackground) { <img src="~/Files/Brand?kind=loginbg&v=@v" alt="" /> } else { <i class="bi bi-card-image"></i> }</div>
-                            <div class="ut-main"><strong>@L["Login background image (optional)"]</strong><small>@L["Shown behind the welcome panel of the login page."]</small>
-                                <div class="mt-2"><input type="file" name="loginBackground" accept=".png,.jpg,.jpeg,.webp" data-preview-image="loginbg" aria-label="@L["Login background image (optional)"]" /></div>
-                                @if (Model.HasLoginBackground) { <div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="removeLoginBackground" value="true" id="rb" /><label class="form-check-label" for="rb">@L["Remove current image"]</label></div> }
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12"><label class="form-label" for="WelcomeText">@L["Welcome text (employee dashboard)"]</label><textarea class="form-control bidi" id="WelcomeText" name="WelcomeText" rows="2" maxlength="1000" data-bind="WelcomeText">@Model.WelcomeText</textarea></div>
-                    <div class="col-12"><label class="form-label" for="FooterText">@L["Footer text (copyright, contact, etc.)"]</label><input class="form-control bidi" id="FooterText" name="FooterText" value="@Model.FooterText" maxlength="500" data-bind="FooterText" /></div>
-                </div>
-            </div>
-        </section>
-
-        <div class="panel p-3 d-flex flex-wrap align-items-center gap-2">
-            <button class="btn btn-primary btn-lg"><i class="bi bi-check2"></i> @L["Save branding"]</button>
-            <button class="btn btn-outline-danger" formaction="@Url.Action("ResetBranding")" formnovalidate data-confirm-click="@L["Reset all branding to defaults and remove uploaded images?"]"><i class="bi bi-arrow-counterclockwise"></i> @L["Restore defaults"]</button>
-            <span class="small text-muted ms-auto">@L["The preview updates as you type. Nothing is published until you save."]</span>
-        </div>
-    </div>
-
-    <aside class="preview-sticky" aria-label="@L["Preview"]">
-        <div class="panel">
-            <div class="panel-head">
-                <h2><i class="bi bi-eye"></i> @L["Live preview"]</h2>
-                <span class="badge text-bg-warning badge-live">@L["Not saved yet"]</span>
-            </div>
-            <div class="panel-body">
-                <ul class="nav nav-tabs pv-tabs" role="tablist">
-                    <li class="nav-item" role="presentation"><button class="nav-link active" type="button" data-bs-toggle="tab" data-bs-target="#pv-app" role="tab"><i class="bi bi-window-sidebar"></i> @L["Application"]</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#pv-login" role="tab"><i class="bi bi-box-arrow-in-left"></i> @L["Login page"]</button></li>
-                </ul>
-                <div class="pv-frame theme-scope" data-preview style="@pvStyle">
-                    <div class="pv-chrome" aria-hidden="true"><i></i><i></i><i></i><span>@(string.IsNullOrWhiteSpace(Model.BaseUrl) ? "lms.company.local" : Model.BaseUrl)</span></div>
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="pv-app" role="tabpanel">
-                            <div class="pv-app">
-                                <div class="pv-side">
-                                    <div class="pv-brand @(Model.HasLogo ? "has-logo" : "")">
-                                        <span class="pv-mono" data-bind-mono>@mono</span>
-                                        <span class="pv-logo">@if (Model.HasLogo) { <img data-pv-logo src="~/Files/Brand?kind=logo&v=@v" alt="" /> } else { <img data-pv-logo alt="" /> }</span>
-                                        <span><b class="bidi" data-bind-target="SystemName">@Model.SystemName</b><small class="bidi" data-bind-target="OrgName">@Model.OrgName</small></span>
-                                    </div>
-                                    <div class="pv-nav on"><i class="bi bi-house-heart"></i> @L["Dashboard"]</div>
-                                    <div class="pv-nav"><i class="bi bi-journal-text"></i> @L["Content"]</div>
-                                    <div class="pv-nav"><i class="bi bi-shield-check"></i> @L["Policies"]</div>
-                                    <div class="pv-nav"><i class="bi bi-patch-question"></i> @L["Assessments"]</div>
-                                </div>
-                                <div class="pv-main">
-                                    <div class="pv-top"><span>@L["Employee portal"]</span><span class="pv-av"></span></div>
-                                    <div class="pv-body">
-                                        <div class="pv-hero"><b>@L.Format("Welcome, {0}", L["Employee"])</b><span class="bidi" data-bind-target="WelcomeText" data-fallback="@L["Your learning space for the policies, controls and safe practices that protect our organization."]">@(string.IsNullOrWhiteSpace(Model.WelcomeText) ? L["Your learning space for the policies, controls and safe practices that protect our organization."] : Model.WelcomeText)</span></div>
-                                        <div class="pv-cards"><div class="pv-card"><b><bdi dir="ltr">80%</bdi></b><span>@L["Overall progress"]</span></div><div class="pv-card"><b>3</b><span>@L["Pending acknowledgments"]</span></div></div>
-                                        <div class="pv-btns"><span class="pv-btn p">@L["Primary color"]</span><span class="pv-btn a">@L["Accent color"]</span><span class="pv-btn o">@L["Open"]</span></div>
-                                    </div>
-                                    <div class="pv-foot bidi" data-bind-target="FooterText">@Model.FooterText</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="pv-login" role="tabpanel">
-                            <div class="pv-login">
-                                <div class="pv-login-hero" style="@(Model.HasLoginBackground ? $"background-image:linear-gradient(160deg, rgba(10,20,50,.75), rgba(10,20,50,.35)), url('/Files/Brand?kind=loginbg&v={v}')" : null)">
-                                    <i class="bi bi-shield-lock fs-4"></i>
-                                    <b class="bidi" data-bind-target="SystemName">@Model.SystemName</b>
-                                    <span class="bidi" data-bind-target="OrgName">@Model.OrgName</span>
-                                </div>
-                                <div class="pv-login-panel">
-                                    <div class="pv-login-card">
-                                        <b class="bidi" data-bind-target="LoginTitle">@Model.LoginTitle</b>
-                                        <span class="text-muted bidi" data-bind-target="LoginSubtitle">@Model.LoginSubtitle</span>
-                                        <div class="pv-input"></div><div class="pv-input"></div>
-                                        <span class="pv-btn p">@L["Sign in"]</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <p class="small text-muted mt-3 mb-0"><i class="bi bi-info-circle"></i> @L["Text colors on buttons are chosen automatically for readability."]</p>
-            </div>
-        </div>
-    </aside>
-</div>
-</form>
+    <partial name="_BrandingStudio" model="Model" />
 </div>
 
 <div class="tab-pane fade" id="t-general" role="tabpanel"><div class="panel" style="max-width:680px"><div class="panel-head"><h2><i class="bi bi-sliders"></i> @L["General"]</h2></div><div class="panel-body">

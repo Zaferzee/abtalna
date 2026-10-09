@@ -1,0 +1,23 @@
+@model Branding
+@*
+    Sidebar / navigation brand block: logo (optionally on a white plate) or compact icon or monogram, then the system name and,
+    when enabled, the organization name. Both names may span several lines (no truncation). Also used by the studio preview.
+*@
+@{
+    var b = Model;
+    var preview = ViewData["preview"] as bool? == true;
+}
+@if (b.HasLogo || preview)
+{
+    <span class="sb-logo @(b.Flag("LogoPlate") ? "" : "no-plate")" data-b-logo="sidebar" @(b.HasLogo ? "" : "hidden")>
+        @if (b.HasLogo) { <img src="@b.AssetUrl("logo")" alt="@b.OrgNameInline" /> } else { <img alt="" /> }
+    </span>
+}
+@if (b.HasIcon || preview)
+{
+    <span class="sb-icon" data-b-logo="icon" @(!b.HasLogo && b.HasIcon ? "" : "hidden")>
+        @if (b.HasIcon) { <img src="@b.AssetUrl("icon")" alt="" /> } else { <img alt="" /> }
+    </span>
+}
+<span class="sb-mono" aria-hidden="true" data-b-mono @(b.HasLogo || b.HasIcon ? "hidden" : "")>@b.Monogram</span>
+<span class="sb-names"><strong class="ml" data-b="SystemName">@b.SystemName</strong><small class="ml" data-b="OrgName" @(b.Flag("ShowOrgInSidebar") ? "" : "hidden")>@b.OrgName</small></span>

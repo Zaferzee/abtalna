@@ -1,0 +1,43 @@
+@model Branding
+@*
+    The visual (hero) panel of the login page. Used by the real login page and, unchanged, by the live preview of the Branding &
+    Appearance studio (ViewData["preview"] = true: placeholders for not-yet-uploaded images are rendered hidden so the preview can
+    show them as soon as a file is chosen; the real page never renders an empty image).
+    data-b / data-b-* attributes are only read by the studio's preview script.
+*@
+@{
+    var b = Model;
+    var preview = ViewData["preview"] as bool? == true;
+    var showLogo = b.HasLoginLogo || preview;
+    var features = new[] { b["LoginFeature1"], b["LoginFeature2"], b["LoginFeature3"] };
+    var icons = new[] { "bi-journal-check", "bi-ui-checks-grid", "bi-graph-up-arrow" };
+}
+<section class="auth-hero" style="@b.LoginHeroStyle" data-b-hero>
+    <div class="auth-media" aria-hidden="true"></div>
+    <div class="auth-overlay" aria-hidden="true"></div>
+    <span class="auth-orb o1 auth-decor" aria-hidden="true"></span><span class="auth-orb o2 auth-decor" aria-hidden="true"></span>
+    <svg class="auth-shield auth-decor" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 4 112 24v40c0 34-22 60-52 72C30 124 8 98 8 64V24Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="m38 70 15 15 30-32" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="auth-brand reveal">
+        @if (showLogo)
+        {
+            <span class="auth-logo @(b.Flag("LoginLogoPlate") ? "plate" : "")" data-b-logo="login" @(b.HasLoginLogo ? "" : "hidden")>
+                @if (b.HasLoginLogo) { <img src="@b.LoginLogoUrl" alt="@b.OrgNameInline" /> } else { <img alt="" /> }
+            </span>
+        }
+        <span class="sb-mono auth-mono" aria-hidden="true" data-b-mono @(b.HasLoginLogo && b["LoginLogoPlacement"] != "card" ? "hidden" : "")>@b.Monogram</span>
+        <span class="auth-brand-names"><strong class="ml bidi" data-b="SystemName">@b.SystemName</strong><small class="ml bidi" data-b="OrgName">@b.OrgName</small></span>
+    </div>
+    <div class="auth-hero-inner">
+        <span class="auth-kicker reveal bidi" style="--i:1" data-b-wrap="LoginBadge" @(string.IsNullOrWhiteSpace(b["LoginBadge"]) ? "hidden" : "")><i class="bi bi-shield-lock"></i> <span data-b="LoginBadge">@b["LoginBadge"]</span></span>
+        <h1 class="auth-title reveal ml bidi" style="--i:2" data-b="LoginHeroTitle">@b["LoginHeroTitle"]</h1>
+        <p class="auth-lead reveal ml bidi" style="--i:3" data-b="LoginHeroDescription">@b["LoginHeroDescription"]</p>
+        <ul class="auth-points">
+            @for (var i = 0; i < 3; i++)
+            {
+                var f = features[i];
+                <li class="reveal" style="--i:@(4 + i)" data-b-wrap="LoginFeature@(i + 1)" @(string.IsNullOrWhiteSpace(f) ? "hidden" : "")><i class="bi @icons[i]"></i><span class="bidi" data-b="LoginFeature@(i + 1)">@f</span></li>
+            }
+        </ul>
+    </div>
+    <div class="auth-hero-foot bidi" data-b="OrgNameInline">@b.OrgNameInline</div>
+</section>

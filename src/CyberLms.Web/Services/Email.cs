@@ -123,7 +123,7 @@ public class NotificationService(EmailQueue queue, SmtpConfigProvider smtp, Sett
             var body = $"<div dir=\"rtl\" style=\"direction:rtl;text-align:right;font-family:Segoe UI,Tahoma,Arial,sans-serif;line-height:1.7\">" +
                        $"<p>{WebUtility.HtmlEncode(Res.Ar("Dear {0},", name))}</p><p>{WebUtility.HtmlEncode(message)}</p>" +
                        (link != null ? $"<p>{WebUtility.HtmlEncode(Res.Ar("Open the platform"))}: <a href=\"{WebUtility.HtmlEncode(link)}\">{WebUtility.HtmlEncode(link)}</a></p>" : "") +
-                       $"<hr><small style=\"color:#666\">{WebUtility.HtmlEncode(brand.OrgName)} - {WebUtility.HtmlEncode(brand.SystemName)}</small></div>";
+                       $"<hr><small style=\"color:#666\">{WebUtility.HtmlEncode(brand.OrgNameInline)} - {WebUtility.HtmlEncode(brand.SystemNameInline)}</small></div>";
             yield return new MailJob(email, subject, body);
         }
     }

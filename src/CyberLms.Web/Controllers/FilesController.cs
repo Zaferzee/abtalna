@@ -49,7 +49,7 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
     [AllowAnonymous]
     public IActionResult Brand(string kind)
     {
-        var key = kind switch { "logo" => Branding.Keys.Logo, "favicon" => Branding.Keys.Favicon, "loginbg" => Branding.Keys.LoginBgImage, _ => null };
+        var key = Branding.Assets.FirstOrDefault(a => a.Kind == kind).Key;
         var rel = key == null ? null : settings.Get(key);
         var path = rel == null ? null : storage.Resolve(rel);
         if (path == null || !System.IO.File.Exists(path)) return NotFound();
@@ -61,21 +61,28 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
     [AllowAnonymous, Route("branding/theme.css")]
     public IActionResult ThemeCss()
     {
+        // Only validated #rrggbb values reach the CSS (Branding falls back to defaults for anything else).
         var b = Branding.From(settings);
-        string C(string v, string fb) => Branding.ColorRegex.IsMatch(v) ? v : fb; // only validated #rrggbb values reach the CSS
-        var primary = C(b.PrimaryColor, "#1f4fd8"); var accent = C(b.AccentColor, "#0f9d8a");
+        var primary = b.PrimaryColor; var accent = b.AccentColor; var bg = b["BackgroundColor"];
         var css = $$"""
             :root{
               --color-primary:{{primary}};
-              --color-secondary:{{C(b.SecondaryColor, "#5b6b86")}};
+              --color-secondary:{{b.SecondaryColor}};
               --color-accent:{{accent}};
               --color-on-primary:{{OnColor(primary)}};
               --color-on-accent:{{OnColor(accent)}};
-              --color-header:{{C(b.HeaderColor, "#ffffff")}};
-              --color-on-header:{{C(b.HeaderTextColor, "#14213d")}};
-              --color-sidebar:{{C(b.SidebarColor, "#0c1f4a")}};
-              --color-on-sidebar:{{C(b.SidebarTextColor, "#e9eefc")}};
-              --color-login-bg:{{C(b.LoginBackgroundColor, "#eaf0fb")}};
+              --color-bg:{{bg}};
+              --color-surface:{{b["SurfaceColor"]}};
+              --color-surface-alt:color-mix(in srgb, {{bg}} 96%, {{primary}});
+              --color-header:{{b.HeaderColor}};
+              --color-on-header:{{b.HeaderTextColor}};
+              --color-sidebar:{{b.SidebarColor}};
+              --color-on-sidebar:{{b.SidebarTextColor}};
+              --color-button:{{b.ButtonColor}};
+              --color-on-button:{{b.ButtonTextColor}};
+              --color-on-hero:{{b["HeroTextColor"]}};
+              --color-login-bg:{{b.LoginBackgroundColor}};
+              --color-login-text:{{b["LoginTextColor"]}};
             }
             """;
         Response.Headers.CacheControl = "public, max-age=3600";
@@ -83,11 +90,5 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
     }
 
     /// <summary>Readable text colour (dark or white) for a given #rrggbb background (WCAG relative luminance).</summary>
-    public static string OnColor(string hex)
-    {
-        double Lin(int v) { var c = v / 255.0; return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4); }
-        var r = Convert.ToInt32(hex.Substring(1, 2), 16); var g = Convert.ToInt32(hex.Substring(3, 2), 16); var bl = Convert.ToInt32(hex.Substring(5, 2), 16);
-        var lum = 0.2126 * Lin(r) + 0.7152 * Lin(g) + 0.0722 * Lin(bl);
-        return lum > 0.42 ? "#14213d" : "#ffffff";
-    }
+    public static string OnColor(string hex) => Branding.OnColor(hex);
 }
