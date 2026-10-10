@@ -89,6 +89,7 @@ await choose(a, 'LoginImagePosition', 'top-right');
 const posTR = await a.evaluate(() => getComputedStyle(document.querySelector('[data-pv-auth] .auth-hero')).getPropertyValue('--img-pos').trim());
 ok(posTR === '100% 0%', 'image position preset is applied to the preview (' + posTR + ')');
 await a.waitForFunction(() => { const i = document.querySelector('[data-focal-img]'); return i && !i.hidden && i.naturalWidth > 0; }, null, { timeout: 10000 });
+await a.evaluate(() => document.querySelector('[data-focal]').scrollIntoView({ block: 'center', behavior: 'instant' }));
 const fb = await a.locator('[data-focal]').boundingBox(); await a.mouse.click(fb.x + fb.width * 0.62, fb.y + fb.height * 0.4);
 const focal = await a.evaluate(() => ({ x: +document.querySelector('[name=LoginFocusX]').value, y: +document.querySelector('[name=LoginFocusY]').value, custom: document.querySelector('[name=LoginImagePosition][value=custom]').checked }));
 ok(focal.custom && Math.abs(focal.x - 62) <= 3 && Math.abs(focal.y - 40) <= 4, `focal point picked on the image (${focal.x}%, ${focal.y}%)`);
@@ -172,7 +173,7 @@ await choose(a, 'LoginImageFit', 'cover'); await choose(a, 'LoginImagePosition',
 await range(a, 'LoginImageZoom', 100); await range(a, 'LoginOverlayOpacity', 40);
 await a.fill('#f-LoginOverlayColor', '#3a2434');
 await choose(a, 'LoginLayout', 'full'); await choose(a, 'LoginTextAlign', 'center');
-await a.setChecked('#f-LoginDecor', false);
+await choose(a, 'LoginDecorStyle', 'none');
 const pvFull = await a.evaluate(() => { const r = document.querySelector('[data-pv-auth]'); return r.classList.contains('layout-full') && r.classList.contains('align-center') && r.classList.contains('no-decor') && r.classList.contains('logo-card'); });
 ok(pvFull, 'preview switches layout (full-screen), text placement (centered), decoration and logo placement');
 await top(a); await shot(a, '13-studio-mauve-full', 'الاستوديو: سمة «الوردي الموفي الهادئ» مع صورة بملء الشاشة ونص في المنتصف وشعار داخل بطاقة الدخول');

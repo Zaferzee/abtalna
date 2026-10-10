@@ -122,7 +122,73 @@ public class BrandingTests(TestApp app) : IClassFixture<TestApp>
         (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
         login = await anon.GetStringAsync("/Account/Login");
         Assert.DoesNotContain("عنوان&#xA;على سطرين", login);
-        Assert.Matches("class=\"auth layout-split align-start logo-hero\"", login);
+        Assert.Matches("class=\"auth layout-split align-start logo-hero decor-shield img-none img-align-start img-slot-above\"", login);
         Assert.Equal(HttpStatusCode.NotFound, (await anon.GetAsync("/Files/Brand?kind=loginlogo")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Logos_are_independent_and_login_image_modes_and_decorations_render()
+    {
+        var admin = await AdminAsync();
+        var anon = app.NewClient();
+        (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
+
+        // only a sidebar logo: the login page does not borrow it
+        (await Save(admin, new(), mp => mp.AddFile("logo", "side.png", Png, "image/png"))).EnsureRedirect();
+        var login = await anon.GetStringAsync("/Account/Login");
+        Assert.DoesNotContain("kind=logo", login); Assert.DoesNotContain("kind=loginlogo", login);
+        Assert.Contains("kind=logo", await admin.GetStringAsync("/Admin/Dashboard"));
+
+        // a login logo: shown on the login page only; the sidebar keeps its own logo
+        (await Save(admin, new(), mp => mp.AddFile("loginLogo", "login.png", Png, "image/png"))).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("kind=loginlogo", login); Assert.DoesNotContain("kind=logo", login);
+        var dash = await admin.GetStringAsync("/Admin/Dashboard");
+        Assert.Contains("kind=logo", dash); Assert.DoesNotContain("kind=loginlogo", dash);
+
+        // removing the sidebar logo leaves the login logo alone (and the reverse)
+        (await Save(admin, new() { ["removeLogo"] = "true" })).EnsureRedirect();
+        Assert.Contains("kind=loginlogo", await anon.GetStringAsync("/Account/Login"));
+        Assert.DoesNotContain("kind=logo", await admin.GetStringAsync("/Admin/Dashboard"));
+        (await Save(admin, new() { ["removeLoginLogo"] = "true" }, mp => mp.AddFile("logo", "side.png", Png, "image/png"))).EnsureRedirect();
+        Assert.DoesNotContain("kind=loginlogo", await anon.GetStringAsync("/Account/Login"));
+        Assert.Contains("kind=logo", await admin.GetStringAsync("/Admin/Dashboard"));
+
+        // login image: small framed picture below the text, centered, with spacing; no full background, no overlay
+        (await Save(admin, new() { ["LoginImageMode"] = "small", ["LoginImageAlign"] = "center", ["LoginImageSlot"] = "below", ["LoginImageSize"] = "30", ["LoginImageInset"] = "12" },
+            mp => mp.AddFile("loginBackground", "bg.png", Png, "image/png"))).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Matches("class=\"auth [^\"]*img-small img-align-center img-slot-below\"", login);
+        Assert.DoesNotContain("has-image", login);
+        Assert.Contains("--img-w:30%;--img-inset:12px;", login);
+        Assert.Contains("auth-figure slot-below", login); Assert.DoesNotContain("auth-figure slot-above", login);
+        // medium, then large: sizes are clamped
+        (await Save(admin, new() { ["LoginImageMode"] = "medium", ["LoginImageSize"] = "500", ["LoginImageSlot"] = "above" })).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("img-medium", login); Assert.Contains("--img-w:100%;", login); Assert.Contains("auth-figure slot-above", login);
+        // full background: the overlay applies and no framed picture is rendered
+        (await Save(admin, new() { ["LoginImageMode"] = "background", ["LoginImageInset"] = "999" })).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("has-image", login); Assert.Contains("img-background", login); Assert.DoesNotContain("auth-figure", login);
+        Assert.Contains("--img-inset:64px;", login);
+        // hidden: the file is kept but not shown; an unknown mode falls back to the full background
+        (await Save(admin, new() { ["LoginImageMode"] = "hidden" })).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("img-hidden", login); Assert.DoesNotContain("has-image", login); Assert.DoesNotContain("auth-figure", login);
+        Assert.Equal(HttpStatusCode.OK, (await anon.GetAsync("/Files/Brand?kind=loginbg")).StatusCode);
+        (await Save(admin, new() { ["LoginImageMode"] = "poster" })).EnsureRedirect();
+        Assert.Contains("img-background", await anon.GetStringAsync("/Account/Login"));
+
+        // decorative pattern: chosen style, "none" switches decorations off, unknown values fall back to the default
+        (await Save(admin, new() { ["LoginDecorStyle"] = "journey" })).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("decor-journey", login); Assert.DoesNotContain("no-decor", login); Assert.Contains("dc dc-journey", login);
+        (await Save(admin, new() { ["LoginDecorStyle"] = "none" })).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("decor-none", login); Assert.Contains("no-decor", login);
+        (await Save(admin, new() { ["LoginDecorStyle"] = "confetti" })).EnsureRedirect();
+        Assert.Contains("decor-shield", await anon.GetStringAsync("/Account/Login"));
+
+        (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
     }
 }

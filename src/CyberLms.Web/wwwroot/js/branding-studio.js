@@ -103,12 +103,28 @@
     auth.classList.toggle('no-names', !flag('ShowNamesOnLogin'));
     auth.classList.toggle('no-badge', !flag('ShowLoginBadge'));
     auth.classList.toggle('no-features', !flag('ShowLoginFeatures'));
-    auth.classList.toggle('no-decor', !flag('LoginDecor'));
+    var decor = val('LoginDecorStyle') || 'shield';
+    auth.className = auth.className.replace(/\bdecor-[\w-]+/g, '').trim();
+    auth.classList.add('decor-' + decor);
+    auth.classList.toggle('no-decor', decor === 'none');
+    renderImageMode();
     $$('.sb-names [data-b="OrgName"]', scope).forEach(function (o) { o.hidden = !flag('ShowOrgInSidebar'); });
     $$('[data-b-logo="sidebar"]', scope).forEach(function (l) { l.classList.toggle('no-plate', !flag('LogoPlate')); });
     $$('[data-b-logo="login"]', scope).forEach(function (l) { l.classList.toggle('plate', flag('LoginLogoPlate')); });
-    $$('.st-seg label, .pos-grid label, .pos-custom').forEach(function (l) { var r = l.querySelector('input'); l.classList.toggle('active', !!(r && r.checked)); });
-    $$('[data-out-for]').forEach(function (o) { o.textContent = val(o.getAttribute('data-out-for')) + '%'; });
+    $$('.st-seg label, .pos-grid label, .pos-custom, .decor-opt').forEach(function (l) { var r = l.querySelector('input'); l.classList.toggle('active', !!(r && r.checked)); });
+    $$('[data-out-for]').forEach(function (o) { o.textContent = val(o.getAttribute('data-out-for')) + (o.getAttribute('data-unit') || '%'); });
+  }
+  /** Image mode classes (same rules as Branding.LoginClasses): no image = "none"; only the full background uses the overlay. */
+  var MODE_WIDTH = { large: 100, medium: 60, small: 22 };
+  function imageMode() { return src('loginbg') ? (val('LoginImageMode') || 'background') : 'none'; }
+  function renderImageMode() {
+    if (!auth) return;
+    var mode = imageMode(), chosen = val('LoginImageMode') || 'background';
+    auth.className = auth.className.replace(/\bimg-[\w-]+/g, '').trim();
+    auth.classList.add('img-' + mode, 'img-align-' + (val('LoginImageAlign') || 'start'), 'img-slot-' + (val('LoginImageSlot') || 'above'));
+    auth.classList.toggle('has-image', mode === 'background');
+    $$('[data-show-modes]').forEach(function (g) { g.hidden = g.getAttribute('data-show-modes').split(' ').indexOf(chosen) < 0; });
+    $$('[data-hide-modes]').forEach(function (g) { g.hidden = g.getAttribute('data-hide-modes').split(' ').indexOf(chosen) >= 0; });
   }
 
   // ---------- assets (upload / remove / revert) ----------
@@ -141,7 +157,8 @@
       a.tile.querySelector('[data-asset-remove]').hidden = !(a.saved || a.url) || state === 'remove';
       a.tile.querySelector('[data-asset-revert]').hidden = state === 'saved' || state === 'none';
     });
-    var logo = src('logo'), icon = src('icon'), login = src('loginlogo') || logo, place = val('LoginLogoPlacement') || 'hero';
+    // every logo is independent: the login page never shows the sidebar logo, the sidebar never shows the login logo
+    var logo = src('logo'), icon = src('icon'), login = src('loginlogo'), place = val('LoginLogoPlacement') || 'hero';
     showImg('[data-b-logo="sidebar"]', logo);
     showImg('[data-b-logo="icon"]', !logo && icon ? icon : '');
     $$('.sb-names', scope).forEach(function (n) { var m = n.parentNode.querySelector('[data-b-mono]'); if (m) m.hidden = !!(logo || icon); });
@@ -150,7 +167,7 @@
     if (hero) { var hm = hero.querySelector('[data-b-mono]'); if (hm) hm.hidden = !!login && place !== 'card'; }
     var bg = src('loginbg');
     if (hero) { if (bg) hero.style.setProperty('--img', 'url("' + bg + '")'); else hero.style.removeProperty('--img'); }
-    if (auth) auth.classList.toggle('has-image', !!bg);
+    renderImageMode();
     var fimg = $('[data-focal-img]'); if (fimg) { if (bg) { fimg.src = bg; fimg.hidden = false; } else fimg.hidden = true; }
     var fe = $('.focal-empty'); if (fe) fe.hidden = !!bg;
     renderMedia();
@@ -166,6 +183,8 @@
     hero.style.setProperty('--img-pos', p);
     hero.style.setProperty('--img-size', FIT[val('LoginImageFit')] || 'cover');
     hero.style.setProperty('--img-zoom', (parseInt(val('LoginImageZoom'), 10) || 100) / 100);
+    hero.style.setProperty('--img-w', (parseInt(val('LoginImageSize'), 10) || 60) + '%');
+    hero.style.setProperty('--img-inset', (parseInt(val('LoginImageInset'), 10) || 0) + 'px');
     hero.style.setProperty('--ov', color('LoginOverlayColor'));
     hero.style.setProperty('--ov-op', (parseInt(val('LoginOverlayOpacity'), 10) || 0) / 100);
     hero.style.setProperty('--hero-text', color('LoginTextColor'));
@@ -229,7 +248,7 @@
     var checks = {
       header: [color('HeaderColor'), color('HeaderTextColor')], sidebar: [color('SidebarColor'), color('SidebarTextColor')],
       button: [buttonColor(), buttonText()], hero: [color('PrimaryColor'), color('HeroTextColor')],
-      login: [src('loginbg') ? color('LoginOverlayColor') : color('PrimaryColor'), color('LoginTextColor')],
+      login: [imageMode() === 'background' ? color('LoginOverlayColor') : color('PrimaryColor'), color('LoginTextColor')],
       page: [color('BackgroundColor'), '#14213d'], surface: [color('SurfaceColor'), '#14213d'],
     }, any = false;
     Object.keys(checks).forEach(function (k) {
@@ -240,7 +259,7 @@
       row.querySelector('.cl-ratio').textContent = r.toFixed(1) + ':1';
       row.querySelector('.cl-state').innerHTML = '<i class="bi ' + (cls === 'ok' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill') + '"></i> ' + t(cls === 'ok' ? 'ok' : cls === 'weak' ? 'weak' : 'low');
     });
-    var imgNote = $('[data-check-note="image"]'); if (imgNote) imgNote.hidden = !(src('loginbg') && (parseInt(val('LoginOverlayOpacity'), 10) || 0) < 35);
+    var imgNote = $('[data-check-note="image"]'); if (imgNote) imgNote.hidden = !(imageMode() === 'background' && (parseInt(val('LoginOverlayOpacity'), 10) || 0) < 35);
     var anyNote = $('[data-check-note="any"]'); if (anyNote) anyNote.hidden = !any;
   }
 
@@ -283,7 +302,8 @@
     renderAll(); changed();
   });
   var COLOR_FIELDS = Object.keys(defaults);
-  var MEDIA_FIELDS = ['LoginImageFit', 'LoginImagePosition', 'LoginImageZoom', 'LoginFocusX', 'LoginFocusY', 'LoginOverlayOpacity', 'LoginOverlayColor', 'LoginTextColor', 'LoginBackgroundColor', 'LoginLayout', 'LoginTextAlign', 'LoginDecor'];
+  var MEDIA_FIELDS = ['LoginImageFit', 'LoginImagePosition', 'LoginImageZoom', 'LoginFocusX', 'LoginFocusY', 'LoginOverlayOpacity', 'LoginOverlayColor', 'LoginTextColor', 'LoginBackgroundColor', 'LoginLayout', 'LoginTextAlign', 'LoginDecor', 'LoginDecorStyle',
+    'LoginImageMode', 'LoginImageSize', 'LoginImageAlign', 'LoginImageSlot', 'LoginImageInset'];
   $$('[data-revert-group]').forEach(function (b) {
     b.addEventListener('click', function () {
       var g = b.getAttribute('data-revert-group');
@@ -303,6 +323,8 @@
     if (n) changed();
   });
   form.addEventListener('change', function (e) {
+    // a new display mode starts from that mode's usual size (it can then be fine-tuned)
+    if (e.target.name === 'LoginImageMode' && MODE_WIDTH[e.target.value]) { field('LoginImageSize').value = MODE_WIDTH[e.target.value]; renderMedia(); }
     if (e.target.matches('[data-b-choice], [data-b-flag]')) { renderOptions(); renderAssets(); renderMedia(); contrast(); }
     if (e.target.name) changed();
   });

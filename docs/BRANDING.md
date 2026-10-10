@@ -2,16 +2,16 @@
 
 **Admin → Settings → الهوية والمظهر.** Everything here is applied to all users as soon as it is saved. No rebuild or restart is needed, and there is no schema change: values are stored as `Branding.*` rows in `SystemSettings`.
 
-Screenshots and the UI acceptance run are in [screenshots/branding-studio-v1](screenshots/branding-studio-v1/README.md).
+Screenshots and the UI acceptance runs are in [screenshots/branding-studio-v1](screenshots/branding-studio-v1/README.md) and, for independent logos, image display modes and decorative patterns, [screenshots/branding-studio-v1.1](screenshots/branding-studio-v1.1/README.md).
 
 ## Sections
 
 | Section | Fields |
 |---|---|
 | General identity | Organization name and system name (multi-line); show the organization name in the sidebar; show the names next to the logo on the login page; welcome text (employee dashboard); footer text; support text |
-| Logos & icons | Sidebar logo (with or without a light plate), login-page logo (with or without a plate; placement: panel / sign-in card / both), compact icon (used in the sidebar when there is no sidebar logo), browser icon (favicon, `.ico`/`.png`) |
+| Logos & icons | Four independent assets, each used in one place only: sidebar logo (with or without a light plate); login-page logo (with or without a plate; placement: panel / sign-in card / both; if empty, the initial of the system name is shown, never the sidebar logo); compact icon (shown in the sidebar only while there is no sidebar logo); browser icon (favicon, `.ico`/`.png`) |
 | Login page text | Badge (with a show/hide toggle), hero title (multi-line; empty = system name), description, features 1–3 (with a show/hide toggle), card title, card subtitle, login notice |
-| Login page media | Background image; fit (cover / contain / fill / original size); position (3×3 grid or a custom focal point picked on the image); zoom 100–200%; overlay color and opacity 0–95%; layout (split, split reversed, full-screen image); text placement (start / center); decorative shapes on or off; revert the media settings |
+| Login page media | Login image; **display mode**: full background / large image / medium image / small (visual mark) / hidden (the file is kept); for the framed modes: size (10–100% of the text column), alignment (start / center / end) and place (above / below the text); spacing from the edges (0–64 px: a frame around the full background, or the space around a framed image); fit (cover / contain / fill / original size); position (3×3 grid or a custom focal point picked on the image); zoom 100–200%; overlay color and opacity 0–95% (full background only); layout (split, split reversed, full-screen image); text placement (start / center); **decorative pattern**: shield, soft circles, checklist, controls grid, policy document, progress journey or none (light line art in the login text color, hidden on phones); revert the media settings |
 | Colors & theme | 8 formal presets, then fine-tuning of 15 colors: primary, secondary, accent, page background, card surface, header and header text, sidebar and sidebar text, button and button text (empty = automatic), banner text, login background, login text, login overlay |
 
 ### Multi-line names
@@ -65,9 +65,12 @@ The login page only writes validated values into its inline CSS variables (`Bran
 - `Areas/Admin/Views/Settings/_BrandingStudio.cshtml`, `wwwroot/js/branding-studio.js`, `wwwroot/css/brand.css`: the studio.
 - `Views/Shared/_LoginHero.cshtml`, `Views/Shared/_SidebarBrand.cshtml`: shared by the real pages and the preview.
 - `Controllers/FilesController.cs`: `theme.css` and the brand assets.
-- Tests: `tests/CyberLms.Tests/BrandingTests.cs`; UI: `tests/ui/branding-studio-acceptance.mjs`.
+- Tests: `tests/CyberLms.Tests/BrandingTests.cs`; UI: `tests/ui/branding-studio-acceptance.mjs`, `tests/ui/branding-studio-refine.mjs`.
 
 ## Limitations
+
+- **Upgrading from v1:** the login page no longer falls back to the sidebar logo. An installation that only uploaded a sidebar logo shows the initial of the system name on the login page until a login logo is uploaded.
+- **Fixed frame shapes.** Framed login images use a fixed aspect ratio per mode: large 16:9, medium 4:3, small square. Fit, position or focal point, and zoom decide what is visible inside the frame.
 
 - **No separate dark-mode logo variants.** The application has no dark theme to switch them. Instead, each logo has a light-plate option for dark backgrounds, and the sidebar and login logos are separate uploads.
 - **No image cropping editor.** Framing uses fit, position or focal point, and zoom.

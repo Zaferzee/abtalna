@@ -139,17 +139,17 @@
             @* ---------- 2. logos ---------- *@
             <section class="panel studio-section" data-studio-panel="logos" hidden>
                 <div class="panel-body stack" style="--gap:1rem">
-                    @{ Asset("logo", "logo", "Sidebar logo", "Shown at the top of the navigation. PNG/JPG/WebP/GIF.", "bi-layout-sidebar-inset", ".png,.jpg,.jpeg,.webp,.gif"); }
+                    @{ Asset("logo", "logo", "Sidebar logo", "Used only at the top of the navigation (sidebar). PNG/JPG/WebP/GIF.", "bi-layout-sidebar-inset", ".png,.jpg,.jpeg,.webp,.gif"); }
                     @{ Toggle("LogoPlate", "Show the sidebar logo on a white plate", "Turn off for a logo designed for dark backgrounds."); }
                     <hr class="my-1" />
-                    @{ Asset("loginLogo", "loginlogo", "Login logo", "Used on the login page. If empty, the sidebar logo is used.", "bi-box-arrow-in-left", ".png,.jpg,.jpeg,.webp,.gif"); }
+                    @{ Asset("loginLogo", "loginlogo", "Login logo", "Used only on the login page; independent of the sidebar logo. If empty, the initial of the system name is shown.", "bi-box-arrow-in-left", ".png,.jpg,.jpeg,.webp,.gif"); }
                     <div class="row g-3">
                         <div class="col-md-7">@{ Segmented("LoginLogoPlacement", "Login logo placement", [("hero", "Visual panel", "bi-image"), ("card", "Sign-in card", "bi-person-badge"), ("both", "Both", "bi-layers")]); }</div>
                         <div class="col-md-5 pt-md-4">@{ Toggle("LoginLogoPlate", "White plate behind the login logo"); }</div>
                     </div>
                     <hr class="my-1" />
-                    @{ Asset("icon", "icon", "Compact logo (icon)", "A square mark used where the full logo does not fit. PNG/JPG/WebP.", "bi-app-indicator", ".png,.jpg,.jpeg,.webp,.gif"); }
-                    @{ Asset("favicon", "favicon", "Favicon", "The small icon in the browser tab. ICO or PNG.", "bi-app", ".ico,.png"); }
+                    @{ Asset("icon", "icon", "Compact logo (icon)", "A square mark shown in the sidebar only when no sidebar logo is uploaded. It never replaces another logo. PNG/JPG/WebP.", "bi-app-indicator", ".png,.jpg,.jpeg,.webp,.gif"); }
+                    @{ Asset("favicon", "favicon", "Favicon", "Used only as the small icon in the browser tab. ICO or PNG.", "bi-app", ".ico,.png"); }
                 </div>
             </section>
 
@@ -180,7 +180,24 @@
             @* ---------- 4. login media ---------- *@
             <section class="panel studio-section" data-studio-panel="media" hidden>
                 <div class="panel-body stack" style="--gap:1.1rem">
-                    @{ Asset("loginBackground", "loginbg", "Login background image", "Shown in the visual panel of the login page. PNG/JPG/WebP; landscape images work best.", "bi-card-image", ".png,.jpg,.jpeg,.webp"); }
+                    @{ Asset("loginBackground", "loginbg", "Login image", "Shown in the visual panel of the login page: as the full background or as a framed picture. PNG/JPG/WebP.", "bi-card-image", ".png,.jpg,.jpeg,.webp"); }
+                    @{ Segmented("LoginImageMode", "Display mode", [("background", "Full background", "bi-fullscreen"), ("large", "Large image", "bi-image"), ("medium", "Medium image", "bi-image-alt"), ("small", "Small (visual mark)", "bi-app"), ("hidden", "Hidden", "bi-eye-slash")]); }
+                    <div class="st-group" data-show-modes="large medium small">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="f-LoginImageSize">@L["Image size"] <output class="st-out" data-out-for="LoginImageSize">@(b.LoginImageWidth)%</output></label>
+                                <input type="range" class="form-range" id="f-LoginImageSize" name="LoginImageSize" min="10" max="100" step="2" value="@b.LoginImageWidth" data-b-number="LoginImageSize" />
+                                <div class="form-text">@L["Width as a share of the text column."]</div>
+                            </div>
+                            <div class="col-md-6">@{ Segmented("LoginImageAlign", "Image alignment", [("start", "Start", "bi-align-start"), ("center", "Center", "bi-align-center"), ("end", "End", "bi-align-end")]); }</div>
+                            <div class="col-md-6">@{ Segmented("LoginImageSlot", "Place in the panel", [("above", "Above the text", "bi-arrow-bar-up"), ("below", "Below the text", "bi-arrow-bar-down")]); }</div>
+                        </div>
+                    </div>
+                    <div data-hide-modes="hidden">
+                        <label class="form-label" for="f-LoginImageInset">@L["Spacing from the edges"] <output class="st-out" data-out-for="LoginImageInset" data-unit="px">@(b["LoginImageInset"])px</output></label>
+                        <input type="range" class="form-range" id="f-LoginImageInset" name="LoginImageInset" min="0" max="64" step="4" value="@b["LoginImageInset"]" data-b-number="LoginImageInset" />
+                        <div class="form-text">@L["Full background: a frame around the image. Framed image: the space around it."]</div>
+                    </div>
                     @{ Segmented("LoginImageFit", "Image fit", [("cover", "Cover", "bi-arrows-fullscreen"), ("contain", "Contain", "bi-aspect-ratio"), ("fill", "Fill (stretch)", "bi-arrows-angle-expand"), ("auto", "Original size", "bi-image")]); }
                     <div class="row g-3">
                         <div class="col-md-5">
@@ -204,12 +221,12 @@
                             <input type="hidden" name="LoginFocusY" value="@b["LoginFocusY"]" data-b-number="LoginFocusY" />
                         </div>
                     </div>
-                    <div class="row g-3">
+                    <div class="row g-3" data-hide-modes="hidden">
                         <div class="col-md-6">
                             <label class="form-label" for="f-LoginImageZoom">@L["Zoom"] <output class="st-out" data-out-for="LoginImageZoom">@(b["LoginImageZoom"])%</output></label>
                             <input type="range" class="form-range" id="f-LoginImageZoom" name="LoginImageZoom" min="100" max="200" step="5" value="@b["LoginImageZoom"]" data-b-number="LoginImageZoom" />
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" data-show-modes="background">
                             <label class="form-label" for="f-LoginOverlayOpacity">@L["Overlay opacity"] <output class="st-out" data-out-for="LoginOverlayOpacity">@(b["LoginOverlayOpacity"])%</output></label>
                             <input type="range" class="form-range" id="f-LoginOverlayOpacity" name="LoginOverlayOpacity" min="0" max="95" step="5" value="@b["LoginOverlayOpacity"]" data-b-number="LoginOverlayOpacity" />
                         </div>
@@ -218,7 +235,17 @@
                     @{ Segmented("LoginLayout", "Login layout", [("split", "Visual panel first", "bi-layout-split"), ("split-reverse", "Sign-in card first", "bi-layout-sidebar-inset-reverse"), ("full", "Full-screen image", "bi-fullscreen")]); }
                     <div class="row g-3">
                         <div class="col-md-6">@{ Segmented("LoginTextAlign", "Text placement", [("start", "Aligned to the side", "bi-text-right"), ("center", "Centered", "bi-text-center")]); }</div>
-                        <div class="col-md-6 pt-md-4">@{ Toggle("LoginDecor", "Decorative shapes (shield, light orbs)"); }</div>
+                    </div>
+                    <div class="st-field">
+                        <div class="form-label">@L["Decorative pattern"]</div>
+                        <div class="decor-picker" role="radiogroup" aria-label="@L["Decorative pattern"]">
+                            @foreach (var (v, t, icon) in new[] { ("shield", "Shield", "bi-shield-check"), ("orbs", "Soft circles", "bi-circle"), ("checklist", "Checklist", "bi-list-check"), ("grid", "Controls grid", "bi-grid-3x3"), ("document", "Policy document", "bi-file-earmark-text"), ("journey", "Progress journey", "bi-signpost-split"), ("none", "No decoration", "bi-slash-circle") })
+                            {
+                                var on = b.LoginDecorStyle == v;
+                                <label class="decor-opt @(on ? "active" : "")"><input type="radio" name="LoginDecorStyle" value="@v" checked="@on" data-b-choice="LoginDecorStyle" /><i class="bi @icon"></i><span>@L[t]</span></label>
+                            }
+                        </div>
+                        <div class="form-text">@L["Light line art in the visual panel; it follows the login text color. Hidden on phones."]</div>
                     </div>
                     <div><button type="button" class="btn btn-outline-secondary btn-sm" data-revert-group="media"><i class="bi bi-arrow-counterclockwise"></i> @L["Revert image settings"]</button></div>
                 </div>

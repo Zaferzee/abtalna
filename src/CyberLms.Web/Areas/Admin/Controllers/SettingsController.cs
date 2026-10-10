@@ -71,6 +71,8 @@ public class SettingsController(SettingsService settings, AppDbContext db, Stora
             if (F(name) is { } v) values[Branding.Key(name)] = (int.TryParse(v.Trim(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var n) ? Math.Clamp(n, min, max) : def).ToString(System.Globalization.CultureInfo.InvariantCulture);
         foreach (var (name, _) in Branding.Flags)
             if (form.TryGetValue(name, out var v)) values[Branding.Key(name)] = v.Contains("true") ? "true" : "false";   // hidden "false" + checkbox "true"
+        // the decoration picker replaces the old on/off switch: "none" switches decorations off
+        if (F("LoginDecorStyle") != null) values[Branding.Key("LoginDecor")] = values[Branding.Key("LoginDecorStyle")] == "none" ? "false" : "true";
         if (F("Preset") is { } preset) values[Branding.Keys.Preset] = BrandingPresets.All.Any(p => p.Id == preset) ? preset : null;
 
         // assets: upload replaces, "remove<Field>" clears; old files are deleted after saving

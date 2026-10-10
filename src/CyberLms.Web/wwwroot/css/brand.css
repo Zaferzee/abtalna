@@ -24,11 +24,35 @@
 /* ---------- login page: image, overlay, layouts ---------- */
 .auth-hero { color: var(--hero-text, var(--color-login-text, #fff)); isolation: isolate; }
 .auth-title { color: inherit; }
-.auth-media { position: absolute; inset: 0; z-index: 0; background-image: var(--img, none); background-repeat: no-repeat;
+/* full background: the frame keeps zoomed images inside the panel (or inside the inset frame when a spacing is set) */
+.auth-media-frame { position: absolute; inset: var(--img-inset, 0px); z-index: 0; overflow: hidden; border-radius: min(var(--img-inset, 0px), 22px); display: none; }
+.auth.has-image .auth-media-frame { display: block; }
+.auth-media { position: absolute; inset: 0; background-image: var(--img, none); background-repeat: no-repeat;
   background-size: var(--img-size, cover); background-position: var(--img-pos, 50% 50%); transform: scale(var(--img-zoom, 1)); transform-origin: var(--img-pos, 50% 50%); }
+/* framed image inside the text column: large / medium / small, aligned start / center / end, above or below the text */
+.auth-figure { display: none; position: relative; overflow: hidden; width: clamp(56px, var(--img-w, 60%), 100%); aspect-ratio: 4 / 3;
+  margin-block: calc(.4rem + var(--img-inset, 0px)) calc(1.4rem + var(--img-inset, 0px)); margin-inline: 0 auto; border-radius: 18px;
+  background: color-mix(in srgb, currentColor 8%, transparent); border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, .55); }
+.auth-figure.slot-below { margin-block: calc(1.4rem + var(--img-inset, 0px)) calc(.4rem + var(--img-inset, 0px)); }
+.auth-figure-img { position: absolute; inset: 0; background-image: var(--img, none); background-repeat: no-repeat; background-size: var(--img-size, cover);
+  background-position: var(--img-pos, 50% 50%); transform: scale(var(--img-zoom, 1)); transform-origin: var(--img-pos, 50% 50%); }
+.auth.img-large .auth-figure, .auth.img-medium .auth-figure, .auth.img-small .auth-figure { display: block; }
+.auth.img-large .auth-figure { aspect-ratio: 16 / 9; }
+.auth.img-small .auth-figure { aspect-ratio: 1; border-radius: 16px; box-shadow: none; }
+.auth.img-slot-above .auth-figure.slot-below, .auth.img-slot-below .auth-figure.slot-above { display: none; }
+.auth.img-align-center .auth-figure { margin-inline: auto; }
+.auth.img-align-end .auth-figure { margin-inline: auto 0; }
 .auth-overlay { position: absolute; inset: 0; z-index: 0; background: var(--ov, #0b1a3f); opacity: 0; transition: opacity .2s; }
 .auth.has-image .auth-overlay { opacity: var(--ov-op, .7); }
 .auth.no-decor .auth-decor, .auth.no-decor .auth-hero::before { display: none; }
+/* decoration styles: each element lists the styles it belongs to (dc-<style>); the dotted texture belongs to shield and orbs */
+.auth .dc { display: none; }
+.auth.decor-shield .dc-shield, .auth.decor-orbs .dc-orbs, .auth.decor-checklist .dc-checklist, .auth.decor-grid .dc-grid,
+.auth.decor-document .dc-document, .auth.decor-journey .dc-journey { display: block; }
+.auth:not(.decor-shield):not(.decor-orbs) .auth-hero::before { display: none; }
+.auth-art { position: absolute; inset-inline-end: 7%; top: 50%; transform: translateY(-50%); width: min(30%, 250px); opacity: .1; z-index: 0; }
+.auth.decor-grid .auth-art, .auth.decor-journey .auth-art { width: min(33%, 270px); }
 .auth.has-image .auth-hero::before { opacity: .25; }
 .auth-logo { display: grid; place-items: center; flex: none; max-width: 12rem; }
 .auth-logo img { display: block; max-height: 3rem; max-width: 11rem; object-fit: contain; }
@@ -50,6 +74,7 @@
 .auth.align-center .auth-hero-foot { text-align: center; }
 
 @media (max-width: 991.98px) {
+  .auth .auth-shield, .auth .auth-art { display: none !important; }
   .auth.layout-full .auth-hero { position: relative; inset: auto; padding: 2rem 1.5rem; }
   .auth.layout-full .auth-panel { width: 100%; justify-self: stretch; background: var(--color-login-bg); }
   .auth.layout-split-reverse .auth-hero { order: 0; }
@@ -59,7 +84,7 @@
    so the phone rules are repeated for .auth.is-compact. */
 .auth.is-compact { grid-template-columns: minmax(0, 1fr); }
 .auth.is-compact .auth-hero { padding: 1.6rem 1.2rem; min-height: auto; position: relative; inset: auto; order: 0; }
-.auth.is-compact .auth-points, .auth.is-compact .auth-shield { display: none; }
+.auth.is-compact .auth-points, .auth.is-compact .auth-shield, .auth.is-compact .auth-art { display: none !important; }
 .auth.is-compact .auth-title { font-size: 1.5rem; }
 .auth.is-compact .auth-panel { width: 100%; justify-self: stretch; padding: 1.5rem 1rem; background: var(--color-login-bg); }
 .auth.is-compact .auth-card { padding: 1.6rem 1.2rem; }
@@ -107,6 +132,16 @@
 .pos-grid label { width: 2.6rem; height: 2.6rem; border-radius: 9px; background: var(--color-surface); border: 1px solid var(--color-border); display: grid; place-items: center; cursor: pointer; position: relative; }
 .pos-grid label input { position: absolute; opacity: 0; } .pos-grid label i { width: .55rem; height: .55rem; border-radius: 50%; background: var(--color-border-strong); }
 .pos-grid label.active { border-color: var(--color-primary); box-shadow: var(--ring); } .pos-grid label.active i { background: var(--color-primary); width: .75rem; height: .75rem; }
+.decor-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: .5rem; }
+.decor-opt { position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: .35rem; text-align: center; padding: .75rem .5rem .65rem;
+  border: 1.5px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); font-size: .82rem; font-weight: 600; color: var(--color-muted); transition: border-color .16s, box-shadow .16s, color .16s; }
+.decor-opt i { font-size: 1.35rem; color: var(--color-primary); opacity: .75; }
+.decor-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.decor-opt:hover { border-color: var(--primary-300); }
+.decor-opt.active { border-color: var(--color-primary); box-shadow: var(--ring); color: var(--color-primary); }
+.decor-opt.active i { opacity: 1; }
+.decor-opt:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent); }
+.st-group { padding: .9rem 1rem; border-radius: var(--radius-md); background: var(--color-surface-alt); }
 .pos-custom { display: inline-flex; gap: .4rem; align-items: center; font-size: .86rem; font-weight: 600; cursor: pointer; padding: .3rem .7rem; border-radius: 9px; border: 1px dashed var(--color-border-strong); }
 .pos-custom input { position: absolute; opacity: 0; } .pos-custom.active { border-style: solid; border-color: var(--color-primary); color: var(--color-primary); background: var(--primary-50); }
 .focal { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--color-border); background: var(--color-surface-alt); min-height: 8rem; display: block; cursor: crosshair; }
@@ -171,4 +206,4 @@ body.studio-expanded { overflow: hidden; }
 /* save bar */
 .studio-bar { position: sticky; bottom: 0; z-index: 10; margin-top: 1.4rem; display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; padding: .8rem 1rem;
   background: color-mix(in srgb, var(--color-surface) 92%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 -6px 20px rgba(15, 25, 50, .08); }
-@media (prefers-reduced-motion: reduce) { .preset-card, .pv-device, .pc-check { transition: none; } .pv-flash { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .decor-opt, .preset-card, .pv-device, .pc-check { transition: none; } .pv-flash { animation: none; } }

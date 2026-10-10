@@ -11,9 +11,11 @@
   <data name="0 = unlimited" xml:space="preserve"><value>0 = غير محدود</value></data>
   <data name="A copy was created as a draft. Review it before publishing." xml:space="preserve"><value>أُنشئت نسخة كمسودة. راجعها قبل النشر.</value></data>
   <data name="A cybersecurity control and how it is applied" xml:space="preserve"><value>ضابط أمن سيبراني وكيفية تطبيقه</value></data>
+  <data name="A square mark shown in the sidebar only when no sidebar logo is uploaded. It never replaces another logo. PNG/JPG/WebP." xml:space="preserve"><value>علامة مربعة تظهر في القائمة الجانبية فقط عند عدم رفع شعار للقائمة، ولا تحل محل أي شعار آخر. PNG/JPG/WebP.</value></data>
   <data name="A square mark used where the full logo does not fit. PNG/JPG/WebP." xml:space="preserve"><value>علامة مربعة تُستخدم حيث لا يتسع الشعار الكامل. PNG/JPG/WebP.</value></data>
   <data name="A value for the {0} parameter is required." xml:space="preserve"><value>القيمة مطلوبة للمعامل {0}.</value></data>
   <data name="A value is required." xml:space="preserve"><value>القيمة مطلوبة.</value></data>
+  <data name="Above the text" xml:space="preserve"><value>فوق النص</value></data>
   <data name="Accent color" xml:space="preserve"><value>لون التمييز</value></data>
   <data name="Access denied" xml:space="preserve"><value>تم رفض الوصول</value></data>
   <data name="Account" xml:space="preserve"><value>الحساب</value></data>
@@ -115,6 +117,7 @@
   <data name="Base URL must be an http(s) URL." xml:space="preserve"><value>عنوان الموقع يجب أن يبدأ بـ http أو https.</value></data>
   <data name="Basic information" xml:space="preserve"><value>المعلومات الأساسية</value></data>
   <data name="Becomes available to employees when published." xml:space="preserve"><value>يصبح متاحاً للموظفين عند النشر.</value></data>
+  <data name="Below the text" xml:space="preserve"><value>تحت النص</value></data>
   <data name="Best score" xml:space="preserve"><value>أفضل نتيجة</value></data>
   <data name="Best score %" xml:space="preserve"><value>أفضل نتيجة %</value></data>
   <data name="Binding rules that set the organization's direction" xml:space="preserve"><value>قواعد ملزمة تحدد توجّه المؤسسة</value></data>
@@ -146,6 +149,7 @@
   <data name="Center" xml:space="preserve"><value>الوسط</value></data>
   <data name="Centered" xml:space="preserve"><value>في المنتصف</value></data>
   <data name="Change password" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
+  <data name="Checklist" xml:space="preserve"><value>قائمة تحقق</value></data>
   <data name="Choose a content type." xml:space="preserve"><value>اختر نوع المحتوى.</value></data>
   <data name="Choose a CSV file (max 5 MB)." xml:space="preserve"><value>اختر ملف CSV (الحد الأقصى 5 ميغابايت).</value></data>
   <data name="Choose a preset, then fine-tune any color below." xml:space="preserve"><value>اختر سمة جاهزة، ثم عدّل أي لون أدناه إن رغبت.</value></data>
@@ -191,6 +195,7 @@
   <data name="Continue" xml:space="preserve"><value>متابعة</value></data>
   <data name="Continue assessment" xml:space="preserve"><value>متابعة الاختبار</value></data>
   <data name="Continue the open attempt" xml:space="preserve"><value>متابعة المحاولة المفتوحة</value></data>
+  <data name="Controls grid" xml:space="preserve"><value>شبكة الضوابط</value></data>
   <data name="Correct" xml:space="preserve"><value>صحيحة</value></data>
   <data name="Correct answer" xml:space="preserve"><value>الإجابة الصحيحة</value></data>
   <data name="Correct answers" xml:space="preserve"><value>الإجابات الصحيحة</value></data>
@@ -213,6 +218,7 @@
   <data name="Dashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
   <data name="Date and time" xml:space="preserve"><value>التاريخ والوقت</value></data>
   <data name="Dear {0}," xml:space="preserve"><value>الأخ/الأخت {0}،</value></data>
+  <data name="Decorative pattern" xml:space="preserve"><value>النمط الزخرفي</value></data>
   <data name="Decorative shapes (shield, light orbs)" xml:space="preserve"><value>الأشكال الزخرفية (الدرع والدوائر الضوئية)</value></data>
   <data name="Deep Emerald" xml:space="preserve"><value>الزمردي العميق</value></data>
   <data name="Default interface language" xml:space="preserve"><value>لغة الواجهة الافتراضية</value></data>
@@ -231,6 +237,7 @@
   <data name="Details" xml:space="preserve"><value>التفاصيل</value></data>
   <data name="Disabled" xml:space="preserve"><value>معطّل</value></data>
   <data name="Discard changes" xml:space="preserve"><value>تجاهل التغييرات</value></data>
+  <data name="Display mode" xml:space="preserve"><value>وضع العرض</value></data>
   <data name="Display name" xml:space="preserve"><value>الاسم المعروض</value></data>
   <data name="Do you want to add an assessment for this content?" xml:space="preserve"><value>هل تريد إضافة اختبار لهذا المحتوى؟</value></data>
   <data name="Document" xml:space="preserve"><value>المستند</value></data>
@@ -295,6 +302,7 @@
   <data name="Employees answer questions after reading; results appear in the reports." xml:space="preserve"><value>يجيب الموظفون عن الأسئلة بعد القراءة، وتظهر النتائج في التقارير.</value></data>
   <data name="Employees can see this material now." xml:space="preserve"><value>يمكن للموظفين رؤية هذه المادة الآن.</value></data>
   <data name="Employees confirm a statement; the date and time are recorded for compliance reports." xml:space="preserve"><value>يؤكد الموظف نص الإقرار، ويُسجَّل التاريخ والوقت لتقارير الامتثال.</value></data>
+  <data name="End" xml:space="preserve"><value>النهاية</value></data>
   <data name="English" xml:space="preserve"><value>English</value></data>
   <data name="Enlarge" xml:space="preserve"><value>تكبير</value></data>
   <data name="Enter a valid e-mail address." xml:space="preserve"><value>أدخل بريداً إلكترونياً صحيحاً.</value></data>
@@ -336,6 +344,8 @@
   <data name="Focal point" xml:space="preserve"><value>نقطة التركيز</value></data>
   <data name="Footer text (copyright, contact, etc.)" xml:space="preserve"><value>نص التذييل (حقوق النشر، التواصل، إلخ)</value></data>
   <data name="For example: IT service desk extension or e-mail." xml:space="preserve"><value>مثال: تحويلة مكتب الدعم الفني أو بريده.</value></data>
+  <data name="Full background" xml:space="preserve"><value>خلفية كاملة</value></data>
+  <data name="Full background: a frame around the image. Framed image: the space around it." xml:space="preserve"><value>في الخلفية الكاملة: إطار حول الصورة. في الصورة المؤطرة: المسافة المحيطة بها.</value></data>
   <data name="Full screen" xml:space="preserve"><value>ملء الشاشة</value></data>
   <data name="Full-screen image" xml:space="preserve"><value>صورة بملء الشاشة</value></data>
   <data name="General" xml:space="preserve"><value>عام</value></data>
@@ -357,13 +367,16 @@
   <data name="Header: good text contrast" xml:space="preserve"><value>الترويسة: تباين النص جيد</value></data>
   <data name="Header: low text contrast - hard to read" xml:space="preserve"><value>الترويسة: تباين النص ضعيف - قد يصعب قراءته</value></data>
   <data name="Headings structure the document and build the employee's table of contents." xml:space="preserve"><value>العناوين تنظّم المستند وتُنشئ فهرس الصفحة للموظف.</value></data>
+  <data name="Hidden" xml:space="preserve"><value>مخفية</value></data>
   <data name="Hide password" xml:space="preserve"><value>إخفاء كلمة المرور</value></data>
   <data name="I acknowledge that I have read and understood this policy." xml:space="preserve"><value>أقرّ بأنني قرأت هذه السياسة وفهمتها.</value></data>
   <data name="I acknowledge that I have read and understood {0}." xml:space="preserve"><value>أقرّ بأنني قرأت وفهمت {0}.</value></data>
   <data name="Identity" xml:space="preserve"><value>الهوية</value></data>
+  <data name="Image alignment" xml:space="preserve"><value>محاذاة الصورة</value></data>
   <data name="Image fit" xml:space="preserve"><value>ملاءمة الصورة</value></data>
   <data name="Image overlay color" xml:space="preserve"><value>لون طبقة التغطية</value></data>
   <data name="Image position" xml:space="preserve"><value>موضع الصورة</value></data>
+  <data name="Image size" xml:space="preserve"><value>حجم الصورة</value></data>
   <data name="Image upload failed." xml:space="preserve"><value>فشل رفع الصورة.</value></data>
   <data name="Import" xml:space="preserve"><value>استيراد</value></data>
   <data name="Import finished: {0} created, {1} skipped (duplicates/invalid)." xml:space="preserve"><value>اكتمل الاستيراد: تم إنشاء {0} وتخطي {1} (مكرر أو غير صالح).</value></data>
@@ -388,6 +401,7 @@
   <data name="Invalid username or password." xml:space="preserve"><value>اسم المستخدم أو كلمة المرور غير صحيحة.</value></data>
   <data name="IP address" xml:space="preserve"><value>عنوان IP</value></data>
   <data name="Language" xml:space="preserve"><value>اللغة</value></data>
+  <data name="Large image" xml:space="preserve"><value>صورة كبيرة</value></data>
   <data name="Last attempt date" xml:space="preserve"><value>تاريخ آخر محاولة</value></data>
   <data name="Last sign-in" xml:space="preserve"><value>آخر دخول</value></data>
   <data name="Latest content" xml:space="preserve"><value>أحدث المحتوى</value></data>
@@ -399,6 +413,7 @@
   <data name="Learning material for a course or session" xml:space="preserve"><value>مادة تعليمية لدورة أو جلسة</value></data>
   <data name="Leave a field empty to use the default text shown in grey." xml:space="preserve"><value>اترك الحقل فارغاً لاستخدام النص الافتراضي الظاهر باللون الرمادي.</value></data>
   <data name="Left" xml:space="preserve"><value>يسار</value></data>
+  <data name="Light line art in the visual panel; it follows the login text color. Hidden on phones." xml:space="preserve"><value>رسوم خطية خفيفة في اللوحة المرئية بلون نص صفحة الدخول، وتُخفى على الجوال.</value></data>
   <data name="Link" xml:space="preserve"><value>رابط</value></data>
   <data name="Linked content" xml:space="preserve"><value>المحتوى المرتبط</value></data>
   <data name="Linked content (optional)" xml:space="preserve"><value>المحتوى المرتبط (اختياري)</value></data>
@@ -419,6 +434,7 @@
   <data name="Login hero feature 3" xml:space="preserve"><value>النقطة المميزة 3</value></data>
   <data name="Login hero text" xml:space="preserve"><value>نص اللوحة المرئية</value></data>
   <data name="Login hero title" xml:space="preserve"><value>عنوان اللوحة المرئية</value></data>
+  <data name="Login image" xml:space="preserve"><value>صورة صفحة الدخول</value></data>
   <data name="Login layout" xml:space="preserve"><value>تخطيط صفحة الدخول</value></data>
   <data name="Login logo" xml:space="preserve"><value>شعار صفحة الدخول</value></data>
   <data name="Login logo placement" xml:space="preserve"><value>موضع شعار صفحة الدخول</value></data>
@@ -446,6 +462,7 @@
   <data name="Marked as read" xml:space="preserve"><value>تمت القراءة</value></data>
   <data name="Max attempts (0 = unlimited)" xml:space="preserve"><value>الحد الأقصى للمحاولات (0 = غير محدود)</value></data>
   <data name="Maximum attempts reached" xml:space="preserve"><value>تم استنفاد عدد المحاولات المسموح بها</value></data>
+  <data name="Medium image" xml:space="preserve"><value>صورة متوسطة</value></data>
   <data name="Menu" xml:space="preserve"><value>القائمة</value></data>
   <data name="Minimum 10 characters, with upper-case, lower-case and a digit." xml:space="preserve"><value>10 خانات على الأقل، وتشمل حرفاً كبيراً وحرفاً صغيراً ورقماً.</value></data>
   <data name="Mobile" xml:space="preserve"><value>الجوال</value></data>
@@ -481,6 +498,7 @@
   <data name="No completed assessments yet." xml:space="preserve"><value>لا توجد اختبارات مكتملة بعد.</value></data>
   <data name="No content found." xml:space="preserve"><value>لا يوجد محتوى.</value></data>
   <data name="No content has been published yet." xml:space="preserve"><value>لم يتم نشر أي محتوى بعد.</value></data>
+  <data name="No decoration" xml:space="preserve"><value>بدون زخارف</value></data>
   <data name="No entries match the filter." xml:space="preserve"><value>لا توجد سجلات مطابقة للتصفية.</value></data>
   <data name="No file chosen" xml:space="preserve"><value>لم يتم اختيار ملف</value></data>
   <data name="No questions yet" xml:space="preserve"><value>لا توجد أسئلة بعد</value></data>
@@ -552,6 +570,7 @@
   <data name="PDF, Word, Excel, PowerPoint, images, MP4/WebM video" xml:space="preserve"><value>PDF وWord وExcel وPowerPoint والصور والفيديو MP4/WebM</value></data>
   <data name="Pending acknowledgments" xml:space="preserve"><value>إقرارات بانتظارك</value></data>
   <data name="Performed by" xml:space="preserve"><value>المستخدم / المنفذ</value></data>
+  <data name="Place in the panel" xml:space="preserve"><value>مكانها في اللوحة</value></data>
   <data name="Please complete the assessment: {0}" xml:space="preserve"><value>يرجى إكمال الاختبار: {0}</value></data>
   <data name="Please read and acknowledge: {0}" xml:space="preserve"><value>يرجى قراءة المحتوى التالي والإقرار عليه: {0}</value></data>
   <data name="Please read the full content above, then confirm below." xml:space="preserve"><value>يرجى قراءة المحتوى كاملاً أعلاه، ثم التأكيد أدناه.</value></data>
@@ -568,6 +587,7 @@
   <data name="Policies, regulations, controls, awareness and training material: with acknowledgment and an assessment when needed." xml:space="preserve"><value>السياسات واللوائح والضوابط ومواد التوعية والتدريب، مع الإقرار والاختبار عند الحاجة.</value></data>
   <data name="Policy" xml:space="preserve"><value>سياسة</value></data>
   <data name="Policy acknowledgments" xml:space="preserve"><value>الإقرار بالسياسات</value></data>
+  <data name="Policy document" xml:space="preserve"><value>وثيقة السياسة</value></data>
   <data name="Port" xml:space="preserve"><value>المنفذ</value></data>
   <data name="Practical instructions and guidance" xml:space="preserve"><value>تعليمات وإرشادات عملية</value></data>
   <data name="Prestigious, with a gold accent" xml:space="preserve"><value>فخم مع لمسة ذهبية</value></data>
@@ -582,6 +602,7 @@
   <data name="Primary color" xml:space="preserve"><value>اللون الرئيسي</value></data>
   <data name="Procedure" xml:space="preserve"><value>إجراء</value></data>
   <data name="Procedure / Instruction" xml:space="preserve"><value>إجراء / تعليمات</value></data>
+  <data name="Progress journey" xml:space="preserve"><value>مسار التقدم</value></data>
   <data name="Protected connection - for authorized users only" xml:space="preserve"><value>اتصال محمي - للمستخدمين المصرّح لهم فقط</value></data>
   <data name="Provide at least two answer options." xml:space="preserve"><value>أدخل خيارين للإجابة على الأقل.</value></data>
   <data name="Public base URL (used for links in emails)" xml:space="preserve"><value>عنوان الموقع العام (يُستخدم في روابط رسائل البريد)</value></data>
@@ -704,6 +725,7 @@
   <data name="Settings" xml:space="preserve"><value>الإعدادات</value></data>
   <data name="SETTINGS_UPDATED" xml:space="preserve"><value>تعديل الإعدادات</value></data>
   <data name="Several lines are allowed." xml:space="preserve"><value>يُسمح بأكثر من سطر.</value></data>
+  <data name="Shield" xml:space="preserve"><value>درع</value></data>
   <data name="Short assessments that check your understanding of the policies and controls." xml:space="preserve"><value>اختبارات قصيرة تقيس فهمك للسياسات والضوابط.</value></data>
   <data name="Short description" xml:space="preserve"><value>وصف مختصر</value></data>
   <data name="Short interactive assessments" xml:space="preserve"><value>اختبارات تفاعلية قصيرة</value></data>
@@ -720,6 +742,7 @@
   <data name="Shown in lists and on the employee dashboard." xml:space="preserve"><value>يظهر في القوائم ولوحة الموظف.</value></data>
   <data name="Shown in the sidebar and on the login page." xml:space="preserve"><value>يظهر في القائمة الجانبية وصفحة الدخول.</value></data>
   <data name="Shown in the visual panel of the login page. PNG/JPG/WebP; landscape images work best." xml:space="preserve"><value>تظهر في اللوحة المرئية لصفحة الدخول. PNG/JPG/WebP، والصور الأفقية أفضل.</value></data>
+  <data name="Shown in the visual panel of the login page: as the full background or as a framed picture. PNG/JPG/WebP." xml:space="preserve"><value>تظهر في اللوحة المرئية لصفحة الدخول: كخلفية كاملة أو كصورة داخل إطار. PNG/JPG/WebP.</value></data>
   <data name="Sidebar background" xml:space="preserve"><value>خلفية القائمة الجانبية</value></data>
   <data name="Sidebar logo" xml:space="preserve"><value>شعار القائمة الجانبية</value></data>
   <data name="Sidebar text" xml:space="preserve"><value>نص القائمة الجانبية</value></data>
@@ -737,14 +760,18 @@
   <data name="Single choice" xml:space="preserve"><value>اختيار واحد</value></data>
   <data name="Single choice questions must have exactly one correct answer." xml:space="preserve"><value>أسئلة الاختيار الواحد يجب أن تحتوي على إجابة صحيحة واحدة فقط.</value></data>
   <data name="Skip to content" xml:space="preserve"><value>تخطَّ إلى المحتوى</value></data>
+  <data name="Small (visual mark)" xml:space="preserve"><value>صغيرة (عنصر بصري)</value></data>
   <data name="SMTP is not configured (Settings → Email)." xml:space="preserve"><value>لم تتم تهيئة خادم البريد (الإعدادات ← إعدادات البريد الإلكتروني).</value></data>
   <data name="SMTP password" xml:space="preserve"><value>كلمة مرور SMTP</value></data>
   <data name="SMTP server" xml:space="preserve"><value>خادم SMTP</value></data>
   <data name="SMTP settings are working." xml:space="preserve"><value>إعدادات البريد تعمل بنجاح.</value></data>
   <data name="SMTP username (if required)" xml:space="preserve"><value>اسم مستخدم SMTP (إن لزم)</value></data>
+  <data name="Soft circles" xml:space="preserve"><value>دوائر ناعمة</value></data>
   <data name="Soft Mauve Rose" xml:space="preserve"><value>الوردي الموفي الهادئ</value></data>
   <data name="Some color combinations have low contrast. You can still save, but consider adjusting them." xml:space="preserve"><value>بعض تركيبات الألوان منخفضة التباين. يمكنك الحفظ، لكن يُستحسن تعديلها.</value></data>
   <data name="Some questions are not answered yet:" xml:space="preserve"><value>لم تتم الإجابة عن بعض الأسئلة:</value></data>
+  <data name="Spacing from the edges" xml:space="preserve"><value>المسافة من الحواف</value></data>
+  <data name="Start" xml:space="preserve"><value>البداية</value></data>
   <data name="Start assessment" xml:space="preserve"><value>ابدأ الاختبار</value></data>
   <data name="Start from a palette" xml:space="preserve"><value>ابدأ من لوحة ألوان جاهزة</value></data>
   <data name="Start now" xml:space="preserve"><value>ابدأ الآن</value></data>
@@ -865,6 +892,9 @@
   <data name="Use the suggested statement" xml:space="preserve"><value>استخدام النص المقترح</value></data>
   <data name="Use the toolbar for headings, lists, links, images and right-to-left paragraphs." xml:space="preserve"><value>استخدم شريط الأدوات للعناوين والقوائم والروابط والصور والفقرات من اليمين إلى اليسار.</value></data>
   <data name="Used on the login page. If empty, the sidebar logo is used." xml:space="preserve"><value>يُستخدم في صفحة الدخول. إذا لم يُرفع يُستخدم شعار القائمة الجانبية.</value></data>
+  <data name="Used only as the small icon in the browser tab. ICO or PNG." xml:space="preserve"><value>تُستخدم فقط كأيقونة صغيرة في تبويب المتصفح. ICO أو PNG.</value></data>
+  <data name="Used only at the top of the navigation (sidebar). PNG/JPG/WebP/GIF." xml:space="preserve"><value>يُستخدم فقط أعلى القائمة الجانبية. PNG/JPG/WebP/GIF.</value></data>
+  <data name="Used only on the login page; independent of the sidebar logo. If empty, the initial of the system name is shown." xml:space="preserve"><value>يُستخدم فقط في صفحة الدخول، ومستقل عن شعار القائمة الجانبية. إن لم يُرفع يظهر الحرف الأول من اسم النظام.</value></data>
   <data name="User" xml:space="preserve"><value>المستخدم</value></data>
   <data name="User created." xml:space="preserve"><value>تم إنشاء المستخدم.</value></data>
   <data name="USER_CREATED" xml:space="preserve"><value>إنشاء مستخدم</value></data>
@@ -898,6 +928,7 @@
   <data name="When you have read the content and viewed its attachments, record that you have completed it." xml:space="preserve"><value>بعد قراءة المحتوى والاطلاع على مرفقاته، سجّل إكمالك للمادة.</value></data>
   <data name="White plate behind the login logo" xml:space="preserve"><value>خلفية بيضاء خلف شعار الدخول</value></data>
   <data name="Whole page" xml:space="preserve"><value>الصفحة كاملة</value></data>
+  <data name="Width as a share of the text column." xml:space="preserve"><value>العرض كنسبة من عمود النص.</value></data>
   <data name="Will be published with the content" xml:space="preserve"><value>سيُنشر مع المحتوى</value></data>
   <data name="Will be removed when you save." xml:space="preserve"><value>سيُزال عند الحفظ.</value></data>
   <data name="Windows / AD (no password)" xml:space="preserve"><value>Windows / AD (بدون كلمة مرور)</value></data>

@@ -42,12 +42,19 @@ public class Branding
         ("LoginLayout", ["split", "split-reverse", "full"]),
         ("LoginTextAlign", ["start", "center"]),
         ("LoginLogoPlacement", ["hero", "card", "both"]),
+        // how the login image is shown: full background of the visual panel, a framed picture (large / medium / small) or not at all
+        ("LoginImageMode", ["background", "large", "medium", "small", "hidden"]),
+        ("LoginImageAlign", ["start", "center", "end"]),
+        ("LoginImageSlot", ["above", "below"]),
+        ("LoginDecorStyle", ["shield", "orbs", "checklist", "grid", "document", "journey", "none"]),
     ];
 
     /// <summary>Integers: range and default.</summary>
     public static readonly (string Name, int Min, int Max, int Default)[] Numbers =
     [
         ("LoginImageZoom", 100, 200, 100), ("LoginFocusX", 0, 100, 50), ("LoginFocusY", 0, 100, 50), ("LoginOverlayOpacity", 0, 95, 70),
+        ("LoginImageSize", 10, 100, 0),   // width of a framed image in % of the text column; 0 = the mode's default
+        ("LoginImageInset", 0, 64, 0),    // spacing (px) from the panel edges (background) or around the framed image
     ];
 
     /// <summary>On/off options and defaults.</summary>
@@ -61,8 +68,8 @@ public class Branding
     public static readonly (string Field, string Key, string Kind)[] Assets =
     [
         ("logo", "Branding.LogoFile", "logo"),               // sidebar / navigation logo
-        ("loginLogo", "Branding.LoginLogoFile", "loginlogo"), // login page logo (falls back to the sidebar logo)
-        ("icon", "Branding.IconFile", "icon"),               // compact logo / icon (collapsed spaces, mobile)
+        ("loginLogo", "Branding.LoginLogoFile", "loginlogo"), // login page logo only (independent of the sidebar logo)
+        ("icon", "Branding.IconFile", "icon"),               // compact square mark (shown in the sidebar only when there is no sidebar logo)
         ("favicon", "Branding.FaviconFile", "favicon"),
         ("loginBackground", "Branding.LoginBackgroundImage", "loginbg"),
     ];
@@ -123,8 +130,9 @@ public class Branding
     public string WelcomeText => this["WelcomeText"];
     public string FooterText => this["FooterText"];
     public bool HasLogo => Has("logo");
-    public bool HasLoginLogo => Has("loginlogo") || Has("logo");
-    public string LoginLogoUrl => AssetUrl(Has("loginlogo") ? "loginlogo" : "logo");
+    // Each asset is independent: the login page never borrows the sidebar logo (and vice versa).
+    public bool HasLoginLogo => Has("loginlogo");
+    public string LoginLogoUrl => AssetUrl("loginlogo");
     public bool HasIcon => Has("icon");
     public bool HasFavicon => Has("favicon");
     public bool HasLoginBackground => Has("loginbg");
@@ -178,6 +186,14 @@ public class Branding
         "custom" => $"{Number("LoginFocusX")}% {Number("LoginFocusY")}%",
         _ => "50% 50%",
     };
+    /// <summary>Effective image mode: "none" when no image is uploaded.</summary>
+    public string LoginImageMode => HasLoginBackground ? this["LoginImageMode"] : "none";
+    public bool IsLoginImageFramed => LoginImageMode is "large" or "medium" or "small";
+    /// <summary>Default width (% of the text column) of a framed image per mode.</summary>
+    public static int DefaultImageWidth(string mode) => mode switch { "large" => 100, "small" => 22, _ => 60 };
+    public int LoginImageWidth => Number("LoginImageSize") is > 0 and var n ? n : DefaultImageWidth(this["LoginImageMode"]);
+    /// <summary>Decoration actually shown ("none" when decorations are switched off).</summary>
+    public string LoginDecorStyle => Flag("LoginDecor") ? this["LoginDecorStyle"] : "none";
     public string LoginImageSizeCss => this["LoginImageFit"] switch { "contain" => "contain", "fill" => "100% 100%", "auto" => "auto", _ => "cover" };
 
     /// <summary>Inline CSS variables for the login hero (media layer, overlay, text color). Only validated values.</summary>
@@ -187,15 +203,17 @@ public class Branding
         {
             var inv = CultureInfo.InvariantCulture;
             var css = $"--hero-text:{this["LoginTextColor"]};--ov:{this["LoginOverlayColor"]};--ov-op:{(Number("LoginOverlayOpacity") / 100.0).ToString("0.##", inv)};" +
-                      $"--img-size:{LoginImageSizeCss};--img-pos:{LoginImagePositionCss};--img-zoom:{(Number("LoginImageZoom") / 100.0).ToString("0.##", inv)};";
+                      $"--img-size:{LoginImageSizeCss};--img-pos:{LoginImagePositionCss};--img-zoom:{(Number("LoginImageZoom") / 100.0).ToString("0.##", inv)};" +
+                      $"--img-w:{LoginImageWidth}%;--img-inset:{Number("LoginImageInset")}px;";
             if (HasLoginBackground) css += $"--img:url('{AssetUrl("loginbg")}');";
             return css;
         }
     }
 
-    /// <summary>Classes on the login root for layout, text alignment and decoration.</summary>
-    public string LoginClasses => $"layout-{this["LoginLayout"]} align-{this["LoginTextAlign"]} logo-{this["LoginLogoPlacement"]}" + (Flag("LoginDecor") ? "" : " no-decor") + (HasLoginBackground ? " has-image" : "") +
-        (Flag("ShowLoginBadge") ? "" : " no-badge") + (Flag("ShowLoginFeatures") ? "" : " no-features") + (Flag("ShowNamesOnLogin") ? "" : " no-names");
+    /// <summary>Classes on the login root for layout, text alignment, image mode and decoration.</summary>
+    public string LoginClasses => $"layout-{this["LoginLayout"]} align-{this["LoginTextAlign"]} logo-{this["LoginLogoPlacement"]}" + (LoginDecorStyle == "none" ? " no-decor" : "") + (LoginImageMode == "background" ? " has-image" : "") +
+        (Flag("ShowLoginBadge") ? "" : " no-badge") + (Flag("ShowLoginFeatures") ? "" : " no-features") + (Flag("ShowNamesOnLogin") ? "" : " no-names") +
+        $" decor-{LoginDecorStyle} img-{LoginImageMode} img-align-{this["LoginImageAlign"]} img-slot-{this["LoginImageSlot"]}";
 
     // ---------- contrast ----------
     public static double Luminance(string hex)

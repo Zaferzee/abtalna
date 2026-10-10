@@ -11,12 +11,20 @@
     var showLogo = b.HasLoginLogo || preview;
     var features = new[] { b["LoginFeature1"], b["LoginFeature2"], b["LoginFeature3"] };
     var icons = new[] { "bi-journal-check", "bi-ui-checks-grid", "bi-graph-up-arrow" };
+    // framed image (large / medium / small): the real page renders it only in the chosen slot; the preview renders both slots
+    // and lets CSS pick, so switching mode / slot needs no round trip
+    bool Figure(string slot) => preview || (b.IsLoginImageFramed && b["LoginImageSlot"] == slot);
 }
 <section class="auth-hero" style="@b.LoginHeroStyle" data-b-hero>
-    <div class="auth-media" aria-hidden="true"></div>
+    <div class="auth-media-frame" aria-hidden="true"><div class="auth-media"></div></div>
     <div class="auth-overlay" aria-hidden="true"></div>
-    <span class="auth-orb o1 auth-decor" aria-hidden="true"></span><span class="auth-orb o2 auth-decor" aria-hidden="true"></span>
-    <svg class="auth-shield auth-decor" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 4 112 24v40c0 34-22 60-52 72C30 124 8 98 8 64V24Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="m38 70 15 15 30-32" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    @* decorations: CSS shows the elements of the active style (.decor-<style> on .auth); line art uses currentColor *@
+    <span class="auth-orb o1 auth-decor dc dc-shield dc-orbs dc-checklist dc-grid dc-document dc-journey" aria-hidden="true"></span><span class="auth-orb o2 auth-decor dc dc-shield dc-orbs" aria-hidden="true"></span>
+    <svg class="auth-shield auth-decor dc dc-shield" viewBox="0 0 120 140" aria-hidden="true"><path d="M60 4 112 24v40c0 34-22 60-52 72C30 124 8 98 8 64V24Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="m38 70 15 15 30-32" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="auth-art auth-decor dc dc-checklist" viewBox="0 0 140 160" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="6" width="124" height="148" rx="14" stroke-width="4"/><path d="M52 6v-2h36v2" stroke-width="4"/>@for (var r = 0; r < 3; r++) { var y = 40 + r * 38; <rect x="26" y="@y" width="20" height="20" rx="5" stroke-width="4"/><path d="m30 @(y + 10) 5 5 9-10" stroke-width="4.5"/><path d="M60 @(y + 6)h52M60 @(y + 16)h34" stroke-width="4" opacity=".7"/> }</svg>
+    <svg class="auth-art auth-decor dc dc-grid" viewBox="0 0 150 150" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">@for (var i = 0; i < 9; i++) { var x = 8 + i % 3 * 48; var y = 8 + i / 3 * 48; <rect x="@x" y="@y" width="38" height="38" rx="9" stroke-width="4" fill="@(i == 4 ? "currentColor" : "none")" fill-opacity=".22"/> if (i is 0 or 2 or 4 or 6) { <path d="m@(x + 11) @(y + 20) 6 6 11-12" stroke-width="4.5"/> } else if (i is 1 or 5) { <path d="M@(x + 12) @(y + 19)h14" stroke-width="4" opacity=".7"/> } }</svg>
+    <svg class="auth-art auth-decor dc dc-document" viewBox="0 0 130 160" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6h62l28 28v114a6 6 0 0 1-6 6H22a6 6 0 0 1-6-6V12a6 6 0 0 1 6-6Z" stroke-width="4"/><path d="M84 6v22a6 6 0 0 0 6 6h22" stroke-width="4"/><path d="M34 40h34M34 62h62M34 78h62M34 94h62M34 110h40" stroke-width="4" opacity=".75"/><circle cx="88" cy="128" r="13" stroke-width="4"/><path d="m82 128 4 4 8-8" stroke-width="4"/></svg>
+    <svg class="auth-art auth-decor dc dc-journey" viewBox="0 0 160 160" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 138C40 134 50 118 62 104S84 86 98 84 128 56 136 30" stroke-width="4" stroke-dasharray="1 10"/><circle cx="22" cy="138" r="7" stroke-width="4" fill="currentColor" fill-opacity=".35"/><circle cx="62" cy="104" r="7" stroke-width="4" fill="currentColor" fill-opacity=".35"/><circle cx="98" cy="84" r="7" stroke-width="4"/><circle cx="136" cy="30" r="13" stroke-width="4"/><path d="m130 30 4 4 8-8" stroke-width="4"/></svg>
     <div class="auth-brand reveal">
         @if (showLogo)
         {
@@ -28,6 +36,7 @@
         <span class="auth-brand-names"><strong class="ml bidi" data-b="SystemName">@b.SystemName</strong><small class="ml bidi" data-b="OrgName">@b.OrgName</small></span>
     </div>
     <div class="auth-hero-inner">
+        @if (Figure("above")) { <div class="auth-figure slot-above" aria-hidden="true"><div class="auth-figure-img"></div></div> }
         <span class="auth-kicker reveal bidi" style="--i:1" data-b-wrap="LoginBadge" @(string.IsNullOrWhiteSpace(b["LoginBadge"]) ? "hidden" : "")><i class="bi bi-shield-lock"></i> <span data-b="LoginBadge">@b["LoginBadge"]</span></span>
         <h1 class="auth-title reveal ml bidi" style="--i:2" data-b="LoginHeroTitle">@b["LoginHeroTitle"]</h1>
         <p class="auth-lead reveal ml bidi" style="--i:3" data-b="LoginHeroDescription">@b["LoginHeroDescription"]</p>
@@ -38,6 +47,7 @@
                 <li class="reveal" style="--i:@(4 + i)" data-b-wrap="LoginFeature@(i + 1)" @(string.IsNullOrWhiteSpace(f) ? "hidden" : "")><i class="bi @icons[i]"></i><span class="bidi" data-b="LoginFeature@(i + 1)">@f</span></li>
             }
         </ul>
+        @if (Figure("below")) { <div class="auth-figure slot-below" aria-hidden="true"><div class="auth-figure-img"></div></div> }
     </div>
     <div class="auth-hero-foot bidi" data-b="OrgNameInline">@b.OrgNameInline</div>
 </section>
