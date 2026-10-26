@@ -26,7 +26,7 @@
 </ol></nav>
 
 <div class="entity-hero reveal">
-    <span class="eh-icon"><i class="bi @(n.IsRoot ? "bi-bank2" : "bi-building")"></i></span>
+    <span class="eh-icon @(Model.LogoUrl != null ? "has-logo" : "")">@if (Model.LogoUrl != null) { <img class="entity-logo" src="@Model.LogoUrl" alt="" /> } else { <i class="bi @(n.IsRoot ? "bi-bank2" : "bi-building")"></i> }</span>
     <div class="eh-text">
         <div class="eyebrow">@L[n.IsRoot ? "Root entity" : "Entity"] · <bdi dir="ltr">@n.Code</bdi></div>
         <h1 class="bidi">@n.Name</h1>

@@ -34,8 +34,8 @@ const toStudio = async p => { await p.goto(base + '/Admin/Settings'); await p.wa
 const save = async p => { await p.click('[data-studio-save]'); await p.waitForLoadState('networkidle'); };
 const upload = (p, field, name, mime) => p.setInputFiles(`input[name="${field}"]`, file(name, mime));
 const waitImg = (p, sel) => p.waitForFunction(s => { const i = document.querySelector(s); return i && i.complete && i.naturalWidth > 0; }, sel, { timeout: 5000 }).catch(() => null);
-// natural width of the logo shown on the real login page / in the real sidebar (each test logo has a different width)
-async function loginLogoWidth(p) { await p.goto(base + '/Account/Login'); await p.waitForLoadState('networkidle'); return p.evaluate(() => { const i = document.querySelector('.auth-hero .auth-logo img, .auth-card-logo img'); return i ? { w: i.naturalWidth, src: i.getAttribute('src') } : { w: 0, src: '' }; }); }
+// natural width of the logos shown on the real login page (card = login logo, hero = sidebar logo) / in the real sidebar (each test logo has a different width)
+async function loginLogoWidth(p) { await p.goto(base + '/Account/Login'); await p.waitForLoadState('networkidle'); return p.evaluate(() => { const i = document.querySelector('.auth-card-logo img'), h = document.querySelector('.auth-hero .auth-logo img'); return { w: i ? i.naturalWidth : 0, src: i ? i.getAttribute('src') : '', heroW: h ? h.naturalWidth : 0, heroSrc: h ? h.getAttribute('src') : '', mono: !!document.querySelector('.auth-card-logo .card-mono') }; }); }
 async function sidebarLogoWidth(p) { await p.goto(base + '/Admin/Dashboard'); await p.waitForLoadState('networkidle'); return p.evaluate(() => { const i = document.querySelector('.sidebar .sb-logo img'); return i ? { w: i.naturalWidth, src: i.getAttribute('src') } : { w: 0, src: '' }; }); }
 const pvState = p => p.evaluate(() => {
   const root = document.querySelector('[data-pv-auth]'), vis = s => { const e = root.querySelector(s); return !!e && getComputedStyle(e).display !== 'none' && !e.closest('[hidden]'); };
@@ -62,19 +62,19 @@ const g = await page();   // signed out: the real login page
 await toStudio(a); await tab(a, 'logos');
 await upload(a, 'logo', 'logo-light.png', 'image/png');
 await waitImg(a, '[data-pv-scope] [data-b-logo="sidebar"] img');
-let pv = await a.evaluate(() => ({ side: document.querySelector('[data-pv-scope] [data-b-logo="sidebar"] img').getAttribute('src') || '', loginHidden: document.querySelector('[data-pv-auth] [data-b-logo="login"]').hidden, cardHidden: document.querySelector('[data-pv-auth] [data-b-logo="card"]').hidden }));
-ok(pv.side.startsWith('data:image/png') && pv.loginHidden && pv.cardHidden, 'preview: a new sidebar logo does not appear on the login page');
+let pv = await a.evaluate(() => { const h = document.querySelector('[data-pv-auth] [data-b-logo="hero"]'); return { side: document.querySelector('[data-pv-scope] [data-b-logo="sidebar"] img').getAttribute('src') || '', heroShown: !h.hidden, heroSrc: h.querySelector('img').getAttribute('src') || '', cardHidden: document.querySelector('[data-pv-auth] [data-b-logo="card"]').hidden, monoShown: !document.querySelector('[data-pv-auth] [data-b-card-mono]').hidden }; });
+ok(pv.side.startsWith('data:image/png') && pv.heroShown && pv.heroSrc === pv.side && pv.cardHidden && pv.monoShown, 'preview: a new sidebar logo heads the visual panel; the sign-in card keeps the initial');
 await upload(a, 'loginLogo', 'logo-seal.png', 'image/png');
-await waitImg(a, '[data-pv-auth] [data-b-logo="login"] img');
-pv = await a.evaluate(() => ({ side: document.querySelector('[data-pv-scope] [data-b-logo="sidebar"] img').naturalWidth, login: document.querySelector('[data-pv-auth] [data-b-logo="login"] img').naturalWidth }));
-ok(pv.side === 520 && pv.login === 440, `preview: login logo (${pv.login}px) and sidebar logo (${pv.side}px) are different files`);
+await waitImg(a, '[data-pv-auth] [data-b-logo="card"] img');
+pv = await a.evaluate(() => ({ side: document.querySelector('[data-pv-scope] [data-b-logo="sidebar"] img').naturalWidth, login: document.querySelector('[data-pv-auth] [data-b-logo="card"] img').naturalWidth, hero: document.querySelector('[data-pv-auth] [data-b-logo="hero"] img').naturalWidth, monoShown: !document.querySelector('[data-pv-auth] [data-b-card-mono]').hidden }));
+ok(pv.side === 520 && pv.login === 440 && pv.hero === 520 && !pv.monoShown, `preview: login logo (${pv.login}px) only in the card; the visual panel keeps the sidebar logo (${pv.hero}px)`);
 await a.evaluate(() => document.querySelector('[data-asset="loginlogo"]').scrollIntoView({ block: 'center', behavior: 'instant' }));
 await shot(a, '01-studio-logos-independent', 'الاستوديو: شعار القائمة الجانبية وشعار صفحة الدخول ملفان مستقلان؛ كل بطاقة توضّح أين يُستخدم الشعار فقط', { wait: 600 });
 await a.click('[data-pv-tab="app"]'); await a.waitForTimeout(400);
 await shot(a, '02-preview-app-sidebar-logo', 'المعاينة (التطبيق): القائمة الجانبية تعرض شعارها الخاص، لا شعار صفحة الدخول', { el: '.studio-preview' });
 await save(a);
 let L = await loginLogoWidth(g), S = await sidebarLogoWidth(a);
-ok(L.w === 440 && L.src.includes('kind=loginlogo') && S.w === 520 && S.src.includes('kind=logo&'), 'saved: login page shows the login logo, the sidebar shows the sidebar logo');
+ok(L.w === 440 && L.src.includes('kind=loginlogo') && L.heroW === 520 && L.heroSrc.includes('kind=logo&') && S.w === 520 && S.src.includes('kind=logo&'), 'saved: login card shows the login logo, the visual panel and the sidebar show the sidebar logo');
 await shot(a, '03-sidebar-own-logo', 'لوحة الإدارة: شعار القائمة الجانبية (مستقل عن شعار صفحة الدخول)');
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
 await shot(g, '04-login-own-logo', 'صفحة الدخول: شعار الدخول الخاص (الختم) وليس شعار القائمة الجانبية');
@@ -82,7 +82,7 @@ await shot(g, '04-login-own-logo', 'صفحة الدخول: شعار الدخول
 // change the sidebar logo only -> login logo unchanged
 await toStudio(a); await tab(a, 'logos'); await upload(a, 'logo', 'icon.png', 'image/png'); await save(a);
 L = await loginLogoWidth(g); S = await sidebarLogoWidth(a);
-ok(S.w === 256 && L.w === 440, 'changing the sidebar logo does not change the login logo');
+ok(S.w === 256 && L.w === 440 && L.heroW === 256, 'changing the sidebar logo does not change the login (card) logo; the visual panel follows the sidebar logo');
 // change the login logo only -> sidebar logo unchanged
 await toStudio(a); await tab(a, 'logos'); await upload(a, 'loginLogo', 'emblem.png', 'image/png'); await save(a);
 L = await loginLogoWidth(g); S = await sidebarLogoWidth(a);
@@ -91,7 +91,7 @@ ok(L.w === 512 && S.w === 256, 'changing the login logo does not change the side
 await toStudio(a); await tab(a, 'logos'); await a.click('[data-asset="logo"] [data-asset-remove]'); await upload(a, 'icon', 'icon.png', 'image/png'); await save(a);
 L = await loginLogoWidth(g);
 const side3 = await a.evaluate(async () => { const r = await fetch('/Admin/Dashboard'); const h = await r.text(); return { logo: h.includes('kind=logo&'), icon: h.includes('kind=icon') }; });
-ok(L.w === 512 && !side3.logo && side3.icon, 'removing the sidebar logo leaves the login logo; the compact icon appears only in the sidebar');
+ok(L.w === 512 && L.heroW === 0 && !side3.logo && side3.icon, 'removing the sidebar logo leaves the login logo; the compact icon appears only in the sidebar');
 // restore the two logos used for the remaining screenshots
 await toStudio(a); await tab(a, 'logos'); await upload(a, 'logo', 'logo-light.png', 'image/png'); await upload(a, 'loginLogo', 'logo-seal.png', 'image/png'); await save(a);
 

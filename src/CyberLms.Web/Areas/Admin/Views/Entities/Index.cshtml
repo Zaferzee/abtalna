@@ -22,7 +22,7 @@
                     var n = r.Node;
                     <li role="treeitem" class="ot-node @(n.EffectiveActive ? "" : "is-off")" style="--d:@(n.Depth - minDepth)">
                         <a asp-action="Details" asp-route-id="@n.Id" class="ot-link">
-                            <span class="ot-icon"><i class="bi @(n.IsRoot ? "bi-bank2" : r.Children > 0 ? "bi-buildings" : "bi-building")"></i></span>
+                            <span class="ot-icon @(r.LogoUrl != null ? "has-logo" : "")">@if (r.LogoUrl != null) { <img class="entity-logo" src="@r.LogoUrl" alt="" /> } else { <i class="bi @(n.IsRoot ? "bi-bank2" : r.Children > 0 ? "bi-buildings" : "bi-building")"></i> }</span>
                             <span class="ot-text"><strong class="bidi">@n.Name</strong><small dir="ltr">@n.Code</small></span>
                             <span class="ot-meta"><i class="bi bi-people"></i> @r.SubtreeUsers</span>
                         </a>
@@ -40,7 +40,7 @@
         {
             var n = r.Node;
             <tr>
-                <td><div class="t-title"><span class="icon-chip"><i class="bi @(n.IsRoot ? "bi-bank2" : "bi-building")"></i></span><div><a class="t-name bidi" asp-action="Details" asp-route-id="@n.Id">@n.Name</a><small class="d-block text-muted" dir="ltr">@n.Code · L@(n.Depth)</small></div></div></td>
+                <td><div class="t-title"><span class="icon-chip @(r.LogoUrl != null ? "has-logo" : "")">@if (r.LogoUrl != null) { <img class="entity-logo" src="@r.LogoUrl" alt="" /> } else { <i class="bi @(n.IsRoot ? "bi-bank2" : "bi-building")"></i> }</span><div><a class="t-name bidi" asp-action="Details" asp-route-id="@n.Id">@n.Name</a><small class="d-block text-muted" dir="ltr">@n.Code · L@(n.Depth)</small></div></div></td>
                 <td class="bidi">@(r.Parent?.Name ?? "—")</td>
                 <td><span class="badge badge-dot text-bg-@(n.EffectiveActive ? "success" : "secondary")">@L[n.EffectiveActive ? "Active" : "Disabled"]</span></td>
                 <td><span title="@L["Own / including sub-entities"]">@r.Users <small class="text-muted">/ @r.SubtreeUsers</small></span></td>

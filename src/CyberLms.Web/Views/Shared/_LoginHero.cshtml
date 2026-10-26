@@ -8,7 +8,8 @@
 @{
     var b = Model;
     var preview = ViewData["preview"] as bool? == true;
-    var showLogo = b.HasLoginLogo || preview;
+    // Final rule: the visual panel shows the SIDEBAR logo (the system's logo); the login-page logo appears only inside the sign-in card.
+    var showLogo = b.HasLogo || preview;
     var features = new[] { b["LoginFeature1"], b["LoginFeature2"], b["LoginFeature3"] };
     var icons = new[] { "bi-journal-check", "bi-ui-checks-grid", "bi-graph-up-arrow" };
     // framed image (large / medium / small): the real page renders it only in the chosen slot; the preview renders both slots
@@ -34,11 +35,11 @@
     <div class="auth-brand reveal">
         @if (showLogo)
         {
-            <span class="auth-logo @(b.Flag("LoginLogoPlate") ? "plate" : "")" data-b-logo="login" @(b.HasLoginLogo ? "" : "hidden")>
-                @if (b.HasLoginLogo) { <img src="@b.LoginLogoUrl" alt="@b.OrgNameInline" /> } else { <img alt="" /> }
+            <span class="auth-logo @(b.Flag("LogoPlate") ? "plate" : "")" data-b-logo="hero" @(b.HasLogo ? "" : "hidden")>
+                @if (b.HasLogo) { <img src="@b.AssetUrl("logo")" alt="@b.OrgNameInline" /> } else { <img alt="" /> }
             </span>
         }
-        <span class="sb-mono auth-mono" aria-hidden="true" data-b-mono @(b.HasLoginLogo && b["LoginLogoPlacement"] != "card" ? "hidden" : "")>@b.Monogram</span>
+        <span class="sb-mono auth-mono" aria-hidden="true" data-b-mono @(b.HasLogo ? "hidden" : "")>@b.Monogram</span>
         <span class="auth-brand-names"><strong class="ml bidi" data-b="SystemName">@b.SystemName</strong><small class="ml bidi" data-b="OrgName">@b.OrgName</small></span>
     </div>
     <div class="auth-hero-inner">

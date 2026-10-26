@@ -41,7 +41,6 @@ public class Branding
         ("LoginImagePosition", ["center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right", "custom"]),
         ("LoginLayout", ["split", "split-reverse", "full"]),
         ("LoginTextAlign", ["start", "center"]),
-        ("LoginLogoPlacement", ["hero", "card", "both"]),
         // how the login image is shown: full background of the visual panel, a framed picture (large / medium / small) or not at all
         ("LoginImageMode", ["background", "large", "medium", "small", "hidden"]),
         ("LoginImageAlign", ["start", "center", "end"]),
@@ -68,7 +67,7 @@ public class Branding
     /// <summary>On/off options and defaults.</summary>
     public static readonly (string Name, bool Default)[] Flags =
     [
-        ("ShowOrgInSidebar", true), ("ShowNamesOnLogin", true), ("LogoPlate", true), ("LoginLogoPlate", true), ("LoginDecor", true),
+        ("ShowOrgInSidebar", true), ("ShowNamesOnLogin", true), ("LogoPlate", true), ("LoginDecor", true),
         ("ShowLoginBadge", true), ("ShowLoginFeatures", true),
         ("Layer1Visible", true), ("Layer2Visible", true), ("Layer3Visible", true),
     ];
@@ -247,7 +246,7 @@ public class Branding
     }
 
     /// <summary>Classes on the login root for layout, text alignment, image mode and decoration.</summary>
-    public string LoginClasses => $"layout-{this["LoginLayout"]} align-{this["LoginTextAlign"]} logo-{this["LoginLogoPlacement"]}" + (LoginLayers.All(l => !l.Visible) ? " no-decor" : "") + (LoginImageMode == "background" ? " has-image" : "") +
+    public string LoginClasses => $"layout-{this["LoginLayout"]} align-{this["LoginTextAlign"]}" + (LoginLayers.All(l => !l.Visible) ? " no-decor" : "") + (LoginImageMode == "background" ? " has-image" : "") +
         (Flag("ShowLoginBadge") ? "" : " no-badge") + (Flag("ShowLoginFeatures") ? "" : " no-features") + (Flag("ShowNamesOnLogin") ? "" : " no-names") +
         $" comp-{LoginCompositionId} img-{LoginImageMode} img-align-{this["LoginImageAlign"]} img-slot-{this["LoginImageSlot"]}";
 

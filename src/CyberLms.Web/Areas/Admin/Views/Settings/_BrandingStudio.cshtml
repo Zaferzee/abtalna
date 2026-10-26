@@ -143,14 +143,10 @@
             @* ---------- 2. logos ---------- *@
             <section class="panel studio-section" data-studio-panel="logos" hidden>
                 <div class="panel-body stack" style="--gap:1rem">
-                    @{ Asset("logo", "logo", "Sidebar logo", "Used only at the top of the navigation (sidebar). PNG/JPG/WebP/GIF.", "bi-layout-sidebar-inset", ".png,.jpg,.jpeg,.webp,.gif"); }
-                    @{ Toggle("LogoPlate", "Show the sidebar logo on a white plate", "Turn off for a logo designed for dark backgrounds."); }
+                    @{ Asset("logo", "logo", "Sidebar logo", "Shown at the top of the sidebar and at the top of the visual panel of the login page. PNG/JPG/WebP/GIF.", "bi-layout-sidebar-inset", ".png,.jpg,.jpeg,.webp,.gif"); }
+                    @{ Toggle("LogoPlate", "Show the sidebar logo on a white plate", "Applies in the sidebar and on the login page's visual panel. Turn off for a logo designed for dark backgrounds."); }
                     <hr class="my-1" />
-                    @{ Asset("loginLogo", "loginlogo", "Login logo", "Used only on the login page; independent of the sidebar logo. If empty, the initial of the system name is shown.", "bi-box-arrow-in-left", ".png,.jpg,.jpeg,.webp,.gif"); }
-                    <div class="row g-3">
-                        <div class="col-md-7">@{ Segmented("LoginLogoPlacement", "Login logo placement", [("hero", "Visual panel", "bi-image"), ("card", "Sign-in card", "bi-person-badge"), ("both", "Both", "bi-layers")]); }</div>
-                        <div class="col-md-5 pt-md-4">@{ Toggle("LoginLogoPlate", "White plate behind the login logo"); }</div>
-                    </div>
+                    @{ Asset("loginLogo", "loginlogo", "Login logo", "Shown only inside the sign-in card of the login page. If empty, the initial of the system name is shown in the card.", "bi-box-arrow-in-left", ".png,.jpg,.jpeg,.webp,.gif"); }
                     <hr class="my-1" />
                     @{ Asset("icon", "icon", "Compact logo (icon)", "A square mark shown in the sidebar only when no sidebar logo is uploaded. It never replaces another logo. PNG/JPG/WebP.", "bi-app-indicator", ".png,.jpg,.jpeg,.webp,.gif"); }
                     @{ Asset("favicon", "favicon", "Favicon", "Used only as the small icon in the browser tab. ICO or PNG.", "bi-app", ".ico,.png"); }
@@ -377,7 +373,7 @@
                                     @await Html.PartialAsync("_LoginHero", b, previewData)
                                     <section class="auth-panel">
                                         <div class="auth-card">
-                                            <div class="auth-card-logo" data-b-logo="card" @(b.HasLoginLogo && b["LoginLogoPlacement"] is "card" or "both" ? "" : "hidden")>@if (b.HasLoginLogo) { <img src="@b.LoginLogoUrl" alt="" /> } else { <img alt="" /> }</div>
+                                            <div class="auth-card-logo"><span data-b-logo="card" @(b.HasLoginLogo ? "" : "hidden")>@if (b.HasLoginLogo) { <img src="@b.LoginLogoUrl" alt="" /> } else { <img alt="" /> }</span><span class="card-mono" aria-hidden="true" data-b-card-mono data-b-mono-text @(b.HasLoginLogo ? "hidden" : "")>@b.Monogram</span></div>
                                             <h2 class="bidi" data-b="LoginTitle">@b.LoginTitle</h2>
                                             <p class="auth-sub bidi" data-b="LoginCardSubtitle">@b["LoginCardSubtitle"]</p>
                                             <div class="alert alert-info bidi" data-b-wrap="LoginSubtitle" @(string.IsNullOrWhiteSpace(b.LoginSubtitle) ? "hidden" : "")><i class="bi bi-info-circle-fill"></i><span class="ml" data-b="LoginSubtitle">@b.LoginSubtitle</span></div>

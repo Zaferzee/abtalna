@@ -9,7 +9,7 @@ Entity branding (overrides per organizational entity, inherited from the central
 | Section | Fields |
 |---|---|
 | General identity | Organization name and system name (multi-line); show the organization name in the sidebar; show the names next to the logo on the login page; welcome text (employee dashboard); footer text; support text |
-| Logos & icons | Four independent assets, each used in one place only: sidebar logo (with or without a light plate); login-page logo (with or without a plate; placement: panel / sign-in card / both; if empty, the initial of the system name is shown, never the sidebar logo); compact icon (shown in the sidebar only while there is no sidebar logo); browser icon (favicon, `.ico`/`.png`) |
+| Logos & icons | Four assets: sidebar logo (with or without a light plate), shown in the sidebar and at the top of the login page's visual panel; login-page logo, shown only inside the sign-in card (if empty, the card shows the initial of the system name; it never appears in the visual panel); compact icon (shown in the sidebar only while there is no sidebar logo); browser icon (favicon, `.ico`/`.png`) |
 | Login page text | Badge (with a show/hide toggle), hero title (multi-line; empty = system name), description, features 1–3 (with a show/hide toggle), card title, card subtitle, login notice |
 | Login page media | Login image; **display mode**: full background / large image / medium image / small (visual mark) / hidden (the file is kept); for the framed modes: size (10–100% of the text column), alignment (start / center / end) and place (above / below the text); spacing from the edges (0–64 px: a frame around the full background, or the space around a framed image); fit (cover / contain / fill / original size); position (3×3 grid or a custom focal point picked on the image); zoom 100–200%; overlay color and opacity 0–95% (full background only); layout (split, split reversed, full-screen image); text placement (start / center); revert the media settings |
 | Visual composition | Curated compositions (Executive Security, Governance & Compliance, Policy & Controls, Awareness Journey, Cyber Defense, Minimal Executive, Clean) and up to three layers (motif, position, opacity, scale, rotation, visibility) with safe ranges. See [LOGIN_COMPOSITIONS.md](LOGIN_COMPOSITIONS.md). Replaces the single decorative pattern of v1.1 |
@@ -70,7 +70,7 @@ The login page only writes validated values into its inline CSS variables (`Bran
 
 ## Limitations
 
-- **Upgrading from v1:** the login page no longer falls back to the sidebar logo. An installation that only uploaded a sidebar logo shows the initial of the system name on the login page until a login logo is uploaded.
+- **Login logos:** the visual panel always uses the sidebar logo (the initial of the system name when there is none); the login-page logo is shown only in the sign-in card. The former placement and login-plate options were removed.
 - **Fixed frame shapes.** Framed login images use a fixed aspect ratio per mode: large 16:9, medium 4:3, small square. Fit, position or focal point, and zoom decide what is visible inside the frame.
 
 - **No separate dark-mode logo variants.** The application has no dark theme to switch them. Instead, each logo has a light-plate option for dark backgrounds, and the sidebar and login logos are separate uploads.

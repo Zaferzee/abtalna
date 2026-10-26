@@ -67,10 +67,11 @@
 .auth-logo { display: grid; place-items: center; flex: none; max-width: 12rem; }
 .auth-logo img { display: block; max-height: 3rem; max-width: 11rem; object-fit: contain; }
 .auth-logo.plate { background: #fff; border-radius: 12px; padding: .45rem .7rem; box-shadow: var(--shadow-sm); }
-.auth.logo-card .auth-hero .auth-logo { display: none; }
 .auth.no-names .auth-brand-names { display: none; }
 .auth-brand-names strong { line-height: 1.45; } .auth-brand-names small { display: block; line-height: 1.5; }
-.auth-card-logo { text-align: center; margin-bottom: 1.1rem; } .auth-card-logo img { max-height: 3.4rem; max-width: 12rem; object-fit: contain; }
+.auth-card-logo { text-align: center; margin-bottom: 1.1rem; }
+.auth-card-logo .card-mono { display: inline-grid; place-items: center; width: 3rem; height: 3rem; border-radius: 14px; font-weight: 700; font-size: 1.25rem;
+  background: var(--primary-50); color: var(--color-primary); } .auth-card-logo img { max-height: 3.4rem; max-width: 12rem; object-fit: contain; }
 .auth-support { margin-top: .9rem; font-size: .84rem; color: var(--color-muted); display: flex; gap: .45rem; justify-content: center; text-align: center; }
 .auth-sub { overflow-wrap: anywhere; }
 

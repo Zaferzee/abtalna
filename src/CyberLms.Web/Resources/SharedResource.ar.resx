@@ -86,6 +86,7 @@
   <data name="Any other content" xml:space="preserve"><value>أي محتوى آخر</value></data>
   <data name="Any status" xml:space="preserve"><value>أي حالة</value></data>
   <data name="Application" xml:space="preserve"><value>التطبيق</value></data>
+  <data name="Applies in the sidebar and on the login page's visual panel. Turn off for a logo designed for dark backgrounds." xml:space="preserve"><value>تنطبق في القائمة الجانبية واللوحة البصرية لصفحة الدخول. أوقفها إذا كان الشعار مصمماً للخلفيات الداكنة.</value></data>
   <data name="Arabic (right-to-left)" xml:space="preserve"><value>العربية (من اليمين إلى اليسار)</value></data>
   <data name="Articles, violations and their penalties" xml:space="preserve"><value>مواد ومخالفات والجزاءات المترتبة عليها</value></data>
   <data name="As an employee sees it" xml:space="preserve"><value>كما يراها الموظف</value></data>
@@ -935,11 +936,13 @@
   <data name="Show the sidebar logo on a white plate" xml:space="preserve"><value>عرض شعار القائمة الجانبية على خلفية بيضاء</value></data>
   <data name="Shown as a highlighted notice above the sign-in fields. Leave empty for none." xml:space="preserve"><value>يظهر كتنبيه بارز فوق حقول الدخول. اتركه فارغاً لإخفائه.</value></data>
   <data name="Shown at the top of the navigation. PNG/JPG/WebP/GIF." xml:space="preserve"><value>يظهر أعلى قائمة التنقل. PNG/JPG/WebP/GIF.</value></data>
+  <data name="Shown at the top of the sidebar and at the top of the visual panel of the login page. PNG/JPG/WebP/GIF." xml:space="preserve"><value>يظهر أعلى القائمة الجانبية وأعلى اللوحة البصرية في صفحة الدخول. PNG/JPG/WebP/GIF.</value></data>
   <data name="Shown behind the welcome panel of the login page." xml:space="preserve"><value>تظهر خلف لوحة الترحيب في صفحة الدخول.</value></data>
   <data name="Shown in lists and on the employee dashboard." xml:space="preserve"><value>يظهر في القوائم ولوحة الموظف.</value></data>
   <data name="Shown in the sidebar and on the login page." xml:space="preserve"><value>يظهر في القائمة الجانبية وصفحة الدخول.</value></data>
   <data name="Shown in the visual panel of the login page. PNG/JPG/WebP; landscape images work best." xml:space="preserve"><value>تظهر في اللوحة المرئية لصفحة الدخول. PNG/JPG/WebP، والصور الأفقية أفضل.</value></data>
   <data name="Shown in the visual panel of the login page: as the full background or as a framed picture. PNG/JPG/WebP." xml:space="preserve"><value>تظهر في اللوحة المرئية لصفحة الدخول: كخلفية كاملة أو كصورة داخل إطار. PNG/JPG/WebP.</value></data>
+  <data name="Shown only inside the sign-in card of the login page. If empty, the initial of the system name is shown in the card." xml:space="preserve"><value>يظهر فقط داخل بطاقة تسجيل الدخول. إن لم يُرفع يظهر الحرف الأول من اسم النظام داخل البطاقة.</value></data>
   <data name="Sidebar background" xml:space="preserve"><value>خلفية القائمة الجانبية</value></data>
   <data name="Sidebar logo" xml:space="preserve"><value>شعار القائمة الجانبية</value></data>
   <data name="Sidebar text" xml:space="preserve"><value>نص القائمة الجانبية</value></data>

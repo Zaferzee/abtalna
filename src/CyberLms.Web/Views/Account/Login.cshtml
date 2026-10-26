@@ -4,7 +4,6 @@
     var b = Brand.Current;
     var auth = (AuthService)ViewBag.Auth;
     var hasErrors = !ViewData.ModelState.IsValid;
-    var logoInCard = b.HasLoginLogo && b["LoginLogoPlacement"] is "card" or "both";
 }
 <!DOCTYPE html>
 <html lang="@L.Lang" dir="@L.Dir">
@@ -27,7 +26,8 @@
 
     <section class="auth-panel">
         <div class="auth-card reveal" style="--i:2">
-            @if (logoInCard) { <div class="auth-card-logo"><img src="@b.LoginLogoUrl" alt="@b.OrgNameInline" /></div> }
+            @* the login-page logo appears only here (never in the visual panel); without it, the initial of the system name *@
+            <div class="auth-card-logo">@if (b.HasLoginLogo) { <img src="@b.LoginLogoUrl" alt="@b.OrgNameInline" /> } else { <span class="card-mono" aria-hidden="true">@b.Monogram</span> }</div>
             <h2 class="bidi">@b.LoginTitle</h2>
             <p class="auth-sub bidi">@b["LoginCardSubtitle"]</p>
             @if (!string.IsNullOrWhiteSpace(b.LoginSubtitle)) { <div class="alert alert-info bidi"><i class="bi bi-info-circle-fill"></i><span class="ml">@b.LoginSubtitle</span></div> }

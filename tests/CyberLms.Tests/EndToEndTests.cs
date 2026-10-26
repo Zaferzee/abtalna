@@ -243,7 +243,7 @@ public class EndToEndTests(TestApp app) : IClassFixture<TestApp>
         Assert.Equal(HttpStatusCode.Redirect, save.StatusCode);
 
         var after = await anon.GetStringAsync("/Account/Login");
-        Assert.Contains("منصة التوعية", after); Assert.Contains("شركة الاختبار", after); Assert.DoesNotContain("kind=logo", after); Assert.Contains("kind=favicon", after);   // the sidebar logo is not borrowed by the login page
+        Assert.Contains("منصة التوعية", after); Assert.Contains("شركة الاختبار", after); Assert.Contains("kind=logo", after); Assert.Contains("kind=favicon", after);   // the sidebar logo also heads the login page's visual panel
         Assert.Contains("للاستخدام الداخلي فقط", after); Assert.Contains("Contact: sec@test.local", after);
         var css = await anon.GetStringAsync("/branding/theme.css");
         Assert.Contains("--color-primary:#aa1122", css); Assert.Contains("--color-header:#111111", css); Assert.Contains("--color-login-bg:#ddeeff", css);

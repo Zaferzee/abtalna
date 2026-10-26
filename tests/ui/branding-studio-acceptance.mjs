@@ -73,11 +73,10 @@ await tab(a, 'logos');
 await a.setInputFiles('input[name=logo]', file('logo-dark.png', 'image/png'));
 await a.setChecked('#f-LogoPlate', false);
 await a.setInputFiles('input[name=loginLogo]', file('logo-dark.png', 'image/png'));
-await a.setChecked('#f-LoginLogoPlate', false);
 await a.setInputFiles('input[name=icon]', file('icon.png', 'image/png'));
 await a.setInputFiles('input[name=favicon]', file('icon.png', 'image/png'));
-await a.waitForFunction(() => { const i = document.querySelector('[data-pv-auth] [data-b-logo="login"] img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 10000 });
-const pvLogo = await a.evaluate(() => { const l = document.querySelector('[data-pv-auth] [data-b-logo="login"]'), sb = document.querySelector('.pv-shell [data-b-logo="sidebar"] img'); return { shown: !l.hidden && l.querySelector('img').naturalWidth > 0, sidebar: sb.naturalWidth > 0, state: document.querySelector('[data-asset="logo"] [data-asset-state]').className }; });
+await a.waitForFunction(() => { const i = document.querySelector('[data-pv-auth] [data-b-logo="card"] img'); return i && i.complete && i.naturalWidth > 0; }, null, { timeout: 10000 });
+const pvLogo = await a.evaluate(() => { const l = document.querySelector('[data-pv-auth] [data-b-logo="card"]'), sb = document.querySelector('.pv-shell [data-b-logo="sidebar"] img'); return { shown: !l.hidden && l.querySelector('img').naturalWidth > 0, sidebar: sb.naturalWidth > 0, state: document.querySelector('[data-asset="logo"] [data-asset-state]').className }; });
 ok(pvLogo.shown && pvLogo.sidebar && pvLogo.state.includes('is-new'), 'logos: the chosen files render in the preview immediately (decoded under the site CSP) and are marked "applied when you save"');
 await top(a); await shot(a, '03-studio-logos', 'الشعارات والأيقونات: شعار القائمة الجانبية، شعار الدخول وموضعه، الأيقونة المختصرة، أيقونة المتصفح (رفع/استبدال/إزالة/تراجع)');
 
@@ -133,13 +132,13 @@ await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
 const L1 = await g.evaluate(() => ({
   title: document.querySelector('.auth-title').innerText, names: document.querySelector('.auth-brand-names strong').innerText,
   badge: document.querySelector('.auth-kicker').innerText, card: document.querySelector('.auth-card h2').innerText, support: document.querySelector('.auth-support')?.innerText || '',
-  logo: document.querySelector('.auth-logo img')?.getAttribute('src') || '', plate: document.querySelector('.auth-logo').classList.contains('plate'),
+  logo: document.querySelector('.auth-card-logo img')?.getAttribute('src') || '', hero: document.querySelector('.auth-hero .auth-logo img')?.getAttribute('src') || '', plate: document.querySelector('.auth-hero .auth-logo').classList.contains('plate'),
   img: getComputedStyle(document.querySelector('.auth-hero')).getPropertyValue('--img'), pos: getComputedStyle(document.querySelector('.auth-hero')).getPropertyValue('--img-pos').trim(),
   favicon: document.querySelector('link[rel=icon]')?.getAttribute('href') || '', mediaBg: getComputedStyle(document.querySelector('.auth-media')).backgroundImage,
 }));
 ok(L1.title === 'رحلتك نحو\nبيئة رقمية آمنة' && L1.names.includes('\n'), 'login page: multi-line hero title and system name');
 ok(L1.badge.includes('برنامج الوعي السيبراني المؤسسي') && L1.card === 'تسجيل الدخول إلى المنصة' && L1.support.includes('4455'), 'login page: custom badge, card title and support text');
-ok(L1.logo.includes('kind=loginlogo') && !L1.plate && L1.favicon.includes('kind=favicon'), 'login page: login logo without plate, favicon');
+ok(L1.logo.includes('kind=loginlogo') && L1.hero.includes('kind=logo&') && !L1.plate && L1.favicon.includes('kind=favicon'), 'login page: sidebar logo in the visual panel (no plate), login logo in the card, favicon');
 ok(L1.mediaBg.includes('kind=loginbg') && /^6\d% [34]\d%$/.test(L1.pos), 'login page: background image with the chosen focal point (' + L1.pos + ')');
 const css1 = await (await g.request.get(base + '/branding/theme.css')).text();
 ok(css1.includes('--color-primary:#1b3a6b') && css1.includes('--color-sidebar:#0e1d38'), 'theme.css carries the Executive Navy colors');
@@ -166,7 +165,6 @@ await toStudio(a);
 await tab(a, 'colors'); await a.click('[data-preset-id="mauve"]');
 await tab(a, 'logos');
 await a.setInputFiles('input[name=loginLogo]', file('logo-light.png', 'image/png'));
-await choose(a, 'LoginLogoPlacement', 'card'); await a.setChecked('#f-LoginLogoPlate', true);
 await tab(a, 'media');
 await a.setInputFiles('input[name=loginBackground]', file('bg-mauve.jpg', 'image/jpeg'));
 await choose(a, 'LoginImageFit', 'cover'); await choose(a, 'LoginImagePosition', 'bottom');
@@ -174,14 +172,14 @@ await range(a, 'LoginImageZoom', 100); await range(a, 'LoginOverlayOpacity', 40)
 await a.fill('#f-LoginOverlayColor', '#3a2434');
 await choose(a, 'LoginLayout', 'full'); await choose(a, 'LoginTextAlign', 'center');
 await tab(a, 'composition'); await a.click('[data-comp-preset="clean"]'); await tab(a, 'media');
-const pvFull = await a.evaluate(() => { const r = document.querySelector('[data-pv-auth]'); return r.classList.contains('layout-full') && r.classList.contains('align-center') && r.classList.contains('no-decor') && r.classList.contains('logo-card'); });
-ok(pvFull, 'preview switches layout (full-screen), text placement (centered), decoration and logo placement');
+const pvFull = await a.evaluate(() => { const r = document.querySelector('[data-pv-auth]'); return r.classList.contains('layout-full') && r.classList.contains('align-center') && r.classList.contains('no-decor'); });
+ok(pvFull, 'preview switches layout (full-screen), text placement (centered) and decoration');
 await top(a); await shot(a, '13-studio-mauve-full', 'الاستوديو: سمة «الوردي الموفي الهادئ» مع صورة بملء الشاشة ونص في المنتصف وشعار داخل بطاقة الدخول');
 await a.click('[data-studio-save]'); await a.waitForLoadState('networkidle');
 const m = await page();
 await m.goto(base + '/Account/Login'); await m.waitForLoadState('networkidle');
-const L2 = await m.evaluate(() => ({ cls: document.querySelector('.auth').className, cardLogo: document.querySelector('.auth-card-logo img')?.getAttribute('src') || '', heroLogo: getComputedStyle(document.querySelector('.auth-hero .auth-logo')).display }));
-ok(L2.cls.includes('layout-full') && L2.cls.includes('align-center') && L2.cls.includes('no-decor') && L2.cardLogo.includes('kind=loginlogo') && L2.heroLogo === 'none', 'login page: full-screen layout, centered text, logo on the sign-in card');
+const L2 = await m.evaluate(() => ({ cls: document.querySelector('.auth').className, cardLogo: document.querySelector('.auth-card-logo img')?.getAttribute('src') || '', heroLogo: document.querySelector('.auth-hero .auth-logo img')?.getAttribute('src') || '' }));
+ok(L2.cls.includes('layout-full') && L2.cls.includes('align-center') && L2.cls.includes('no-decor') && L2.cardLogo.includes('kind=loginlogo') && L2.heroLogo.includes('kind=logo&'), 'login page: full-screen layout, centered text, login logo in the card, sidebar logo in the visual panel');
 const css2 = await (await m.request.get(base + '/branding/theme.css')).text();
 ok(css2.includes('--color-primary:#7d4f6e'), 'theme.css carries the Soft Mauve Rose colors');
 await shot(m, '14-login-mauve', 'صفحة الدخول بسمة «الوردي الموفي الهادئ»: صورة بملء الشاشة، نص في المنتصف، الشعار داخل البطاقة', { wait: 1400 });
@@ -196,8 +194,8 @@ await toStudio(a);
 await a.click('[data-studio-reset]'); await a.waitForSelector('#confirmModal.show'); await a.click('#confirmModalOk'); await a.waitForLoadState('networkidle');
 const r = await page();
 await r.goto(base + '/Account/Login'); await r.waitForLoadState('networkidle');
-const L3 = await r.evaluate(() => ({ cls: document.querySelector('.auth').className, img: getComputedStyle(document.querySelector('.auth-media')).backgroundImage, logo: !!document.querySelector('.auth-logo img'), title: document.querySelector('.auth-title').innerText }));
-ok(!L3.cls.includes('layout-full') && L3.img === 'none' && !L3.logo && !L3.title.includes('رحلتك'), 'reset to default: default layout, no image, no logo, default texts');
+const L3 = await r.evaluate(() => ({ cls: document.querySelector('.auth').className, img: getComputedStyle(document.querySelector('.auth-media')).backgroundImage, logo: !!document.querySelector('.auth-logo img, .auth-card-logo img'), mono: !!document.querySelector('.auth-card-logo .card-mono'), title: document.querySelector('.auth-title').innerText }));
+ok(!L3.cls.includes('layout-full') && L3.img === 'none' && !L3.logo && L3.mono && !L3.title.includes('رحلتك'), 'reset to default: default layout, no image, no logo (initial in the card), default texts');
 await r.context().close();
 
 console.log(`CHECKS ${checks.filter(c => c.pass).length}/${checks.length}`);

@@ -472,6 +472,12 @@ public class EntitiesTests(TestApp app) : IClassFixture<TestApp>
         Assert.Equal(HttpStatusCode.OK, (await a1.GetAsync($"/Files/Brand?kind=logo&e={w.A}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await cb.GetAsync($"/Files/Brand?kind=logo&e={w.A}")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await app.NewClient().GetAsync($"/Files/Brand?kind=logo&e={w.A}")).StatusCode);
+        // ...and shown next to the entity name in the organization structure (tree + table) and the entity page; others keep the icon
+        var orgPage = await w.Central.GetStringAsync("/Admin/Entities");
+        Assert.Equal(2, Regex.Matches(orgPage, $"<img class=\"entity-logo\" src=\"/Files/Brand\\?kind=logo&amp;e={w.A}&amp;v=").Count);
+        Assert.DoesNotContain($"kind=logo&amp;e={w.B}", orgPage);
+        Assert.Contains($"<img class=\"entity-logo\" src=\"/Files/Brand?kind=logo&amp;e={w.A}", await w.Central.GetStringAsync($"/Admin/Entities/Details/{w.A}"));
+        Assert.DoesNotContain("entity-logo", await w.Central.GetStringAsync($"/Admin/Entities/Details/{w.B}"));
 
         // local branding permission: refused while the entity does not allow it, possible once allowed + granted
         (await Assign(w.Central, w.A, admA, true, Capability.ManageUsers)).EnsureRedirect();

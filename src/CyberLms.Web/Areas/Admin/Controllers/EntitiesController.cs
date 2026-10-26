@@ -43,7 +43,7 @@ public class EntitiesController(AppDbContext db, EntityAccess access, EntityTree
             {
                 Node = n, Parent = all.FirstOrDefault(p => p.Id == n.ParentId),
                 Users = users.GetValueOrDefault(n.Id), SubtreeUsers = EntityTree.Subtree(all, n).Sum(x => users.GetValueOrDefault(x.Id)),
-                Admins = admins.GetValueOrDefault(n.Id), CustomBranding = branding.HasOverrides(n.Id),
+                Admins = admins.GetValueOrDefault(n.Id), CustomBranding = branding.HasOverrides(n.Id), LogoUrl = branding.OwnLogoUrl(n.Id, n.IsRoot),
                 Directory = dirs.TryGetValue(n.Id, out var d) ? (d.Enabled ? "enabled" : "disabled") : "none",
                 Children = all.Count(c => c.ParentId == n.Id),
             }).ToList(),
@@ -160,7 +160,7 @@ public class EntitiesController(AppDbContext db, EntityAccess access, EntityTree
             UsersOwn = await db.Users.CountAsync(u => u.EntityId == id),
             UsersSubtree = await db.Users.CountAsync(u => subtreeIds.Contains(u.EntityId)),
             ContentOwned = await db.Contents.CountAsync(c => c.OwnerEntityId == id),
-            CustomBranding = branding.HasOverrides(id),
+            CustomBranding = branding.HasOverrides(id), LogoUrl = branding.OwnLogoUrl(id, node.IsRoot),
         };
         vm.Admins = await db.EntityAdminAssignments.AsNoTracking().Include(a => a.User).Where(a => a.EntityId == id).OrderBy(a => a.User.DisplayName).ToListAsync();
         vm.Directory = await db.EntityDirectorySources.AsNoTracking().FirstOrDefaultAsync(d => d.EntityId == id);

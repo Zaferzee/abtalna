@@ -44,6 +44,17 @@ public class EntityBrandingService(AppDbContext db, SettingsService settings, En
     public IReadOnlyDictionary<string, string?> Overrides(int entityId) => All().TryGetValue(entityId, out var d) ? d : new Dictionary<string, string?>();
     public bool HasOverrides(int entityId) => Overrides(entityId).Keys.Any(k => k != Branding.Keys.Version);
 
+    /// <summary>URL of the entity's own logo (shown next to its name in the organization pages), or null when it has none.
+    /// The root entity's branding is the central one, so its logo is the central (sidebar) logo.</summary>
+    public string? OwnLogoUrl(int entityId, bool isRoot = false)
+    {
+        if (isRoot)
+            return string.IsNullOrWhiteSpace(settings.Get(Branding.Keys.Logo)) ? null : $"/Files/Brand?kind=logo&v={settings.Get(Branding.Keys.Version, "0")}";
+        var o = Overrides(entityId);
+        return o.TryGetValue(Branding.Keys.Logo, out var v) && !string.IsNullOrWhiteSpace(v)
+            ? $"/Files/Brand?kind=logo&e={entityId}&v={o.GetValueOrDefault(Branding.Keys.Version) ?? "0"}" : null;
+    }
+
     private List<int> Chain(int entityId)
     {
         var node = tree.AllAsync(db).GetAwaiter().GetResult().FirstOrDefault(x => x.Id == entityId);

@@ -97,9 +97,9 @@
   }
   function renderOptions() {
     if (!auth) return;
-    var layout = val('LoginLayout') || 'split', align = val('LoginTextAlign') || 'start', place = val('LoginLogoPlacement') || 'hero';
-    auth.className = auth.className.replace(/\b(layout|align|logo)-[\w-]+/g, '').trim();
-    auth.classList.add('layout-' + layout, 'align-' + align, 'logo-' + place);
+    var layout = val('LoginLayout') || 'split', align = val('LoginTextAlign') || 'start';
+    auth.className = auth.className.replace(/\b(layout|align)-[\w-]+/g, '').trim();
+    auth.classList.add('layout-' + layout, 'align-' + align);
     auth.classList.toggle('no-names', !flag('ShowNamesOnLogin'));
     auth.classList.toggle('no-badge', !flag('ShowLoginBadge'));
     auth.classList.toggle('no-features', !flag('ShowLoginFeatures'));
@@ -107,7 +107,7 @@
     renderLayers();
     $$('.sb-names [data-b="OrgName"]', scope).forEach(function (o) { o.hidden = !flag('ShowOrgInSidebar'); });
     $$('[data-b-logo="sidebar"]', scope).forEach(function (l) { l.classList.toggle('no-plate', !flag('LogoPlate')); });
-    $$('[data-b-logo="login"]', scope).forEach(function (l) { l.classList.toggle('plate', flag('LoginLogoPlate')); });
+    $$('[data-b-logo="hero"]', scope).forEach(function (l) { l.classList.toggle('plate', flag('LogoPlate')); });
     $$('.st-seg label, .pos-grid label, .pos-custom, .decor-opt, .lc-motif').forEach(function (l) { var r = l.querySelector('input'); l.classList.toggle('active', !!(r && r.checked)); });
     $$('[data-out-for]').forEach(function (o) { o.textContent = val(o.getAttribute('data-out-for')) + (o.getAttribute('data-unit') || '%'); });
   }
@@ -154,14 +154,15 @@
       a.tile.querySelector('[data-asset-remove]').hidden = !(a.saved || a.url) || state === 'remove';
       a.tile.querySelector('[data-asset-revert]').hidden = state === 'saved' || state === 'none';
     });
-    // every logo is independent: the login page never shows the sidebar logo, the sidebar never shows the login logo
-    var logo = src('logo'), icon = src('icon'), login = src('loginlogo'), place = val('LoginLogoPlacement') || 'hero';
+    // final rule: the login page's visual panel shows the SIDEBAR logo; the login-page logo appears only inside the sign-in card
+    var logo = src('logo'), icon = src('icon'), login = src('loginlogo');
     showImg('[data-b-logo="sidebar"]', logo);
     showImg('[data-b-logo="icon"]', !logo && icon ? icon : '');
     $$('.sb-names', scope).forEach(function (n) { var m = n.parentNode.querySelector('[data-b-mono]'); if (m) m.hidden = !!(logo || icon); });
-    showImg('[data-b-logo="login"]', login);
-    showImg('[data-b-logo="card"]', login && place !== 'hero' ? login : '');
-    if (hero) { var hm = hero.querySelector('[data-b-mono]'); if (hm) hm.hidden = !!login && place !== 'card'; }
+    showImg('[data-b-logo="hero"]', logo);
+    showImg('[data-b-logo="card"]', login);
+    if (hero) { var hm = hero.querySelector('[data-b-mono]'); if (hm) hm.hidden = !!logo; }
+    $$('[data-b-card-mono]', scope).forEach(function (m) { m.hidden = !!login; });
     var bg = src('loginbg');
     if (hero) { if (bg) hero.style.setProperty('--img', 'url("' + bg + '")'); else hero.style.removeProperty('--img'); }
     renderImageMode();

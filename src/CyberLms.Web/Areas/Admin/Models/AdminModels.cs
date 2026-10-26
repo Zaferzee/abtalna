@@ -140,6 +140,7 @@ public class EntityRowVm
     public int Admins { get; set; }
     public int Children { get; set; }
     public bool CustomBranding { get; set; }
+    public string? LogoUrl { get; set; }
     /// <summary>none | enabled | disabled</summary>
     public string Directory { get; set; } = "none";
 }
@@ -182,6 +183,7 @@ public class EntityDetailsVm
     public int UsersSubtree { get; set; }
     public int ContentOwned { get; set; }
     public bool CustomBranding { get; set; }
+    public string? LogoUrl { get; set; }
     public List<EntityAdminAssignment> Admins { get; set; } = new();
     public EntityDirectorySource? Directory { get; set; }
     public bool DirectorySecretSet { get; set; }

@@ -68,7 +68,7 @@ public class BrandingTests(TestApp app) : IClassFixture<TestApp>
             ["LoginFeature1"] = "نقطة أولى", ["LoginFeature2"] = "نقطة ثانية", ["LoginFeature3"] = "نقطة ثالثة",
             ["LoginCardSubtitle"] = "نص بطاقة مخصص", ["SupportText"] = "الدعم: 4455", ["LoginTitle"] = new string('x', 400),
             ["LoginImageFit"] = "contain", ["LoginImagePosition"] = "nowhere;}body{display:none", ["LoginImageZoom"] = "999", ["LoginOverlayOpacity"] = "-5",
-            ["LoginLayout"] = "full", ["LoginTextAlign"] = "center", ["LoginLogoPlacement"] = "card",
+            ["LoginLayout"] = "full", ["LoginTextAlign"] = "center",
             ["ShowOrgInSidebar"] = "false", ["ShowLoginFeatures"] = "false", ["LoginDecor"] = "false",
             ["Preset"] = "navy", ["PrimaryColor"] = "#1B3A6B", ["ButtonColor"] = "", ["BackgroundColor"] = "#f3f5f9", ["LoginTextColor"] = "#fafafa",
         }, mp =>
@@ -89,11 +89,11 @@ public class BrandingTests(TestApp app) : IClassFixture<TestApp>
         Assert.Contains("نص بطاقة مخصص", login); Assert.Contains("الدعم: 4455", login); Assert.Contains("نقطة ثانية", login);
         Assert.Contains("<title>" + new string('x', 150) + " - منصة التوعية</title>", login);    // title cut to 150, name on one line
         // choices: allowed values kept, invalid ones replaced by the default; numbers clamped
-        Assert.Matches("class=\"auth layout-full align-center logo-card no-decor has-image[^\"]*no-features", login);
+        Assert.Matches("class=\"auth layout-full align-center no-decor has-image[^\"]*no-features", login);
         Assert.Contains("--img-size:contain;--img-pos:50% 50%;--img-zoom:2;", login);
         Assert.Contains("--ov-op:0;", login);                                                     // -5 clamped (culture-independent parsing)
         Assert.DoesNotContain("display:none", login);
-        Assert.Contains("auth-card-logo", login); Assert.Contains("kind=loginlogo", login);
+        Assert.Matches("<div class=\"auth-card-logo\">\\s*<img src=\"/Files/Brand\\?kind=loginlogo", login);
         // theme tokens
         var css = await anon.GetStringAsync("/branding/theme.css");
         Assert.Contains("--color-primary:#1b3a6b", css);
@@ -123,7 +123,7 @@ public class BrandingTests(TestApp app) : IClassFixture<TestApp>
         (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
         login = await anon.GetStringAsync("/Account/Login");
         Assert.DoesNotContain("عنوان&#xA;على سطرين", login);
-        Assert.Matches("class=\"auth layout-split align-start logo-hero comp-executive img-none img-align-start img-slot-above\"", login);
+        Assert.Matches("class=\"auth layout-split align-start comp-executive img-none img-align-start img-slot-above\"", login);
         Assert.Equal(HttpStatusCode.NotFound, (await anon.GetAsync("/Files/Brand?kind=loginlogo")).StatusCode);
     }
 
@@ -134,25 +134,35 @@ public class BrandingTests(TestApp app) : IClassFixture<TestApp>
         var anon = app.NewClient();
         (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
 
-        // only a sidebar logo: the login page does not borrow it
-        (await Save(admin, new(), mp => mp.AddFile("logo", "side.png", Png, "image/png"))).EnsureRedirect();
+        // the visual panel shows the SIDEBAR logo; the login-page logo appears only inside the sign-in card (initial of the system name otherwise)
+        const string heroSidebarLogo = "data-b-logo=\"hero\"[^>]*>\\s*<img src=\"/Files/Brand\\?kind=logo&amp;";
+        const string cardLoginLogo = "<div class=\"auth-card-logo\">\\s*<img src=\"/Files/Brand\\?kind=loginlogo";
+        const string cardMonogram = "<div class=\"auth-card-logo\">\\s*<span class=\"card-mono\"";
         var login = await anon.GetStringAsync("/Account/Login");
-        Assert.DoesNotContain("kind=logo", login); Assert.DoesNotContain("kind=loginlogo", login);
+        Assert.DoesNotContain("data-b-logo=\"hero\"", login); Assert.Matches(cardMonogram, login);   // no logos at all: initials only
+
+        // only a sidebar logo: shown in the visual panel; the card keeps the initial
+        (await Save(admin, new(), mp => mp.AddFile("logo", "side.png", Png, "image/png"))).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Matches(heroSidebarLogo, login); Assert.Matches(cardMonogram, login); Assert.DoesNotContain("kind=loginlogo", login);
         Assert.Contains("kind=logo", await admin.GetStringAsync("/Admin/Dashboard"));
 
-        // a login logo: shown on the login page only; the sidebar keeps its own logo
+        // a login logo: only inside the card (never in the visual panel); the sidebar keeps its own logo
         (await Save(admin, new(), mp => mp.AddFile("loginLogo", "login.png", Png, "image/png"))).EnsureRedirect();
         login = await anon.GetStringAsync("/Account/Login");
-        Assert.Contains("kind=loginlogo", login); Assert.DoesNotContain("kind=logo", login);
+        Assert.Matches(heroSidebarLogo, login); Assert.Matches(cardLoginLogo, login); Assert.DoesNotMatch(cardMonogram, login);
+        Assert.Single(Regex.Matches(login, "kind=loginlogo"));
         var dash = await admin.GetStringAsync("/Admin/Dashboard");
         Assert.Contains("kind=logo", dash); Assert.DoesNotContain("kind=loginlogo", dash);
 
         // removing the sidebar logo leaves the login logo alone (and the reverse)
         (await Save(admin, new() { ["removeLogo"] = "true" })).EnsureRedirect();
-        Assert.Contains("kind=loginlogo", await anon.GetStringAsync("/Account/Login"));
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Matches(cardLoginLogo, login); Assert.DoesNotContain("data-b-logo=\"hero\"", login); Assert.Single(Regex.Matches(login, "kind=loginlogo"));
         Assert.DoesNotContain("kind=logo", await admin.GetStringAsync("/Admin/Dashboard"));
         (await Save(admin, new() { ["removeLoginLogo"] = "true" }, mp => mp.AddFile("logo", "side.png", Png, "image/png"))).EnsureRedirect();
-        Assert.DoesNotContain("kind=loginlogo", await anon.GetStringAsync("/Account/Login"));
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.DoesNotContain("kind=loginlogo", login); Assert.Matches(heroSidebarLogo, login); Assert.Matches(cardMonogram, login);
         Assert.Contains("kind=logo", await admin.GetStringAsync("/Admin/Dashboard"));
 
         // login image: small framed picture below the text, centered, with spacing; no full background, no overlay
