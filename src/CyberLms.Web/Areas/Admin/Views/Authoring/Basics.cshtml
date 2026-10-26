@@ -46,5 +46,42 @@
             </div>
         </div>
     </section>
+    <section class="panel mt-3 audience" id="audience">
+        <div class="panel-head"><h2><i class="bi bi-diagram-3"></i> @L["Owner and audience"]</h2></div>
+        <div class="panel-body stack" style="--gap:1.1rem">
+            @if (Model.Entities.Count > 1)
+            {
+                <div>
+                    <label class="form-label" for="f-OwnerEntityId">@L["Owning entity"]</label>
+                    @await Html.PartialAsync("_EntitySelect", new EntitySelectVm("OwnerEntityId", Model.Entities, Model.OwnerEntityId, null, null, true))
+                    <div class="form-text">@L["The owning entity manages the content; employees only see it when it is targeted to their entity."]</div>
+                </div>
+            }
+            else { <input type="hidden" name="OwnerEntityId" value="@Model.OwnerEntityId" /> }
+            <fieldset>
+                <legend class="form-label">@L["Who should see this content?"]</legend>
+                <div class="aud-options">
+                    @foreach (var (scope, title, hint, icon) in new[] {
+                        (ContentTargetScope.OwnerAndDescendants, "Owning entity and all its sub-entities", "For central content: all entities.", "bi-diagram-3-fill"),
+                        (ContentTargetScope.OwnerOnly, "Owning entity only", "For central content: the root entity only.", "bi-building"),
+                        (ContentTargetScope.Selected, "Selected entities", "Choose the entities below.", "bi-ui-checks") })
+                    {
+                        <label class="aud-opt"><input type="radio" name="Audience" value="@((int)scope)" checked="@(Model.Audience == scope)" /><i class="bi @icon"></i><span><strong>@L[title]</strong><small>@L[hint]</small></span></label>
+                    }
+                </div>
+            </fieldset>
+            <div class="aud-targets" data-aud-targets>
+                <div class="form-label">@L["Target entities"]</div>
+                <div class="aud-tree">
+                    @{ var min = Model.Entities.Count > 0 ? Model.Entities.Min(e => e.Depth) : 0; }
+                    @foreach (var e in Model.Entities)
+                    {
+                        <label class="aud-node" style="--d:@(e.Depth - min)"><input type="checkbox" class="form-check-input" name="TargetIds" value="@e.Id" checked="@Model.TargetIds.Contains(e.Id)" /> <span class="bidi">@e.Name</span> <code dir="ltr">@e.Code</code></label>
+                    }
+                </div>
+                <div class="form-check form-switch mt-2"><input type="hidden" name="TargetsIncludeDescendants" value="false" /><input class="form-check-input" type="checkbox" id="f-tdesc" name="TargetsIncludeDescendants" value="true" checked="@Model.TargetsIncludeDescendants" /><label class="form-check-label" for="f-tdesc">@L["Include the sub-entities of each selected entity"]</label></div>
+            </div>
+        </div>
+    </section>
 </form>
 <partial name="_Nav" model="Model" />

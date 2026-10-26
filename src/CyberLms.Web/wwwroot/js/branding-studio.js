@@ -34,7 +34,7 @@
     tabs.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-studio-tab') === id); b.setAttribute('aria-selected', b.getAttribute('data-studio-tab') === id); });
     $$('[data-studio-panel]').forEach(function (p) { p.hidden = p.getAttribute('data-studio-panel') !== id; });
     try { sessionStorage.setItem('studio-tab', id); } catch (e) { /* not essential */ }
-    if (id === 'media' || id === 'text' || id === 'logos') pvTab('login'); else if (id === 'colors') { /* keep the current preview */ }
+    if (id === 'media' || id === 'text' || id === 'logos' || id === 'composition') pvTab('login'); else if (id === 'colors') { /* keep the current preview */ }
   }
   tabs.forEach(function (b) { b.addEventListener('click', function () { showTab(b.getAttribute('data-studio-tab')); }); });
   try { var last = sessionStorage.getItem('studio-tab'); if (last && $('[data-studio-tab="' + last + '"]')) showTab(last); } catch (e) { /* default tab */ }
@@ -103,15 +103,12 @@
     auth.classList.toggle('no-names', !flag('ShowNamesOnLogin'));
     auth.classList.toggle('no-badge', !flag('ShowLoginBadge'));
     auth.classList.toggle('no-features', !flag('ShowLoginFeatures'));
-    var decor = val('LoginDecorStyle') || 'shield';
-    auth.className = auth.className.replace(/\bdecor-[\w-]+/g, '').trim();
-    auth.classList.add('decor-' + decor);
-    auth.classList.toggle('no-decor', decor === 'none');
     renderImageMode();
+    renderLayers();
     $$('.sb-names [data-b="OrgName"]', scope).forEach(function (o) { o.hidden = !flag('ShowOrgInSidebar'); });
     $$('[data-b-logo="sidebar"]', scope).forEach(function (l) { l.classList.toggle('no-plate', !flag('LogoPlate')); });
     $$('[data-b-logo="login"]', scope).forEach(function (l) { l.classList.toggle('plate', flag('LoginLogoPlate')); });
-    $$('.st-seg label, .pos-grid label, .pos-custom, .decor-opt').forEach(function (l) { var r = l.querySelector('input'); l.classList.toggle('active', !!(r && r.checked)); });
+    $$('.st-seg label, .pos-grid label, .pos-custom, .decor-opt, .lc-motif').forEach(function (l) { var r = l.querySelector('input'); l.classList.toggle('active', !!(r && r.checked)); });
     $$('[data-out-for]').forEach(function (o) { o.textContent = val(o.getAttribute('data-out-for')) + (o.getAttribute('data-unit') || '%'); });
   }
   /** Image mode classes (same rules as Branding.LoginClasses): no image = "none"; only the full background uses the overlay. */
@@ -201,6 +198,66 @@
     $$('input[name="LoginImagePosition"]').forEach(function (r2) { r2.checked = r2.value === 'custom'; });
     renderOptions(); renderMedia(); changed();
   });
+
+  // ---------- visual composition (same safety rules as LoginCompositions.Safe on the server) ----------
+  var compositions = JSON.parse(form.getAttribute('data-compositions') || '[]');
+  var rules = JSON.parse(form.getAttribute('data-comp-rules') || '{}');
+  var compId = $('[data-comp-id]');
+  function column(pos) { return /-start$/.test(pos) || pos === 'center-start' ? 'start' : /-end$/.test(pos) ? 'end' : 'center'; }
+  function safeLayer(n) {
+    var motif = val('Layer' + n + 'Motif') || 'none', pos = val('Layer' + n + 'Position') || 'center-end';
+    var op = Math.min(Math.max(parseInt(val('Layer' + n + 'Opacity'), 10) || 14, rules.MinOpacity), rules.MaxOpacity);
+    var capped = column(pos) !== 'end' && op > rules.TextColumnMaxOpacity;
+    if (column(pos) !== 'end') op = Math.min(op, rules.TextColumnMaxOpacity);
+    var rotatable = (rules.Rotatable || []).indexOf(motif) >= 0;
+    return { motif: motif, pos: pos, op: op, capped: capped, rotatable: rotatable, scale: parseInt(val('Layer' + n + 'Scale'), 10) || 100,
+      rot: rotatable ? (parseInt(val('Layer' + n + 'Rotate'), 10) || 0) : 0, visible: flag('Layer' + n + 'Visible') && motif !== 'none' };
+  }
+  function renderLayers() {
+    if (!hero) return;
+    var anyVisible = false;
+    for (var n = 1; n <= 3; n++) {
+      var l = safeLayer(n), el = hero.querySelector('[data-layer="' + n + '"]'), card = $('[data-layer-card="' + n + '"]');
+      if (l.visible) anyVisible = true;
+      if (el) {
+        el.setAttribute('class', 'auth-layer pos-' + l.pos);
+        el.setAttribute('data-motif', l.motif);
+        el.querySelector('use').setAttribute('href', '#lm-' + (l.motif === 'none' ? 'circles' : l.motif));
+        el.style.setProperty('--l-op', l.op / 100); el.style.setProperty('--l-scale', l.scale / 100); el.style.setProperty('--l-rot', l.rot + 'deg');
+        if (l.visible) el.removeAttribute('hidden'); else el.setAttribute('hidden', '');
+      }
+      if (card) {
+        card.classList.toggle('is-off', !l.visible);
+        card.querySelector('[data-comp-capped]').hidden = !(l.capped && l.visible);
+        var rot = field('Layer' + n + 'Rotate'); rot.disabled = !l.rotatable;
+        ['Opacity', 'Scale', 'Rotate'].forEach(function (k) { var o = $('[data-comp-out="Layer' + n + k + '"]'); if (o) o.textContent = val('Layer' + n + k) + (o.getAttribute('data-unit') || '%'); });
+      }
+    }
+    var id = compId ? compId.value : 'executive';
+    auth.className = auth.className.replace(/\bcomp-[\w-]+/g, '').trim();
+    auth.classList.add('comp-' + id);
+    auth.classList.toggle('no-decor', !anyVisible);
+    $$('[data-comp-preset]').forEach(function (c) { c.classList.toggle('active', c.getAttribute('data-comp-preset') === id); });
+    var custom = $('[data-comp-custom]'); if (custom) custom.hidden = id !== 'custom';
+  }
+  function setRadio(name, value) { $$('input[name="' + name + '"]').forEach(function (r) { r.checked = r.value === value; }); }
+  $$('[data-comp-preset]').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var c = compositions.filter(function (x) { return x.Id === card.getAttribute('data-comp-preset'); })[0]; if (!c) return;
+      c.Layers.forEach(function (l, i) {
+        var n = i + 1;
+        setRadio('Layer' + n + 'Motif', l.Motif); setRadio('Layer' + n + 'Position', l.Position);
+        field('Layer' + n + 'Opacity').value = l.Opacity; field('Layer' + n + 'Scale').value = l.Scale; field('Layer' + n + 'Rotate').value = l.Rotate;
+        $$('input[type=checkbox][name="Layer' + n + 'Visible"]')[0].checked = l.Visible && l.Motif !== 'none';
+      });
+      compId.value = c.Id;
+      renderOptions(); changed();
+      scope.classList.remove('pv-flash'); void scope.offsetWidth; scope.classList.add('pv-flash');
+    });
+  });
+  // editing any layer turns the composition into a custom one
+  form.addEventListener('input', function (e) { if (e.target.matches('[data-comp-field]') && compId) { compId.value = 'custom'; renderOptions(); } });
+  form.addEventListener('change', function (e) { if (e.target.matches('[data-comp-field]') && compId) { compId.value = 'custom'; renderOptions(); } });
 
   // ---------- colors ----------
   var VARS = { PrimaryColor: '--color-primary', SecondaryColor: '--color-secondary', AccentColor: '--color-accent', BackgroundColor: '--color-bg', SurfaceColor: '--color-surface',
@@ -308,6 +365,7 @@
     b.addEventListener('click', function () {
       var g = b.getAttribute('data-revert-group');
       if (g === 'colors') { restore(function (el) { return COLOR_FIELDS.indexOf(el.name) >= 0 || el.name === 'Preset'; }); setPreset(field('Preset').value); }
+      else if (g === 'composition') { restore(function (el) { return el.name === 'LoginComposition' || /^Layer\d/.test(el.name); }); }
       else { restore(function (el) { return MEDIA_FIELDS.indexOf(el.name) >= 0; }); revertAsset('loginbg'); }
       renderAll(); changed();
     });

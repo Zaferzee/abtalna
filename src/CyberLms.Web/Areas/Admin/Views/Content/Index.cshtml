@@ -1,5 +1,8 @@
 @model ContentListVm
-@{ ViewData["Title"] = L["Content Management"]; var filtered = !string.IsNullOrEmpty(Model.Q) || Model.Type != null || Model.Status != null; var i = 0; }
+@{
+    ViewData["Title"] = L["Content Management"]; var filtered = !string.IsNullOrEmpty(Model.Q) || Model.Type != null || Model.Status != null || ViewBag.EntityId != null; var i = 0;
+    var entities = (List<EntityNode>)ViewBag.Entities; var all = (IReadOnlyList<EntityNode>)ViewBag.All; var targets = (ILookup<int, int>)ViewBag.Targets;
+}
 <div class="page-head reveal">
     <div>
         <div class="eyebrow"><i class="bi bi-journal-richtext"></i> @L["Manage"]</div>
@@ -13,6 +16,7 @@
     <form class="toolbar" method="get" role="search">
         <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="@Model.Q" placeholder="@L["Search by title"]" aria-label="@L["Search"]" /></div>
         <select class="form-select" name="type" aria-label="@L["Content type"]"><option value="">@L["All types"]</option>@foreach (var t in Labels.TypeOrder) { <option value="@((int)t)" selected="@(Model.Type == t)">@L[Labels.Type(t)]</option> }</select>
+        @if (entities.Count > 1) { @await Html.PartialAsync("_EntitySelect", new EntitySelectVm("entity", entities, (int?)ViewBag.EntityId, L["All entities in my scope"], "f-entity-filter")) }
         <select class="form-select" name="status" aria-label="@L["Status"]"><option value="">@L["All statuses"]</option><option value="Published" selected="@(Model.Status == ContentStatus.Published)">@L["Published"]</option><option value="Draft" selected="@(Model.Status == ContentStatus.Draft)">@L["Draft"]</option></select>
         <div class="tb-end">
             <button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button>
@@ -30,7 +34,7 @@
             <td><div class="t-title">
                 <span class="icon-chip tc type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i></span>
                 <div class="min-w-0"><a class="t-name bidi" asp-controller="Authoring" asp-action="Basics" asp-route-id="@c.Id">@c.Title</a>
-                    <span class="t-meta"><span class="type-chip type-@((int)c.Type)">@L[Labels.Type(c.Type)]</span>@if (!string.IsNullOrWhiteSpace(c.Description)) { <span class="t-desc bidi">@c.Description</span> }</span></div>
+                    <span class="t-meta"><span class="type-chip type-@((int)c.Type)">@L[Labels.Type(c.Type)]</span>@await Html.PartialAsync("_AudienceChips", (c, all, targets[c.Id]))@if (!string.IsNullOrWhiteSpace(c.Description)) { <span class="t-desc bidi">@c.Description</span> }</span></div>
             </div></td>
             <td><span class="badge badge-dot text-bg-@(published ? "success" : "secondary")">@L[Labels.ContentStatus(c.Status)]</span></td>
             <td class="text-nowrap">

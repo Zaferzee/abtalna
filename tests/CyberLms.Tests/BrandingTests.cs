@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Net;
 using CyberLms.Web.Services;
 using static CyberLms.Tests.HttpExt;
@@ -122,7 +123,7 @@ public class BrandingTests(TestApp app) : IClassFixture<TestApp>
         (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
         login = await anon.GetStringAsync("/Account/Login");
         Assert.DoesNotContain("عنوان&#xA;على سطرين", login);
-        Assert.Matches("class=\"auth layout-split align-start logo-hero decor-shield img-none img-align-start img-slot-above\"", login);
+        Assert.Matches("class=\"auth layout-split align-start logo-hero comp-executive img-none img-align-start img-slot-above\"", login);
         Assert.Equal(HttpStatusCode.NotFound, (await anon.GetAsync("/Files/Brand?kind=loginlogo")).StatusCode);
     }
 
@@ -179,15 +180,65 @@ public class BrandingTests(TestApp app) : IClassFixture<TestApp>
         (await Save(admin, new() { ["LoginImageMode"] = "poster" })).EnsureRedirect();
         Assert.Contains("img-background", await anon.GetStringAsync("/Account/Login"));
 
-        // decorative pattern: chosen style, "none" switches decorations off, unknown values fall back to the default
+        // legacy decorative pattern (v1.1 setting) maps to the closest composition; "none" switches decorations off
         (await Save(admin, new() { ["LoginDecorStyle"] = "journey" })).EnsureRedirect();
         login = await anon.GetStringAsync("/Account/Login");
-        Assert.Contains("decor-journey", login); Assert.DoesNotContain("no-decor", login); Assert.Contains("dc dc-journey", login);
+        Assert.Contains("comp-journey", login); Assert.DoesNotContain("no-decor", login); Assert.Contains("data-motif=\"journey\"", login);
         (await Save(admin, new() { ["LoginDecorStyle"] = "none" })).EnsureRedirect();
         login = await anon.GetStringAsync("/Account/Login");
-        Assert.Contains("decor-none", login); Assert.Contains("no-decor", login);
+        Assert.Contains("comp-clean", login); Assert.Contains("no-decor", login); Assert.DoesNotContain("class=\"auth-layer ", login);
         (await Save(admin, new() { ["LoginDecorStyle"] = "confetti" })).EnsureRedirect();
-        Assert.Contains("decor-shield", await anon.GetStringAsync("/Account/Login"));
+        Assert.Contains("comp-executive", await anon.GetStringAsync("/Account/Login"));
+
+        (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
+    }
+
+    [Fact]
+    public async Task Login_compositions_render_presets_and_enforce_safe_custom_layers()
+    {
+        var admin = await AdminAsync();
+        var anon = app.NewClient();
+        (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
+
+        // fresh installation: "Executive Security" with its three layers, motif library rendered locally
+        var login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("comp-executive", login);
+        Assert.Contains("id=\"lm-shield\"", login); Assert.Contains("id=\"lm-network\"", login);
+        Assert.Equal(3, Regex.Matches(login, "class=\"auth-layer ").Count);
+        Assert.DoesNotContain("http://", Regex.Match(login, "<svg class=\"auth-motifs\".*?</svg>", RegexOptions.Singleline).Value.Replace("http://www.w3.org", ""));
+
+        // every preset renders its own layer set
+        foreach (var c in LoginCompositions.All)
+        {
+            (await Save(admin, new() { ["LoginComposition"] = c.Id })).EnsureRedirect();
+            login = await anon.GetStringAsync("/Account/Login");
+            Assert.Contains("comp-" + c.Id, login);
+            foreach (var l in c.Layers.Where(l => l.Visible && l.Motif != "none")) Assert.Contains($"data-motif=\"{l.Motif}\"", login);
+            Assert.Equal(c.Layers.Count(l => l.Visible && l.Motif != "none"), Regex.Matches(login, "class=\"auth-layer ").Count);
+        }
+
+        // custom layers: values outside the safe ranges are clamped; behind the text the opacity is capped; a shield stays upright;
+        // an unknown motif or position falls back; a hidden layer is not rendered on the real page
+        (await Save(admin, new()
+        {
+            ["LoginComposition"] = "custom",
+            ["Layer1Motif"] = "shield", ["Layer1Position"] = "center-start", ["Layer1Opacity"] = "90", ["Layer1Scale"] = "999", ["Layer1Rotate"] = "45", ["Layer1Visible"] = "true",
+            ["Layer2Motif"] = "grid", ["Layer2Position"] = "top-end", ["Layer2Opacity"] = "1", ["Layer2Scale"] = "10", ["Layer2Rotate"] = "-40", ["Layer2Visible"] = "true",
+            ["Layer3Motif"] = "<script>", ["Layer3Position"] = "nowhere", ["Layer3Opacity"] = "20", ["Layer3Visible"] = "true",
+        })).EnsureRedirect();
+        login = await anon.GetStringAsync("/Account/Login");
+        Assert.Contains("comp-custom", login);
+        Assert.Matches("class=\"auth-layer pos-center-start\" data-layer=\"1\" data-motif=\"shield\"[^>]*--l-op:0.12;--l-scale:1.6;--l-rot:0deg", login);
+        Assert.True(Regex.IsMatch(login, "class=\"auth-layer pos-top-end\" data-layer=\"2\" data-motif=\"grid\"[^>]*--l-op:0.04;--l-scale:0.5;--l-rot:-12deg"), Regex.Match(login, "<svg class=\"auth-layer[^>]*data-layer=\"2\"[^>]*>").Value);
+        Assert.Matches("class=\"auth-layer pos-top-end\" data-layer=\"2\" data-motif=\"grid\"[^>]*--l-op:0.04;--l-scale:0.5;--l-rot:-12deg", login);
+        Assert.DoesNotContain("data-layer=\"3\"", login);   // invalid motif -> none -> not rendered
+        Assert.DoesNotContain("<script>", login);
+        (await Save(admin, new() { ["Layer2Visible"] = "false" })).EnsureRedirect();
+        Assert.DoesNotContain("data-layer=\"2\"", await anon.GetStringAsync("/Account/Login"));
+        // the studio preview still renders all three slots (for live editing)
+        var studio = await admin.GetStringAsync("/Admin/Settings");
+        Assert.Contains("data-comp-preset=\"governance\"", studio);
+        Assert.Equal(3, Regex.Matches(studio, "data-layer=\"[123]\"").Count);
 
         (await admin.PostForm("/Admin/Settings", "/Admin/Settings/ResetBranding", [])).EnsureRedirect();
     }

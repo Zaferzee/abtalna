@@ -46,6 +46,9 @@ namespace CyberLms.Web.Data.Migrations
                     b.Property<int>("MaxAttempts")
                         .HasColumnType("integer");
 
+                    b.Property<int>("OwnerEntityId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("PassingPercentage")
                         .HasColumnType("integer");
 
@@ -60,6 +63,8 @@ namespace CyberLms.Web.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ContentId");
+
+                    b.HasIndex("OwnerEntityId");
 
                     b.ToTable("Assessments", t =>
                         {
@@ -168,6 +173,9 @@ namespace CyberLms.Web.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int?>("ActorEntityId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Details")
                         .HasColumnType("text");
 
@@ -184,6 +192,9 @@ namespace CyberLms.Web.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<int?>("ScopeEntityId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
@@ -196,6 +207,8 @@ namespace CyberLms.Web.Data.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ScopeEntityId");
 
                     b.HasIndex("Timestamp");
 
@@ -231,6 +244,9 @@ namespace CyberLms.Web.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<int>("OwnerEntityId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -238,6 +254,9 @@ namespace CyberLms.Web.Data.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TargetScope")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
@@ -257,6 +276,8 @@ namespace CyberLms.Web.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedById");
+
+                    b.HasIndex("OwnerEntityId");
 
                     b.HasIndex("Status", "Type");
 
@@ -333,6 +354,181 @@ namespace CyberLms.Web.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("ContentCompletions");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.ContentEntityTarget", b =>
+                {
+                    b.Property<int>("ContentId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IncludeDescendants")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("ContentId", "EntityId");
+
+                    b.HasIndex("EntityId");
+
+                    b.ToTable("ContentEntityTargets");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.EntityAdminAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Capabilities")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatedById")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IncludeDescendants")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("UserId", "EntityId")
+                        .IsUnique();
+
+                    b.ToTable("EntityAdminAssignments");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.EntityDirectorySource", b =>
+                {
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BindSecretProtected")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BindUser")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Domain")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastValidatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LdapPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("SearchBase")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ValidationNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("EntityId");
+
+                    b.HasIndex("Domain");
+
+                    b.ToTable("EntityDirectorySources");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.EntitySetting", b =>
+                {
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("EntityId", "Key");
+
+                    b.ToTable("EntitySettings");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.OrgEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AllowedCapabilities")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Depth")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int?>("ParentEntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("ParentEntityId");
+
+                    b.HasIndex("Path");
+
+                    b.ToTable("Entities", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_entity_not_own_parent", "\"ParentEntityId\" IS NULL OR \"ParentEntityId\" <> \"Id\"");
+                        });
                 });
 
             modelBuilder.Entity("CyberLms.Web.Domain.Question", b =>
@@ -459,6 +655,9 @@ namespace CyberLms.Web.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ExternalId")
                         .HasColumnType("text");
 
@@ -491,6 +690,8 @@ namespace CyberLms.Web.Data.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
 
                     b.HasIndex("ExternalId");
 
@@ -557,7 +758,15 @@ namespace CyberLms.Web.Data.Migrations
                         .HasForeignKey("ContentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", "OwnerEntity")
+                        .WithMany()
+                        .HasForeignKey("OwnerEntityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Content");
+
+                    b.Navigation("OwnerEntity");
                 });
 
             modelBuilder.Entity("CyberLms.Web.Domain.AssessmentAnswer", b =>
@@ -605,7 +814,15 @@ namespace CyberLms.Web.Data.Migrations
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", "OwnerEntity")
+                        .WithMany()
+                        .HasForeignKey("OwnerEntityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("CreatedBy");
+
+                    b.Navigation("OwnerEntity");
                 });
 
             modelBuilder.Entity("CyberLms.Web.Domain.ContentAttachment", b =>
@@ -638,6 +855,74 @@ namespace CyberLms.Web.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("CyberLms.Web.Domain.ContentEntityTarget", b =>
+                {
+                    b.HasOne("CyberLms.Web.Domain.Content", "Content")
+                        .WithMany("Targets")
+                        .HasForeignKey("ContentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Content");
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.EntityAdminAssignment", b =>
+                {
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CyberLms.Web.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.EntityDirectorySource", b =>
+                {
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.EntitySetting", b =>
+                {
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", null)
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.OrgEntity", b =>
+                {
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentEntityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("CyberLms.Web.Domain.Question", b =>
                 {
                     b.HasOne("CyberLms.Web.Domain.Assessment", "Assessment")
@@ -658,6 +943,17 @@ namespace CyberLms.Web.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Question");
+                });
+
+            modelBuilder.Entity("CyberLms.Web.Domain.User", b =>
+                {
+                    b.HasOne("CyberLms.Web.Domain.OrgEntity", "Entity")
+                        .WithMany()
+                        .HasForeignKey("EntityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Entity");
                 });
 
             modelBuilder.Entity("CyberLms.Web.Domain.UserAcknowledgment", b =>
@@ -711,6 +1007,8 @@ namespace CyberLms.Web.Data.Migrations
             modelBuilder.Entity("CyberLms.Web.Domain.Content", b =>
                 {
                     b.Navigation("Attachments");
+
+                    b.Navigation("Targets");
                 });
 
             modelBuilder.Entity("CyberLms.Web.Domain.Question", b =>

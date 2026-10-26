@@ -6,6 +6,10 @@
     var f = Model.Filter;
 }
 <form class="panel filters mb-3" method="get" role="search">
+    @if (Model.Entities.Count > 1)
+    {
+        <div><label class="form-label" for="f-ent">@L["Entity"]</label>@await Html.PartialAsync("_EntitySelect", new EntitySelectVm("entityId", Model.Entities, f.EntityId, L["All entities in my scope"], "f-ent"))</div>
+    }
     <div>
         <label class="form-label" for="f-q">@L["User"]</label>
         <div class="field-icon"><i class="bi bi-search"></i><input class="form-control" id="f-q" name="q" value="@f.Q" placeholder="@L["Search for a user"]" /></div>
@@ -21,7 +25,7 @@
     <div><label class="form-label" for="f-s">@L["Status"]</label><select class="form-select" id="f-s" name="status"><option value="">@L["Any status"]</option>@foreach (var s in statuses) { <option value="@s" selected="@(f.Status == s)">@L[Labels.Status(s)]</option> }</select></div>
     <div class="d-flex gap-2">
         <button class="btn btn-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button>
-        @if (!string.IsNullOrEmpty(f.Q) || f.AssessmentId != null || f.ContentId != null || !string.IsNullOrEmpty(f.Status))
+        @if (!string.IsNullOrEmpty(f.Q) || f.AssessmentId != null || f.ContentId != null || f.EntityId != null || !string.IsNullOrEmpty(f.Status))
         { <a class="btn btn-ghost" asp-action="@a"><i class="bi bi-x-lg"></i> @L["Clear filters"]</a> }
     </div>
 </form>

@@ -9,10 +9,13 @@
   <data name="(set it in the server configuration or the Smtp__Password environment variable; it is never stored in the database)." xml:space="preserve"><value>(تُضبط في إعدادات الخادم أو متغير البيئة Smtp__Password، ولا تُخزَّن في قاعدة البيانات).</value></data>
   <data name="- none -" xml:space="preserve"><value>- بدون -</value></data>
   <data name="0 = unlimited" xml:space="preserve"><value>0 = غير محدود</value></data>
+  <data name="A ceiling set by the central administrator: administrators of this entity can only exercise capabilities allowed here, whatever is granted to them." xml:space="preserve"><value>سقف يحدده المدير المركزي: لا يمارس مديرو هذه الجهة إلا الصلاحيات المسموح بها هنا، أيًّا كان ما يُمنح لهم.</value></data>
   <data name="A copy was created as a draft. Review it before publishing." xml:space="preserve"><value>أُنشئت نسخة كمسودة. راجعها قبل النشر.</value></data>
   <data name="A cybersecurity control and how it is applied" xml:space="preserve"><value>ضابط أمن سيبراني وكيفية تطبيقه</value></data>
+  <data name="A single quiet geometric accent" xml:space="preserve"><value>لمسة هندسية هادئة واحدة</value></data>
   <data name="A square mark shown in the sidebar only when no sidebar logo is uploaded. It never replaces another logo. PNG/JPG/WebP." xml:space="preserve"><value>علامة مربعة تظهر في القائمة الجانبية فقط عند عدم رفع شعار للقائمة، ولا تحل محل أي شعار آخر. PNG/JPG/WebP.</value></data>
   <data name="A square mark used where the full logo does not fit. PNG/JPG/WebP." xml:space="preserve"><value>علامة مربعة تُستخدم حيث لا يتسع الشعار الكامل. PNG/JPG/WebP.</value></data>
+  <data name="A user of your own entities. You can only grant capabilities you hold yourself." xml:space="preserve"><value>مستخدم من الجهات التي تديرها. لا يمكنك منح صلاحيات لا تملكها.</value></data>
   <data name="A value for the {0} parameter is required." xml:space="preserve"><value>القيمة مطلوبة للمعامل {0}.</value></data>
   <data name="A value is required." xml:space="preserve"><value>القيمة مطلوبة.</value></data>
   <data name="Above the text" xml:space="preserve"><value>فوق النص</value></data>
@@ -44,11 +47,19 @@
   <data name="Add files" xml:space="preserve"><value>أضف ملفات</value></data>
   <data name="Add option" xml:space="preserve"><value>إضافة خيار</value></data>
   <data name="Add question" xml:space="preserve"><value>إضافة سؤال</value></data>
+  <data name="Add sub-entity" xml:space="preserve"><value>إضافة جهة تابعة</value></data>
   <data name="Add the first question below. Each saved question appears here in order." xml:space="preserve"><value>أضف السؤال الأول أدناه. يظهر كل سؤال محفوظ هنا بالترتيب.</value></data>
+  <data name="ADMIN_ASSIGNED" xml:space="preserve"><value>تعيين مدير جهة</value></data>
   <data name="ADMIN_BOOTSTRAPPED" xml:space="preserve"><value>تعيين مدير نظام من الخادم</value></data>
+  <data name="ADMIN_PERMISSIONS_CHANGED" xml:space="preserve"><value>تعديل صلاحيات مدير جهة</value></data>
+  <data name="ADMIN_REVOKED" xml:space="preserve"><value>إلغاء تعيين مدير جهة</value></data>
   <data name="Administration" xml:space="preserve"><value>الإدارة</value></data>
   <data name="Administrator" xml:space="preserve"><value>مدير النظام</value></data>
   <data name="Administrator '{0}' assigned from the server command line" xml:space="preserve"><value>تم تعيين '{0}' مديراً للنظام من سطر أوامر الخادم</value></data>
+  <data name="Administrator assigned." xml:space="preserve"><value>تم تعيين المدير.</value></data>
+  <data name="Administrator removed." xml:space="preserve"><value>تمت إزالة المدير.</value></data>
+  <data name="Administrators" xml:space="preserve"><value>المديرون</value></data>
+  <data name="Administrators &amp; permissions" xml:space="preserve"><value>المديرون والصلاحيات</value></data>
   <data name="After saving, the form is ready for the next question." xml:space="preserve"><value>بعد الحفظ يصبح النموذج جاهزاً للسؤال التالي.</value></data>
   <data name="Aligned to the side" xml:space="preserve"><value>محاذاة جانبية</value></data>
   <data name="All" xml:space="preserve"><value>الكل</value></data>
@@ -57,14 +68,21 @@
   <data name="All assessments" xml:space="preserve"><value>كل الاختبارات</value></data>
   <data name="All changes saved" xml:space="preserve"><value>تم حفظ كل التغييرات</value></data>
   <data name="All content" xml:space="preserve"><value>كل المحتوى</value></data>
+  <data name="All entities" xml:space="preserve"><value>جميع الجهات</value></data>
+  <data name="All entities in my scope" xml:space="preserve"><value>كل الجهات ضمن نطاقي</value></data>
   <data name="All required policies are acknowledged and there are no open assessments." xml:space="preserve"><value>تم الإقرار بجميع السياسات المطلوبة ولا توجد اختبارات مفتوحة.</value></data>
   <data name="All roles" xml:space="preserve"><value>جميع الأدوار</value></data>
   <data name="All statuses" xml:space="preserve"><value>جميع الحالات</value></data>
   <data name="All types" xml:space="preserve"><value>جميع الأنواع</value></data>
+  <data name="Allowed for this entity" xml:space="preserve"><value>المسموح لهذه الجهة</value></data>
+  <data name="Also for sub-entities" xml:space="preserve"><value>يشمل الجهات التابعة</value></data>
+  <data name="An entity cannot be placed under itself or one of its sub-entities." xml:space="preserve"><value>لا يمكن وضع الجهة تحت نفسها أو تحت إحدى جهاتها التابعة.</value></data>
   <data name="An unexpected error occurred. Please try again or contact the administrator." xml:space="preserve"><value>حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو التواصل مع مدير النظام.</value></data>
   <data name="Answer options" xml:space="preserve"><value>خيارات الإجابة</value></data>
   <data name="Answer options (leave unused rows empty; tick the correct answer(s))" xml:space="preserve"><value>خيارات الإجابة (اترك الخانات غير المستخدمة فارغة، وحدّد الإجابة أو الإجابات الصحيحة)</value></data>
   <data name="Answer review" xml:space="preserve"><value>مراجعة الإجابات</value></data>
+  <data name="Any active user. Administrators receive only the capabilities you tick." xml:space="preserve"><value>أي مستخدم نشط. لا يحصل المدير إلا على الصلاحيات التي تختارها.</value></data>
+  <data name="Any depth is supported: ministry, agency, general directorate, department…" xml:space="preserve"><value>يدعم أي عدد من المستويات: وزارة، هيئة، إدارة عامة، إدارة…</value></data>
   <data name="Any other content" xml:space="preserve"><value>أي محتوى آخر</value></data>
   <data name="Any status" xml:space="preserve"><value>أي حالة</value></data>
   <data name="Application" xml:space="preserve"><value>التطبيق</value></data>
@@ -92,6 +110,8 @@
   <data name="Assessments (users x published assessments)" xml:space="preserve"><value>الاختبارات (المستخدمون × الاختبارات المنشورة)</value></data>
   <data name="Assessments linked to content are easiest to manage from the content wizard; standalone assessments are managed here." xml:space="preserve"><value>الاختبارات المرتبطة بمحتوى تُدار بسهولة من معالج المحتوى، والاختبارات المستقلة تُدار هنا.</value></data>
   <data name="Assessments passed" xml:space="preserve"><value>اختبارات مجتازة</value></data>
+  <data name="Assign" xml:space="preserve"><value>تعيين</value></data>
+  <data name="Assign an administrator" xml:space="preserve"><value>تعيين مدير</value></data>
   <data name="Assignments" xml:space="preserve"><value>تكليف</value></data>
   <data name="ATTACHMENT_ADDED" xml:space="preserve"><value>إضافة مرفق</value></data>
   <data name="ATTACHMENT_DELETED" xml:space="preserve"><value>حذف مرفق</value></data>
@@ -103,13 +123,18 @@
   <data name="Attempts" xml:space="preserve"><value>المحاولات</value></data>
   <data name="Attempts allowed" xml:space="preserve"><value>المحاولات المسموحة</value></data>
   <data name="Attempts and scores" xml:space="preserve"><value>المحاولات والنتائج</value></data>
+  <data name="Audience" xml:space="preserve"><value>الجمهور المستهدف</value></data>
+  <data name="Audit" xml:space="preserve"><value>التدقيق</value></data>
   <data name="Audit log" xml:space="preserve"><value>سجل التدقيق</value></data>
   <data name="Automatic" xml:space="preserve"><value>تلقائي</value></data>
   <data name="Available assessments" xml:space="preserve"><value>الاختبارات المتاحة</value></data>
   <data name="Available content" xml:space="preserve"><value>المحتوى المتاح</value></data>
   <data name="Available now" xml:space="preserve"><value>متاح الآن</value></data>
   <data name="Awareness Content" xml:space="preserve"><value>محتوى توعوي</value></data>
+  <data name="Awareness Journey" xml:space="preserve"><value>رحلة التوعية</value></data>
+  <data name="Awareness, acknowledgment and assessment status across all entities." xml:space="preserve"><value>حالة التوعية والإقرارات والاختبارات في جميع الجهات.</value></data>
   <data name="Awareness, acknowledgment and assessment status across the organization." xml:space="preserve"><value>حالة التوعية والإقرارات والاختبارات على مستوى المؤسسة.</value></data>
+  <data name="Awareness, acknowledgment and assessment status of the entities you administer." xml:space="preserve"><value>حالة التوعية والإقرارات والاختبارات في الجهات التي تديرها.</value></data>
   <data name="Back to assessments" xml:space="preserve"><value>العودة إلى الاختبارات</value></data>
   <data name="Back to Content Management" xml:space="preserve"><value>العودة إلى إدارة المحتوى</value></data>
   <data name="Back to home" xml:space="preserve"><value>العودة إلى الصفحة الرئيسية</value></data>
@@ -145,19 +170,44 @@
   <data name="Calculating your result..." xml:space="preserve"><value>جارٍ احتساب نتيجتك…</value></data>
   <data name="Calm and trustworthy" xml:space="preserve"><value>هادئ وموثوق</value></data>
   <data name="Cancel" xml:space="preserve"><value>إلغاء</value></data>
+  <data name="Capability: Create and edit content" xml:space="preserve"><value>إنشاء المحتوى وتعديله</value></data>
+  <data name="Capability: Export reports" xml:space="preserve"><value>تصدير التقارير</value></data>
+  <data name="Capability: Manage acknowledgments" xml:space="preserve"><value>إدارة الإقرارات</value></data>
+  <data name="Capability: Manage assessments" xml:space="preserve"><value>إدارة الاختبارات</value></data>
+  <data name="Capability: Manage directory integration" xml:space="preserve"><value>إدارة ربط الدليل (AD)</value></data>
+  <data name="Capability: Manage entity administrators" xml:space="preserve"><value>إدارة مديري الجهة</value></data>
+  <data name="Capability: Manage entity branding" xml:space="preserve"><value>إدارة هوية الجهة</value></data>
+  <data name="Capability: Manage users" xml:space="preserve"><value>إدارة المستخدمين</value></data>
+  <data name="Capability: Publish content" xml:space="preserve"><value>نشر المحتوى</value></data>
+  <data name="Capability: Send notifications and reminders" xml:space="preserve"><value>إرسال الإشعارات والتذكيرات</value></data>
+  <data name="Capability: View audit log" xml:space="preserve"><value>عرض سجل التدقيق</value></data>
+  <data name="Capability: View reports" xml:space="preserve"><value>عرض التقارير</value></data>
   <data name="Cards and surfaces" xml:space="preserve"><value>البطاقات والأسطح</value></data>
   <data name="Center" xml:space="preserve"><value>الوسط</value></data>
   <data name="Centered" xml:space="preserve"><value>في المنتصف</value></data>
+  <data name="Central" xml:space="preserve"><value>مركزي</value></data>
+  <data name="Central administrator (all entities, all capabilities)" xml:space="preserve"><value>مدير مركزي (كل الجهات وكل الصلاحيات)</value></data>
+  <data name="Central branding" xml:space="preserve"><value>الهوية المركزية</value></data>
+  <data name="Central governance" xml:space="preserve"><value>الحوكمة المركزية</value></data>
   <data name="Change password" xml:space="preserve"><value>تغيير كلمة المرور</value></data>
   <data name="Checklist" xml:space="preserve"><value>قائمة تحقق</value></data>
+  <data name="Choose a composition, then fine-tune its layers below. Changing a layer makes it a custom composition." xml:space="preserve"><value>اختر تكوينًا ثم اضبط طبقاته أدناه. أي تعديل على طبقة يجعله تكوينًا مخصصًا.</value></data>
   <data name="Choose a content type." xml:space="preserve"><value>اختر نوع المحتوى.</value></data>
   <data name="Choose a CSV file (max 5 MB)." xml:space="preserve"><value>اختر ملف CSV (الحد الأقصى 5 ميغابايت).</value></data>
   <data name="Choose a preset, then fine-tune any color below." xml:space="preserve"><value>اختر سمة جاهزة، ثم عدّل أي لون أدناه إن رغبت.</value></data>
+  <data name="Choose an entity you administer." xml:space="preserve"><value>اختر جهة تديرها.</value></data>
+  <data name="Choose at least one capability." xml:space="preserve"><value>اختر صلاحية واحدة على الأقل.</value></data>
   <data name="Choose file" xml:space="preserve"><value>اختيار ملف</value></data>
   <data name="Choose files" xml:space="preserve"><value>اختيار ملفات</value></data>
+  <data name="Choose the entities below." xml:space="preserve"><value>اختر الجهات أدناه.</value></data>
+  <data name="Choose the parent entity." xml:space="preserve"><value>اختر الجهة الأم.</value></data>
+  <data name="Choose who should see this content." xml:space="preserve"><value>اختر من يرى هذا المحتوى.</value></data>
   <data name="Classic blue" xml:space="preserve"><value>أزرق كلاسيكي</value></data>
+  <data name="Clean" xml:space="preserve"><value>بدون زخارف</value></data>
   <data name="Clear filters" xml:space="preserve"><value>مسح التصفية</value></data>
   <data name="Close" xml:space="preserve"><value>إغلاق</value></data>
+  <data name="Code: letters, digits, '.', '_' or '-' (up to 50)." xml:space="preserve"><value>الرمز: حروف لاتينية وأرقام و'.' و'_' و'-' (حتى 50).</value></data>
+  <data name="code: {0} → {1}" xml:space="preserve"><value>الرمز: {0} ← {1}</value></data>
   <data name="Colors" xml:space="preserve"><value>الألوان</value></data>
   <data name="Colors &amp; theme" xml:space="preserve"><value>الألوان والسمة</value></data>
   <data name="Compact logo (icon)" xml:space="preserve"><value>الشعار المختصر (أيقونة)</value></data>
@@ -172,7 +222,11 @@
   <data name="Completed on" xml:space="preserve"><value>تاريخ الإكمال</value></data>
   <data name="Completion" xml:space="preserve"><value>الإنجاز</value></data>
   <data name="Completion date" xml:space="preserve"><value>تاريخ الإكمال</value></data>
+  <data name="Completion rate" xml:space="preserve"><value>نسبة الإنجاز</value></data>
+  <data name="Completion rate = acknowledgments given + assessments passed, divided by all acknowledgment and assessment requirements of the entity's employees (including its sub-entities). Only content targeted to each employee is counted." xml:space="preserve"><value>نسبة الإنجاز = الإقرارات المنجزة + الاختبارات المجتازة، مقسومة على جميع متطلبات الإقرار والاختبار لموظفي الجهة (مع جهاتها التابعة). لا يُحتسب إلا المحتوى الموجّه لكل موظف.</value></data>
+  <data name="Composition presets" xml:space="preserve"><value>تكوينات جاهزة</value></data>
   <data name="Configure host and sender first." xml:space="preserve"><value>اضبط الخادم والمرسل أولاً.</value></data>
+  <data name="Configured" xml:space="preserve"><value>مُعدّ</value></data>
   <data name="configured on the server" xml:space="preserve"><value>مهيأة على الخادم</value></data>
   <data name="Confirm" xml:space="preserve"><value>تأكيد</value></data>
   <data name="Confirm new password" xml:space="preserve"><value>تأكيد كلمة المرور الجديدة</value></data>
@@ -185,17 +239,20 @@
   <data name="Content created and published." xml:space="preserve"><value>تم إنشاء المحتوى ونشره.</value></data>
   <data name="Content created as draft." xml:space="preserve"><value>تم إنشاء المحتوى كمسودة.</value></data>
   <data name="Content Management" xml:space="preserve"><value>إدارة المحتوى</value></data>
+  <data name="Content owned" xml:space="preserve"><value>المحتوى المملوك</value></data>
   <data name="Content title" xml:space="preserve"><value>عنوان المحتوى</value></data>
   <data name="Content type" xml:space="preserve"><value>نوع المحتوى</value></data>
   <data name="CONTENT_CREATED" xml:space="preserve"><value>إنشاء محتوى</value></data>
   <data name="CONTENT_DELETED" xml:space="preserve"><value>حذف محتوى</value></data>
   <data name="CONTENT_PUBLISHED" xml:space="preserve"><value>نشر محتوى</value></data>
+  <data name="CONTENT_TARGETING_CHANGED" xml:space="preserve"><value>تغيير الجمهور المستهدف للمحتوى</value></data>
   <data name="CONTENT_UNPUBLISHED" xml:space="preserve"><value>إلغاء نشر محتوى</value></data>
   <data name="CONTENT_UPDATED" xml:space="preserve"><value>تعديل محتوى</value></data>
   <data name="Continue" xml:space="preserve"><value>متابعة</value></data>
   <data name="Continue assessment" xml:space="preserve"><value>متابعة الاختبار</value></data>
   <data name="Continue the open attempt" xml:space="preserve"><value>متابعة المحاولة المفتوحة</value></data>
   <data name="Controls grid" xml:space="preserve"><value>شبكة الضوابط</value></data>
+  <data name="Controls grid with a policy document and quiet rings" xml:space="preserve"><value>شبكة ضوابط مع وثيقة سياسة وحلقات هادئة</value></data>
   <data name="Correct" xml:space="preserve"><value>صحيحة</value></data>
   <data name="Correct answer" xml:space="preserve"><value>الإجابة الصحيحة</value></data>
   <data name="Correct answers" xml:space="preserve"><value>الإجابات الصحيحة</value></data>
@@ -211,8 +268,12 @@
   <data name="Current password" xml:space="preserve"><value>كلمة المرور الحالية</value></data>
   <data name="Current password is incorrect." xml:space="preserve"><value>كلمة المرور الحالية غير صحيحة.</value></data>
   <data name="Current step" xml:space="preserve"><value>الخطوة الحالية</value></data>
+  <data name="Custom" xml:space="preserve"><value>مخصص</value></data>
+  <data name="Custom branding" xml:space="preserve"><value>هوية مخصصة</value></data>
+  <data name="Custom composition" xml:space="preserve"><value>تكوين مخصص</value></data>
   <data name="Custom focal point" xml:space="preserve"><value>نقطة تركيز مخصصة</value></data>
   <data name="Customize the identity, login page and colors of the platform. The preview shows the result before anything is published." xml:space="preserve"><value>خصّص هوية المنصة وصفحة الدخول والألوان. تعرض المعاينة النتيجة قبل نشر أي تغيير.</value></data>
+  <data name="Cyber Defense" xml:space="preserve"><value>الدفاع السيبراني</value></data>
   <data name="Cybersecurity awareness" xml:space="preserve"><value>التوعية بالأمن السيبراني</value></data>
   <data name="Cybersecurity Control" xml:space="preserve"><value>ضوابط الأمن السيبراني</value></data>
   <data name="Dashboard" xml:space="preserve"><value>لوحة التحكم</value></data>
@@ -235,20 +296,33 @@
   <data name="Description / instructions" xml:space="preserve"><value>الوصف / التعليمات</value></data>
   <data name="Desktop" xml:space="preserve"><value>سطح المكتب</value></data>
   <data name="Details" xml:space="preserve"><value>التفاصيل</value></data>
+  <data name="Directory" xml:space="preserve"><value>الدليل</value></data>
+  <data name="Directory integration" xml:space="preserve"><value>ربط الدليل (AD)</value></data>
+  <data name="Directory integration is not allowed for this entity by the central administrator." xml:space="preserve"><value>ربط الدليل غير مسموح لهذه الجهة من المدير المركزي.</value></data>
+  <data name="Directory mapping only: new Windows accounts from this domain are placed in this entity, and the directory can be used for user attributes." xml:space="preserve"><value>ربط بالدليل فقط: تُضاف حسابات Windows الجديدة من هذا النطاق إلى هذه الجهة، ويمكن استخدام الدليل لبيانات المستخدمين.</value></data>
+  <data name="Directory settings saved." xml:space="preserve"><value>تم حفظ إعدادات الدليل.</value></data>
+  <data name="Directory source" xml:space="preserve"><value>مصدر الدليل</value></data>
+  <data name="DIRECTORY_CONFIG_CHANGED" xml:space="preserve"><value>تغيير إعدادات الدليل</value></data>
   <data name="Disabled" xml:space="preserve"><value>معطّل</value></data>
+  <data name="Disabling an entity blocks sign-in for its users and all its sub-entities and suspends its administrators." xml:space="preserve"><value>تعطيل الجهة يمنع دخول مستخدميها ومستخدمي جهاتها التابعة ويوقف صلاحيات مديريها.</value></data>
   <data name="Discard changes" xml:space="preserve"><value>تجاهل التغييرات</value></data>
   <data name="Display mode" xml:space="preserve"><value>وضع العرض</value></data>
   <data name="Display name" xml:space="preserve"><value>الاسم المعروض</value></data>
+  <data name="Distributed to this entity by other entities" xml:space="preserve"><value>محتوى موجّه لهذه الجهة من جهات أخرى</value></data>
   <data name="Do you want to add an assessment for this content?" xml:space="preserve"><value>هل تريد إضافة اختبار لهذا المحتوى؟</value></data>
   <data name="Document" xml:space="preserve"><value>المستند</value></data>
   <data name="Document pages" xml:space="preserve"><value>صفحات المستند</value></data>
   <data name="Document tools" xml:space="preserve"><value>أدوات المستند</value></data>
   <data name="Documents" xml:space="preserve"><value>المستندات</value></data>
   <data name="Does this content require employees to acknowledge that they have read it?" xml:space="preserve"><value>هل يتطلب هذا المحتوى إقراراً بالاطلاع؟</value></data>
+  <data name="Domain" xml:space="preserve"><value>النطاق</value></data>
+  <data name="Domain (NetBIOS)" xml:space="preserve"><value>النطاق (NetBIOS)</value></data>
   <data name="Done" xml:space="preserve"><value>تم</value></data>
   <data name="Download" xml:space="preserve"><value>تنزيل</value></data>
   <data name="Download the video" xml:space="preserve"><value>تنزيل الفيديو</value></data>
   <data name="Draft" xml:space="preserve"><value>مسودة</value></data>
+  <data name="Drill down" xml:space="preserve"><value>تفصيل</value></data>
+  <data name="Drill down into" xml:space="preserve"><value>عرض تفاصيل</value></data>
   <data name="Duplicate" xml:space="preserve"><value>نسخ</value></data>
   <data name="Duplicate of {0}" xml:space="preserve"><value>نسخة من الاختبار {0}</value></data>
   <data name="e.g. Answer all questions after reading the regulation." xml:space="preserve"><value>مثال: أجب عن جميع الأسئلة بعد قراءة اللائحة.</value></data>
@@ -257,6 +331,7 @@
   <data name="Edit" xml:space="preserve"><value>تعديل</value></data>
   <data name="Edit assessment" xml:space="preserve"><value>تعديل الاختبار</value></data>
   <data name="Edit content" xml:space="preserve"><value>تعديل المحتوى</value></data>
+  <data name="Edit entity" xml:space="preserve"><value>تعديل الجهة</value></data>
   <data name="Edit learning material" xml:space="preserve"><value>تعديل مادة تعليمية</value></data>
   <data name="Edit question" xml:space="preserve"><value>تعديل السؤال</value></data>
   <data name="Edit question {0}" xml:space="preserve"><value>تعديل السؤال {0}</value></data>
@@ -298,22 +373,48 @@
   <data name="Emerald" xml:space="preserve"><value>زمردي</value></data>
   <data name="Employee" xml:space="preserve"><value>الموظف</value></data>
   <data name="Employee portal" xml:space="preserve"><value>بوابة الموظفين</value></data>
+  <data name="Employees" xml:space="preserve"><value>الموظفون</value></data>
   <data name="Employees and administrators, local or Windows / Active Directory accounts." xml:space="preserve"><value>الموظفون والمسؤولون، بحسابات محلية أو حسابات Windows / Active Directory.</value></data>
   <data name="Employees answer questions after reading; results appear in the reports." xml:space="preserve"><value>يجيب الموظفون عن الأسئلة بعد القراءة، وتظهر النتائج في التقارير.</value></data>
   <data name="Employees can see this material now." xml:space="preserve"><value>يمكن للموظفين رؤية هذه المادة الآن.</value></data>
   <data name="Employees confirm a statement; the date and time are recorded for compliance reports." xml:space="preserve"><value>يؤكد الموظف نص الإقرار، ويُسجَّل التاريخ والوقت لتقارير الامتثال.</value></data>
+  <data name="Empty fields inherit from the parent entity and the central branding. Only this entity and its sub-entities are affected; the login page stays central." xml:space="preserve"><value>الحقول الفارغة تُورَث من الجهة الأم والهوية المركزية. يقتصر الأثر على هذه الجهة وجهاتها التابعة، وتبقى صفحة الدخول مركزية.</value></data>
+  <data name="Enabled" xml:space="preserve"><value>مفعّل</value></data>
   <data name="End" xml:space="preserve"><value>النهاية</value></data>
   <data name="English" xml:space="preserve"><value>English</value></data>
   <data name="Enlarge" xml:space="preserve"><value>تكبير</value></data>
   <data name="Enter a valid e-mail address." xml:space="preserve"><value>أدخل بريداً إلكترونياً صحيحاً.</value></data>
   <data name="Enter an http(s) URL or a path starting with '/'." xml:space="preserve"><value>أدخل رابطاً يبدأ بـ http أو https، أو مساراً يبدأ بـ '/'.</value></data>
-  <data name="Entity" xml:space="preserve"><value>الكيان</value></data>
+  <data name="Enter the entity name." xml:space="preserve"><value>أدخل اسم الجهة.</value></data>
+  <data name="Enter the NetBIOS domain name (e.g. AGENCY)." xml:space="preserve"><value>أدخل اسم النطاق NetBIOS (مثل AGENCY).</value></data>
+  <data name="Entity" xml:space="preserve"><value>الجهة</value></data>
+  <data name="Entity administrator" xml:space="preserve"><value>مدير جهة</value></data>
+  <data name="Entity administrators" xml:space="preserve"><value>مديرو الجهة</value></data>
+  <data name="Entity and sub-entities" xml:space="preserve"><value>الجهة وجهاتها التابعة</value></data>
+  <data name="Entity branding" xml:space="preserve"><value>هوية الجهة</value></data>
+  <data name="Entity branding saved." xml:space="preserve"><value>تم حفظ هوية الجهة.</value></data>
+  <data name="Entity code" xml:space="preserve"><value>رمز الجهة</value></data>
+  <data name="Entity comparison" xml:space="preserve"><value>مقارنة الجهات</value></data>
+  <data name="Entity created." xml:space="preserve"><value>تم إنشاء الجهة.</value></data>
+  <data name="Entity details" xml:space="preserve"><value>بيانات الجهة</value></data>
+  <data name="Entity logo" xml:space="preserve"><value>شعار الجهة</value></data>
+  <data name="Entity name" xml:space="preserve"><value>اسم الجهة</value></data>
+  <data name="Entity sections" xml:space="preserve"><value>أقسام الجهة</value></data>
   <data name="Entity: Assessment" xml:space="preserve"><value>اختبار</value></data>
   <data name="Entity: Content" xml:space="preserve"><value>محتوى</value></data>
+  <data name="Entity: Entity" xml:space="preserve"><value>جهة</value></data>
   <data name="Entity: Question" xml:space="preserve"><value>سؤال</value></data>
   <data name="Entity: Report" xml:space="preserve"><value>تقرير</value></data>
   <data name="Entity: Settings" xml:space="preserve"><value>إعدادات</value></data>
   <data name="Entity: User" xml:space="preserve"><value>مستخدم</value></data>
+  <data name="ENTITY_BRANDING_RESET" xml:space="preserve"><value>إعادة هوية الجهة إلى الموروث</value></data>
+  <data name="ENTITY_BRANDING_UPDATED" xml:space="preserve"><value>تعديل هوية الجهة</value></data>
+  <data name="ENTITY_CAPABILITIES_CHANGED" xml:space="preserve"><value>تعديل الصلاحيات المسموحة للجهة</value></data>
+  <data name="ENTITY_CREATED" xml:space="preserve"><value>إنشاء جهة</value></data>
+  <data name="ENTITY_DISABLED" xml:space="preserve"><value>تعطيل جهة</value></data>
+  <data name="ENTITY_ENABLED" xml:space="preserve"><value>تفعيل جهة</value></data>
+  <data name="ENTITY_MOVED" xml:space="preserve"><value>نقل جهة</value></data>
+  <data name="ENTITY_UPDATED" xml:space="preserve"><value>تعديل جهة</value></data>
   <data name="entries" xml:space="preserve"><value>سجل</value></data>
   <data name="Error" xml:space="preserve"><value>خطأ</value></data>
   <data name="Estimated time" xml:space="preserve"><value>الوقت التقديري</value></data>
@@ -321,6 +422,7 @@
   <data name="Everything is ready to publish." xml:space="preserve"><value>كل شيء جاهز للنشر.</value></data>
   <data name="Exactly what the employee will see" xml:space="preserve"><value>تماماً كما سيراه الموظف</value></data>
   <data name="Executive Navy" xml:space="preserve"><value>الكحلي التنفيذي</value></data>
+  <data name="Executive Security" xml:space="preserve"><value>الأمن التنفيذي</value></data>
   <data name="Export CSV" xml:space="preserve"><value>تصدير CSV</value></data>
   <data name="Export Excel" xml:space="preserve"><value>تصدير Excel</value></data>
   <data name="Failed" xml:space="preserve"><value>غير مجتاز</value></data>
@@ -343,7 +445,10 @@
   <data name="Fit width" xml:space="preserve"><value>ملاءمة العرض</value></data>
   <data name="Focal point" xml:space="preserve"><value>نقطة التركيز</value></data>
   <data name="Footer text (copyright, contact, etc.)" xml:space="preserve"><value>نص التذييل (حقوق النشر، التواصل، إلخ)</value></data>
+  <data name="For central content: all entities." xml:space="preserve"><value>للمحتوى المركزي: جميع الجهات.</value></data>
+  <data name="For central content: the root entity only." xml:space="preserve"><value>للمحتوى المركزي: الجهة الرئيسية فقط.</value></data>
   <data name="For example: IT service desk extension or e-mail." xml:space="preserve"><value>مثال: تحويلة مكتب الدعم الفني أو بريده.</value></data>
+  <data name="Full audit log" xml:space="preserve"><value>سجل التدقيق الكامل</value></data>
   <data name="Full background" xml:space="preserve"><value>خلفية كاملة</value></data>
   <data name="Full background: a frame around the image. Framed image: the space around it." xml:space="preserve"><value>في الخلفية الكاملة: إطار حول الصورة. في الصورة المؤطرة: المسافة المحيطة بها.</value></data>
   <data name="Full screen" xml:space="preserve"><value>ملء الشاشة</value></data>
@@ -352,11 +457,13 @@
   <data name="General Content" xml:space="preserve"><value>محتوى عام</value></data>
   <data name="General identity" xml:space="preserve"><value>الهوية العامة</value></data>
   <data name="General settings saved." xml:space="preserve"><value>تم حفظ الإعدادات العامة.</value></data>
+  <data name="Geometric accent" xml:space="preserve"><value>لمسة هندسية</value></data>
   <data name="Go to assessment" xml:space="preserve"><value>الانتقال للاختبار</value></data>
   <data name="Go to the acknowledgment" xml:space="preserve"><value>الانتقال إلى الإقرار</value></data>
   <data name="Good afternoon" xml:space="preserve"><value>مساء الخير</value></data>
   <data name="Good evening" xml:space="preserve"><value>مساء الخير</value></data>
   <data name="Good morning" xml:space="preserve"><value>صباح الخير</value></data>
+  <data name="Governance &amp; Compliance" xml:space="preserve"><value>الحوكمة والامتثال</value></data>
   <data name="Graphite" xml:space="preserve"><value>جرافيتي</value></data>
   <data name="Graphite Gold" xml:space="preserve"><value>الجرافيت الذهبي</value></data>
   <data name="Great, there are no pending tasks right now." xml:space="preserve"><value>رائع، لا توجد مهام معلقة حالياً.</value></data>
@@ -369,6 +476,8 @@
   <data name="Headings structure the document and build the employee's table of contents." xml:space="preserve"><value>العناوين تنظّم المستند وتُنشئ فهرس الصفحة للموظف.</value></data>
   <data name="Hidden" xml:space="preserve"><value>مخفية</value></data>
   <data name="Hide password" xml:space="preserve"><value>إخفاء كلمة المرور</value></data>
+  <data name="Hierarchy" xml:space="preserve"><value>الهيكل التنظيمي</value></data>
+  <data name="How this is used" xml:space="preserve"><value>كيف يُستخدم</value></data>
   <data name="I acknowledge that I have read and understood this policy." xml:space="preserve"><value>أقرّ بأنني قرأت هذه السياسة وفهمتها.</value></data>
   <data name="I acknowledge that I have read and understood {0}." xml:space="preserve"><value>أقرّ بأنني قرأت وفهمت {0}.</value></data>
   <data name="Identity" xml:space="preserve"><value>الهوية</value></data>
@@ -382,10 +491,18 @@
   <data name="Import finished: {0} created, {1} skipped (duplicates/invalid)." xml:space="preserve"><value>اكتمل الاستيراد: تم إنشاء {0} وتخطي {1} (مكرر أو غير صالح).</value></data>
   <data name="Import from CSV" xml:space="preserve"><value>استيراد من ملف CSV</value></data>
   <data name="In progress" xml:space="preserve"><value>قيد التنفيذ</value></data>
+  <data name="Include the sub-entities of each selected entity" xml:space="preserve"><value>يشمل الجهات التابعة لكل جهة محددة</value></data>
   <data name="Includes a PDF document" xml:space="preserve"><value>يتضمن مستند PDF</value></data>
   <data name="Includes a video" xml:space="preserve"><value>يتضمن فيديو</value></data>
   <data name="Includes an assessment" xml:space="preserve"><value>يتضمن اختباراً</value></data>
   <data name="Incorrect" xml:space="preserve"><value>خاطئة</value></data>
+  <data name="Inherit" xml:space="preserve"><value>وراثة</value></data>
+  <data name="Inherit ({0})" xml:space="preserve"><value>موروث ({0})</value></data>
+  <data name="Inherit everything again" xml:space="preserve"><value>العودة إلى الوراثة بالكامل</value></data>
+  <data name="Inherit {0}" xml:space="preserve"><value>موروث {0}</value></data>
+  <data name="Inherited" xml:space="preserve"><value>موروثة</value></data>
+  <data name="Inherited branding" xml:space="preserve"><value>هوية موروثة</value></data>
+  <data name="Inherited." xml:space="preserve"><value>موروث.</value></data>
   <data name="Initial administrator '{0}' created" xml:space="preserve"><value>تم إنشاء مدير النظام الأول '{0}'</value></data>
   <data name="Initial password (Local only)" xml:space="preserve"><value>كلمة المرور الأولية (للحساب المحلي فقط)</value></data>
   <data name="Initial password (Local only; the user must change it)" xml:space="preserve"><value>كلمة المرور الأولية (للحساب المحلي فقط، وعلى المستخدم تغييرها)</value></data>
@@ -400,12 +517,17 @@
   <data name="Invalid request" xml:space="preserve"><value>طلب غير صالح</value></data>
   <data name="Invalid username or password." xml:space="preserve"><value>اسم المستخدم أو كلمة المرور غير صحيحة.</value></data>
   <data name="IP address" xml:space="preserve"><value>عنوان IP</value></data>
+  <data name="It does not configure sign-in. Windows Integrated Authentication (Kerberos/NTLM) across domains or forests depends on IIS and domain trusts and is validated on the Windows Server." xml:space="preserve"><value>لا يُعدّ تسجيل الدخول. مصادقة Windows المتكاملة (Kerberos/NTLM) عبر النطاقات أو الغابات تعتمد على IIS وعلاقات الثقة بين النطاقات، ويُتحقق منها على خادم Windows.</value></data>
   <data name="Language" xml:space="preserve"><value>اللغة</value></data>
   <data name="Large image" xml:space="preserve"><value>صورة كبيرة</value></data>
   <data name="Last attempt date" xml:space="preserve"><value>تاريخ آخر محاولة</value></data>
   <data name="Last sign-in" xml:space="preserve"><value>آخر دخول</value></data>
   <data name="Latest content" xml:space="preserve"><value>أحدث المحتوى</value></data>
   <data name="Lavender Slate" xml:space="preserve"><value>الخزامى الرمادي</value></data>
+  <data name="Layer {0}" xml:space="preserve"><value>الطبقة {0}</value></data>
+  <data name="Layers" xml:space="preserve"><value>الطبقات</value></data>
+  <data name="Layers stay behind the content and never receive clicks. Over a background photo they are toned down, and on phones only the soft geometric accent remains." xml:space="preserve"><value>تبقى الطبقات خلف المحتوى ولا تستقبل النقرات. تُخفَّف فوق صورة الخلفية، وعلى الجوال لا تبقى إلا اللمسة الهندسية الناعمة.</value></data>
+  <data name="LDAP path" xml:space="preserve"><value>مسار LDAP</value></data>
   <data name="Learn the policies, controls and safe practices that protect our organization - in short, clear lessons." xml:space="preserve"><value>تعرّف على السياسات والضوابط والممارسات الآمنة التي تحمي مؤسستنا، في دروس قصيرة وواضحة.</value></data>
   <data name="Learning" xml:space="preserve"><value>التعلّم</value></data>
   <data name="Learning item completed" xml:space="preserve"><value>مادة تعليمية مكتملة</value></data>
@@ -421,6 +543,8 @@
   <data name="Live preview" xml:space="preserve"><value>معاينة مباشرة</value></data>
   <data name="Loading the document..." xml:space="preserve"><value>جارٍ تحميل المستند…</value></data>
   <data name="Local (initial password)" xml:space="preserve"><value>محلي (بكلمة مرور أولية)</value></data>
+  <data name="Local branding allowed" xml:space="preserve"><value>الهوية المحلية مسموحة</value></data>
+  <data name="Local branding not allowed: centrally controlled" xml:space="preserve"><value>الهوية المحلية غير مسموحة: تُدار مركزيًا</value></data>
   <data name="Local sign-in is disabled." xml:space="preserve"><value>تسجيل الدخول المحلي معطّل.</value></data>
   <data name="Locked" xml:space="preserve"><value>مقفل</value></data>
   <data name="Login background image" xml:space="preserve"><value>صورة خلفية صفحة الدخول</value></data>
@@ -464,21 +588,26 @@
   <data name="Maximum attempts reached" xml:space="preserve"><value>تم استنفاد عدد المحاولات المسموح بها</value></data>
   <data name="Medium image" xml:space="preserve"><value>صورة متوسطة</value></data>
   <data name="Menu" xml:space="preserve"><value>القائمة</value></data>
+  <data name="Minimal Executive" xml:space="preserve"><value>تنفيذي بسيط</value></data>
   <data name="Minimum 10 characters, with upper-case, lower-case and a digit." xml:space="preserve"><value>10 خانات على الأقل، وتشمل حرفاً كبيراً وحرفاً صغيراً ورقماً.</value></data>
   <data name="Mobile" xml:space="preserve"><value>الجوال</value></data>
   <data name="More actions" xml:space="preserve"><value>إجراءات أخرى</value></data>
+  <data name="Motif" xml:space="preserve"><value>العنصر</value></data>
   <data name="Move down" xml:space="preserve"><value>نقل للأسفل</value></data>
   <data name="Move up" xml:space="preserve"><value>نقل للأعلى</value></data>
   <data name="Multiple choice" xml:space="preserve"><value>اختيار متعدد</value></data>
   <data name="My acknowledgments" xml:space="preserve"><value>إقراراتي</value></data>
+  <data name="My entities" xml:space="preserve"><value>جهاتي</value></data>
   <data name="My Results" xml:space="preserve"><value>نتائجي</value></data>
   <data name="Name" xml:space="preserve"><value>الاسم</value></data>
+  <data name="name: {0} → {1}" xml:space="preserve"><value>الاسم: {0} ← {1}</value></data>
   <data name="New" xml:space="preserve"><value>جديد</value></data>
   <data name="New assessment" xml:space="preserve"><value>اختبار جديد</value></data>
   <data name="New assessments will appear here when they are published." xml:space="preserve"><value>ستظهر الاختبارات الجديدة هنا عند نشرها.</value></data>
   <data name="New content" xml:space="preserve"><value>محتوى جديد</value></data>
   <data name="New content has been published: {0}" xml:space="preserve"><value>تم نشر محتوى جديد: {0}</value></data>
   <data name="New content: {0}" xml:space="preserve"><value>محتوى جديد: {0}</value></data>
+  <data name="New entity" xml:space="preserve"><value>جهة جديدة</value></data>
   <data name="New file - applied when you save." xml:space="preserve"><value>ملف جديد - يُطبَّق عند الحفظ.</value></data>
   <data name="New learning items will appear here when they are published." xml:space="preserve"><value>ستظهر المواد التعليمية الجديدة هنا عند نشرها.</value></data>
   <data name="New learning material" xml:space="preserve"><value>مادة تعليمية جديدة</value></data>
@@ -488,7 +617,10 @@
   <data name="Next page" xml:space="preserve"><value>الصفحة التالية</value></data>
   <data name="Next step" xml:space="preserve"><value>الخطوة التالية</value></data>
   <data name="Next step: assessment" xml:space="preserve"><value>الخطوة التالية: الاختبار</value></data>
+  <data name="No" xml:space="preserve"><value>لا</value></data>
+  <data name="No active user with this username in your scope." xml:space="preserve"><value>لا يوجد مستخدم نشط بهذا الاسم ضمن نطاقك.</value></data>
   <data name="No activity recorded yet." xml:space="preserve"><value>لا توجد أنشطة مسجّلة بعد.</value></data>
+  <data name="No administrators assigned to this entity yet." xml:space="preserve"><value>لم يُعيَّن مديرون لهذه الجهة بعد.</value></data>
   <data name="No answer" xml:space="preserve"><value>لم تتم الإجابة</value></data>
   <data name="No assessment" xml:space="preserve"><value>بدون اختبار</value></data>
   <data name="No assessments available." xml:space="preserve"><value>لا توجد اختبارات متاحة حالياً.</value></data>
@@ -499,6 +631,8 @@
   <data name="No content found." xml:space="preserve"><value>لا يوجد محتوى.</value></data>
   <data name="No content has been published yet." xml:space="preserve"><value>لم يتم نشر أي محتوى بعد.</value></data>
   <data name="No decoration" xml:space="preserve"><value>بدون زخارف</value></data>
+  <data name="No directory source" xml:space="preserve"><value>لا يوجد دليل</value></data>
+  <data name="No entities in your scope." xml:space="preserve"><value>لا توجد جهات ضمن نطاقك.</value></data>
   <data name="No entries match the filter." xml:space="preserve"><value>لا توجد سجلات مطابقة للتصفية.</value></data>
   <data name="No file chosen" xml:space="preserve"><value>لم يتم اختيار ملف</value></data>
   <data name="No questions yet" xml:space="preserve"><value>لا توجد أسئلة بعد</value></data>
@@ -507,11 +641,14 @@
   <data name="No results." xml:space="preserve"><value>لا توجد نتائج.</value></data>
   <data name="No results. Only published assessments and active employees are included." xml:space="preserve"><value>لا توجد نتائج. يشمل التقرير الاختبارات المنشورة والموظفين النشطين فقط.</value></data>
   <data name="No results. Only published content that requires acknowledgment is included." xml:space="preserve"><value>لا توجد نتائج. يشمل التقرير المحتوى المنشور المطلوب الإقرار عليه فقط.</value></data>
+  <data name="No sub-entities." xml:space="preserve"><value>لا توجد جهات تابعة.</value></data>
   <data name="No text" xml:space="preserve"><value>بدون نص</value></data>
   <data name="No users found." xml:space="preserve"><value>لا يوجد مستخدمون.</value></data>
   <data name="No, for reading only" xml:space="preserve"><value>لا، للاطلاع فقط</value></data>
   <data name="None" xml:space="preserve"><value>بدون</value></data>
   <data name="Not acknowledged" xml:space="preserve"><value>لم يتم الإقرار</value></data>
+  <data name="Not allowed" xml:space="preserve"><value>غير مسموح</value></data>
+  <data name="Not allowed for this entity by the central administrator" xml:space="preserve"><value>غير مسموح لهذه الجهة من المدير المركزي</value></data>
   <data name="Not attempted" xml:space="preserve"><value>لم يختبر</value></data>
   <data name="not configured" xml:space="preserve"><value>غير مهيأة</value></data>
   <data name="Not passed" xml:space="preserve"><value>غير مجتاز</value></data>
@@ -519,7 +656,10 @@
   <data name="Not published yet" xml:space="preserve"><value>غير منشور بعد</value></data>
   <data name="Not required" xml:space="preserve"><value>غير مطلوب</value></data>
   <data name="Not saved yet" xml:space="preserve"><value>لم تُحفظ بعد</value></data>
+  <data name="Not set" xml:space="preserve"><value>غير محددة</value></data>
+  <data name="Not set." xml:space="preserve"><value>غير محدد.</value></data>
   <data name="Not uploaded - the default is used." xml:space="preserve"><value>لم يُرفع - يُستخدم الافتراضي.</value></data>
+  <data name="Not validated yet." xml:space="preserve"><value>لم يُتحقق منه بعد.</value></data>
   <data name="Not written yet" xml:space="preserve"><value>لم يُكتب بعد</value></data>
   <data name="Nothing pending." xml:space="preserve"><value>لا يوجد شيء معلّق.</value></data>
   <data name="NOTIFICATION_QUEUED" xml:space="preserve"><value>جدولة إشعارات بالبريد</value></data>
@@ -530,22 +670,37 @@
   <data name="Official and authoritative" xml:space="preserve"><value>رسمي وموثوق</value></data>
   <data name="On this page" xml:space="preserve"><value>في هذه الصفحة</value></data>
   <data name="One or two sentences shown in lists and on the employee dashboard." xml:space="preserve"><value>جملة أو جملتان تظهران في القوائم ولوحة الموظف.</value></data>
+  <data name="One platform, one governance: entities receive delegated administration; the central administrator keeps visibility and control over the whole hierarchy." xml:space="preserve"><value>منصة واحدة وحوكمة واحدة: تحصل الجهات على إدارة مفوّضة، ويحتفظ المدير المركزي بالرؤية والتحكم في الهيكل كله.</value></data>
+  <data name="Opacity" xml:space="preserve"><value>الشفافية</value></data>
   <data name="Open" xml:space="preserve"><value>فتح</value></data>
   <data name="Open employee page" xml:space="preserve"><value>فتح صفحة الموظف</value></data>
   <data name="Open in a new tab" xml:space="preserve"><value>فتح في تبويب جديد</value></data>
   <data name="Open in the content wizard" xml:space="preserve"><value>فتح في معالج المحتوى</value></data>
+  <data name="Open in user management" xml:space="preserve"><value>فتح في إدارة المستخدمين</value></data>
+  <data name="Open the branding studio" xml:space="preserve"><value>فتح استوديو الهوية</value></data>
   <data name="Open the document" xml:space="preserve"><value>فتح المستند</value></data>
+  <data name="Open the entity branding studio" xml:space="preserve"><value>فتح هوية الجهة</value></data>
   <data name="Open the platform" xml:space="preserve"><value>فتح المنصة</value></data>
   <data name="Option {0}" xml:space="preserve"><value>الخيار {0}</value></data>
   <data name="or" xml:space="preserve"><value>أو</value></data>
   <data name="Order" xml:space="preserve"><value>الترتيب</value></data>
+  <data name="Organization" xml:space="preserve"><value>الهيكل التنظيمي</value></data>
+  <data name="Organization and entities" xml:space="preserve"><value>الهيكل التنظيمي والجهات</value></data>
   <data name="Organization name" xml:space="preserve"><value>اسم المؤسسة</value></data>
   <data name="Organization name and system name are required." xml:space="preserve"><value>اسم المؤسسة واسم النظام مطلوبان.</value></data>
   <data name="Original size" xml:space="preserve"><value>الحجم الأصلي</value></data>
   <data name="Other attachments" xml:space="preserve"><value>مرفقات أخرى</value></data>
   <data name="Overall progress" xml:space="preserve"><value>التقدم العام</value></data>
   <data name="Overlay opacity" xml:space="preserve"><value>شفافية طبقة التغطية</value></data>
+  <data name="Oversized translucent shield with soft geometric rings" xml:space="preserve"><value>درع شفاف كبير مع حلقات هندسية ناعمة</value></data>
   <data name="Overview" xml:space="preserve"><value>نظرة عامة</value></data>
+  <data name="Own / including sub-entities" xml:space="preserve"><value>مباشرة / مع الجهات التابعة</value></data>
+  <data name="Own file of this entity." xml:space="preserve"><value>ملف خاص بهذه الجهة.</value></data>
+  <data name="Owned by this entity" xml:space="preserve"><value>مملوك لهذه الجهة</value></data>
+  <data name="Owner and audience" xml:space="preserve"><value>الجهة المالكة والجمهور المستهدف</value></data>
+  <data name="Owning entity" xml:space="preserve"><value>الجهة المالكة</value></data>
+  <data name="Owning entity and all its sub-entities" xml:space="preserve"><value>الجهة المالكة وجميع جهاتها التابعة</value></data>
+  <data name="Owning entity only" xml:space="preserve"><value>الجهة المالكة فقط</value></data>
   <data name="Page and cards" xml:space="preserve"><value>الصفحة والبطاقات</value></data>
   <data name="Page background" xml:space="preserve"><value>خلفية الصفحة</value></data>
   <data name="Page not found" xml:space="preserve"><value>الصفحة غير موجودة</value></data>
@@ -554,6 +709,7 @@
   <data name="Page {0}" xml:space="preserve"><value>الصفحة {0}</value></data>
   <data name="Page {0} of {1}" xml:space="preserve"><value>صفحة {0} من {1}</value></data>
   <data name="Pagination" xml:space="preserve"><value>ترقيم الصفحات</value></data>
+  <data name="Parent entity" xml:space="preserve"><value>الجهة الأم</value></data>
   <data name="Pass rate" xml:space="preserve"><value>نسبة النجاح</value></data>
   <data name="Passed" xml:space="preserve"><value>مجتاز</value></data>
   <data name="Passing percentage" xml:space="preserve"><value>نسبة النجاح</value></data>
@@ -569,8 +725,11 @@
   <data name="Paste from Word keeps headings, lists and tables; fonts, colours and unsafe code are removed." xml:space="preserve"><value>اللصق من Word يحافظ على العناوين والقوائم والجداول، ويزيل الخطوط والألوان والشيفرات غير الآمنة.</value></data>
   <data name="PDF, Word, Excel, PowerPoint, images, MP4/WebM video" xml:space="preserve"><value>PDF وWord وExcel وPowerPoint والصور والفيديو MP4/WebM</value></data>
   <data name="Pending acknowledgments" xml:space="preserve"><value>إقرارات بانتظارك</value></data>
+  <data name="Pending validation on the Windows Server (domain reachability, trust and service account)." xml:space="preserve"><value>بانتظار التحقق على خادم Windows (الوصول إلى النطاق وعلاقات الثقة وحساب الخدمة).</value></data>
   <data name="Performed by" xml:space="preserve"><value>المستخدم / المنفذ</value></data>
+  <data name="Permissions updated." xml:space="preserve"><value>تم تحديث الصلاحيات.</value></data>
   <data name="Place in the panel" xml:space="preserve"><value>مكانها في اللوحة</value></data>
+  <data name="Placed behind the text: opacity is limited to {0}% for readability." xml:space="preserve"><value>خلف النص: الشفافية محدودة بـ{0}% حفاظًا على وضوح القراءة.</value></data>
   <data name="Please complete the assessment: {0}" xml:space="preserve"><value>يرجى إكمال الاختبار: {0}</value></data>
   <data name="Please read and acknowledge: {0}" xml:space="preserve"><value>يرجى قراءة المحتوى التالي والإقرار عليه: {0}</value></data>
   <data name="Please read the full content above, then confirm below." xml:space="preserve"><value>يرجى قراءة المحتوى كاملاً أعلاه، ثم التأكيد أدناه.</value></data>
@@ -586,9 +745,21 @@
   <data name="Policies, controls, awareness and training material shown to employees." xml:space="preserve"><value>السياسات والضوابط ومواد التوعية والتدريب المعروضة للموظفين.</value></data>
   <data name="Policies, regulations, controls, awareness and training material: with acknowledgment and an assessment when needed." xml:space="preserve"><value>السياسات واللوائح والضوابط ومواد التوعية والتدريب، مع الإقرار والاختبار عند الحاجة.</value></data>
   <data name="Policy" xml:space="preserve"><value>سياسة</value></data>
+  <data name="Policy &amp; Controls" xml:space="preserve"><value>السياسات والضوابط</value></data>
   <data name="Policy acknowledgments" xml:space="preserve"><value>الإقرار بالسياسات</value></data>
   <data name="Policy document" xml:space="preserve"><value>وثيقة السياسة</value></data>
+  <data name="Policy document with a checklist card" xml:space="preserve"><value>وثيقة سياسة مع بطاقة قائمة تحقق</value></data>
   <data name="Port" xml:space="preserve"><value>المنفذ</value></data>
+  <data name="Position" xml:space="preserve"><value>الموضع</value></data>
+  <data name="Position: bottom-center" xml:space="preserve"><value>أسفل الوسط</value></data>
+  <data name="Position: bottom-end" xml:space="preserve"><value>أسفل النهاية</value></data>
+  <data name="Position: bottom-start" xml:space="preserve"><value>أسفل البداية</value></data>
+  <data name="Position: center" xml:space="preserve"><value>الوسط</value></data>
+  <data name="Position: center-end" xml:space="preserve"><value>وسط النهاية</value></data>
+  <data name="Position: center-start" xml:space="preserve"><value>وسط البداية</value></data>
+  <data name="Position: top-center" xml:space="preserve"><value>أعلى الوسط</value></data>
+  <data name="Position: top-end" xml:space="preserve"><value>أعلى النهاية</value></data>
+  <data name="Position: top-start" xml:space="preserve"><value>أعلى البداية</value></data>
   <data name="Practical instructions and guidance" xml:space="preserve"><value>تعليمات وإرشادات عملية</value></data>
   <data name="Prestigious, with a gold accent" xml:space="preserve"><value>فخم مع لمسة ذهبية</value></data>
   <data name="Preview" xml:space="preserve"><value>المعاينة</value></data>
@@ -603,6 +774,7 @@
   <data name="Procedure" xml:space="preserve"><value>إجراء</value></data>
   <data name="Procedure / Instruction" xml:space="preserve"><value>إجراء / تعليمات</value></data>
   <data name="Progress journey" xml:space="preserve"><value>مسار التقدم</value></data>
+  <data name="Progress path with milestones" xml:space="preserve"><value>مسار تقدّم بمحطات</value></data>
   <data name="Protected connection - for authorized users only" xml:space="preserve"><value>اتصال محمي - للمستخدمين المصرّح لهم فقط</value></data>
   <data name="Provide at least two answer options." xml:space="preserve"><value>أدخل خيارين للإجابة على الأقل.</value></data>
   <data name="Public base URL (used for links in emails)" xml:space="preserve"><value>عنوان الموقع العام (يُستخدم في روابط رسائل البريد)</value></data>
@@ -640,6 +812,7 @@
   <data name="Read the content" xml:space="preserve"><value>قراءة المحتوى</value></data>
   <data name="Read the item, then record that you have completed it." xml:space="preserve"><value>اقرأ المادة ثم سجّل إكمالها.</value></data>
   <data name="Read-only record" xml:space="preserve"><value>سجل للقراءة فقط</value></data>
+  <data name="Read-only." xml:space="preserve"><value>عرض فقط.</value></data>
   <data name="Readability check" xml:space="preserve"><value>فحص الوضوح</value></data>
   <data name="Readable" xml:space="preserve"><value>واضح</value></data>
   <data name="Reading" xml:space="preserve"><value>القراءة</value></data>
@@ -647,6 +820,7 @@
   <data name="Recent achievements" xml:space="preserve"><value>إنجازاتك الأخيرة</value></data>
   <data name="Recent activity" xml:space="preserve"><value>آخر الأنشطة</value></data>
   <data name="Recent results" xml:space="preserve"><value>أحدث النتائج</value></data>
+  <data name="Record" xml:space="preserve"><value>السجل</value></data>
   <data name="Reference" xml:space="preserve"><value>المرجع</value></data>
   <data name="Refined soft rose, still formal" xml:space="preserve"><value>وردي ناعم راقٍ بطابع رسمي</value></data>
   <data name="Regulation" xml:space="preserve"><value>لائحة</value></data>
@@ -656,8 +830,11 @@
   <data name="Reminder: policy acknowledgment required" xml:space="preserve"><value>تذكير: مطلوب الإقرار على السياسات</value></data>
   <data name="REMINDER_QUEUED" xml:space="preserve"><value>جدولة تذكيرات بالبريد</value></data>
   <data name="Remove" xml:space="preserve"><value>إزالة</value></data>
+  <data name="Remove all overrides of this entity and inherit again?" xml:space="preserve"><value>إزالة كل تخصيصات هذه الجهة والعودة إلى الوراثة؟</value></data>
   <data name="Remove current image" xml:space="preserve"><value>إزالة الصورة الحالية</value></data>
   <data name="Remove the assessment and its questions from this content?" xml:space="preserve"><value>إزالة الاختبار وأسئلته من هذا المحتوى؟</value></data>
+  <data name="Remove the stored password" xml:space="preserve"><value>حذف كلمة المرور المخزنة</value></data>
+  <data name="Remove this administrator from the entity?" xml:space="preserve"><value>إزالة هذا المدير من الجهة؟</value></data>
   <data name="Remove this file?" xml:space="preserve"><value>هل تريد إزالة هذا الملف؟</value></data>
   <data name="Replace" xml:space="preserve"><value>استبدال</value></data>
   <data name="REPORT_EXPORTED" xml:space="preserve"><value>تصدير تقرير</value></data>
@@ -680,6 +857,7 @@
   <data name="results" xml:space="preserve"><value>نتيجة</value></data>
   <data name="Retry" xml:space="preserve"><value>إعادة المحاولة</value></data>
   <data name="Revert" xml:space="preserve"><value>تراجع</value></data>
+  <data name="Revert composition" xml:space="preserve"><value>التراجع عن التكوين</value></data>
   <data name="Revert image settings" xml:space="preserve"><value>التراجع عن إعدادات الصورة</value></data>
   <data name="Revert theme" xml:space="preserve"><value>التراجع عن السمة</value></data>
   <data name="Review the content" xml:space="preserve"><value>مراجعة المحتوى</value></data>
@@ -688,7 +866,12 @@
   <data name="Right" xml:space="preserve"><value>يمين</value></data>
   <data name="Role" xml:space="preserve"><value>الدور</value></data>
   <data name="Role: Administrator" xml:space="preserve"><value>مدير النظام</value></data>
+  <data name="Role: Central administrator" xml:space="preserve"><value>مدير مركزي</value></data>
   <data name="Role: Employee" xml:space="preserve"><value>موظف</value></data>
+  <data name="Role: Entity administrator" xml:space="preserve"><value>مدير جهة</value></data>
+  <data name="Root entity" xml:space="preserve"><value>الجهة الرئيسية</value></data>
+  <data name="Root entity only" xml:space="preserve"><value>الجهة الرئيسية فقط</value></data>
+  <data name="Rotation" xml:space="preserve"><value>الدوران</value></data>
   <data name="Royal Indigo" xml:space="preserve"><value>النيلي الملكي</value></data>
   <data name="Royal purple" xml:space="preserve"><value>أرجواني ملكي</value></data>
   <data name="Save" xml:space="preserve"><value>حفظ</value></data>
@@ -698,15 +881,20 @@
   <data name="Save assessment settings" xml:space="preserve"><value>حفظ إعدادات الاختبار</value></data>
   <data name="Save branding" xml:space="preserve"><value>حفظ الهوية البصرية</value></data>
   <data name="Save changes" xml:space="preserve"><value>حفظ التعديلات</value></data>
+  <data name="Save directory settings" xml:space="preserve"><value>حفظ إعدادات الدليل</value></data>
+  <data name="Save entity branding" xml:space="preserve"><value>حفظ هوية الجهة</value></data>
+  <data name="Save permissions" xml:space="preserve"><value>حفظ الصلاحيات</value></data>
   <data name="Save question" xml:space="preserve"><value>حفظ السؤال</value></data>
   <data name="Saved as draft. You can continue later from Content Management." xml:space="preserve"><value>حُفظ كمسودة. يمكنك المتابعة لاحقاً من إدارة المحتوى.</value></data>
   <data name="Saved, but: {0}" xml:space="preserve"><value>تم الحفظ، ولكن: {0}</value></data>
   <data name="Saved." xml:space="preserve"><value>تم الحفظ.</value></data>
   <data name="Saved. (Completed attempts keep the passing percentage they were taken with.)" xml:space="preserve"><value>تم الحفظ. (تحتفظ المحاولات المكتملة بنسبة النجاح التي أُجريت بها.)</value></data>
   <data name="Saved. The changes are already visible to employees." xml:space="preserve"><value>تم الحفظ. التعديلات ظاهرة للموظفين.</value></data>
+  <data name="Scale" xml:space="preserve"><value>الحجم</value></data>
   <data name="Score" xml:space="preserve"><value>النتيجة</value></data>
   <data name="Score %" xml:space="preserve"><value>النتيجة %</value></data>
   <data name="Search" xml:space="preserve"><value>بحث</value></data>
+  <data name="Search base" xml:space="preserve"><value>قاعدة البحث</value></data>
   <data name="Search by administrator or details" xml:space="preserve"><value>ابحث باسم المدير أو التفاصيل</value></data>
   <data name="Search by title" xml:space="preserve"><value>ابحث بالعنوان</value></data>
   <data name="Search by title or description" xml:space="preserve"><value>ابحث بالعنوان أو الوصف</value></data>
@@ -714,14 +902,21 @@
   <data name="Search by username, name or email" xml:space="preserve"><value>ابحث باسم المستخدم أو الاسم أو البريد</value></data>
   <data name="Search for a user" xml:space="preserve"><value>ابحث عن مستخدم</value></data>
   <data name="Secondary color" xml:space="preserve"><value>اللون الثانوي</value></data>
+  <data name="Security network" xml:space="preserve"><value>شبكة أمنية</value></data>
+  <data name="Security network with a guarding shield" xml:space="preserve"><value>شبكة أمنية مع درع حماية</value></data>
   <data name="Select all that apply" xml:space="preserve"><value>اختر كل ما ينطبق</value></data>
+  <data name="Select at least one entity." xml:space="preserve"><value>اختر جهة واحدة على الأقل.</value></data>
   <data name="Select one answer" xml:space="preserve"><value>اختر إجابة واحدة</value></data>
+  <data name="Selected entities" xml:space="preserve"><value>جهات محددة</value></data>
   <data name="Send" xml:space="preserve"><value>إرسال</value></data>
   <data name="Send an email to all employees (only those who still need to acknowledge, if acknowledgment is required)?" xml:space="preserve"><value>هل تريد إرسال بريد إلكتروني إلى الموظفين (وإذا كان الإقرار مطلوباً فيُرسل لمن لم يُقرّ فقط)؟</value></data>
   <data name="Send test email" xml:space="preserve"><value>إرسال بريد تجريبي</value></data>
   <data name="Sender address" xml:space="preserve"><value>عنوان المرسل</value></data>
   <data name="Sender name" xml:space="preserve"><value>اسم المرسل</value></data>
+  <data name="Service account" xml:space="preserve"><value>حساب الخدمة</value></data>
+  <data name="Service account password" xml:space="preserve"><value>كلمة مرور حساب الخدمة</value></data>
   <data name="Service temporarily unavailable" xml:space="preserve"><value>الخدمة غير متاحة مؤقتاً</value></data>
+  <data name="Set by the central administrator. Delegated capabilities outside this list have no effect." xml:space="preserve"><value>يحددها المدير المركزي. لا أثر لأي صلاحية مفوّضة خارج هذه القائمة.</value></data>
   <data name="Settings" xml:space="preserve"><value>الإعدادات</value></data>
   <data name="SETTINGS_UPDATED" xml:space="preserve"><value>تعديل الإعدادات</value></data>
   <data name="Several lines are allowed." xml:space="preserve"><value>يُسمح بأكثر من سطر.</value></data>
@@ -729,6 +924,8 @@
   <data name="Short assessments that check your understanding of the policies and controls." xml:space="preserve"><value>اختبارات قصيرة تقيس فهمك للسياسات والضوابط.</value></data>
   <data name="Short description" xml:space="preserve"><value>وصف مختصر</value></data>
   <data name="Short interactive assessments" xml:space="preserve"><value>اختبارات تفاعلية قصيرة</value></data>
+  <data name="Short unique code, e.g. MOH or AGY-01." xml:space="preserve"><value>رمز قصير فريد، مثل MOH أو AGY-01.</value></data>
+  <data name="Show" xml:space="preserve"><value>عرض</value></data>
   <data name="Show all entries" xml:space="preserve"><value>عرض جميع السجلات</value></data>
   <data name="Show password" xml:space="preserve"><value>إظهار كلمة المرور</value></data>
   <data name="Show the badge" xml:space="preserve"><value>إظهار الشارة</value></data>
@@ -784,6 +981,8 @@
   <data name="Step-by-step way of carrying out a process" xml:space="preserve"><value>خطوات تنفيذ عملية بالتسلسل</value></data>
   <data name="Steps" xml:space="preserve"><value>الخطوات</value></data>
   <data name="Steps for this item" xml:space="preserve"><value>خطوات هذه المادة</value></data>
+  <data name="Stored (hidden). Leave empty to keep." xml:space="preserve"><value>مخزنة (مخفية). اتركه فارغًا للإبقاء عليها.</value></data>
+  <data name="Sub-entities" xml:space="preserve"><value>الجهات التابعة</value></data>
   <data name="Submit answers" xml:space="preserve"><value>إرسال الإجابات</value></data>
   <data name="Submit your answers now? You cannot change them afterwards." xml:space="preserve"><value>هل تريد إرسال إجاباتك الآن؟ لا يمكن تعديلها بعد الإرسال.</value></data>
   <data name="Summary" xml:space="preserve"><value>الملخص</value></data>
@@ -792,6 +991,7 @@
   <data name="System name" xml:space="preserve"><value>اسم النظام</value></data>
   <data name="Table size (rows x columns), e.g. 4x3" xml:space="preserve"><value>حجم الجدول (صفوف × أعمدة)، مثال 4×3</value></data>
   <data name="Tables: use the table button, then add rows and columns." xml:space="preserve"><value>الجداول: استخدم زر الجدول ثم أضف الصفوف والأعمدة.</value></data>
+  <data name="Target entities" xml:space="preserve"><value>الجهات المستهدفة</value></data>
   <data name="Temporary password" xml:space="preserve"><value>كلمة مرور مؤقتة</value></data>
   <data name="Test email" xml:space="preserve"><value>رسالة تجريبية</value></data>
   <data name="Test email sent to {0}." xml:space="preserve"><value>تم إرسال رسالة تجريبية إلى {0}.</value></data>
@@ -810,6 +1010,7 @@
   <data name="The correct answer is" xml:space="preserve"><value>الإجابة الصحيحة هي</value></data>
   <data name="The document could not be loaded. Please try again." xml:space="preserve"><value>تعذّر تحميل المستند. يرجى المحاولة مرة أخرى.</value></data>
   <data name="The document is not available (it may have been removed, or you do not have access to it)." xml:space="preserve"><value>المستند غير متاح (ربما حُذف، أو ليست لديك صلاحية الوصول إليه).</value></data>
+  <data name="The entity now inherits its branding again." xml:space="preserve"><value>عادت الجهة إلى وراثة هويتها.</value></data>
   <data name="The field must be a number." xml:space="preserve"><value>يجب أن يكون الحقل رقماً.</value></data>
   <data name="The field {0} is not a valid e-mail address." xml:space="preserve"><value>الحقل {0} لا يحتوي على بريد إلكتروني صحيح.</value></data>
   <data name="The field {0} must be a number." xml:space="preserve"><value>يجب أن يكون الحقل {0} رقماً.</value></data>
@@ -817,9 +1018,14 @@
   <data name="The field {0} must be between {1} and {2}." xml:space="preserve"><value>يجب أن تكون قيمة الحقل {0} بين {1} و{2}.</value></data>
   <data name="The file cannot be displayed: it is damaged or is not a valid PDF document." xml:space="preserve"><value>تعذّر عرض الملف: الملف تالف أو ليس مستند PDF صالحاً.</value></data>
   <data name="The file is empty." xml:space="preserve"><value>الملف فارغ.</value></data>
+  <data name="The organizational unit the employee belongs to; it decides which content is targeted to them." xml:space="preserve"><value>الوحدة التنظيمية التي ينتمي إليها الموظف؛ وعلى أساسها يُحدَّد المحتوى الموجّه إليه.</value></data>
+  <data name="The owning entity manages the content; employees only see it when it is targeted to their entity." xml:space="preserve"><value>الجهة المالكة تدير المحتوى؛ ولا يراه الموظفون إلا إذا كان موجّهًا إلى جهتهم.</value></data>
   <data name="The page you requested does not exist or is not available to you." xml:space="preserve"><value>الصفحة المطلوبة غير موجودة أو غير متاحة لك.</value></data>
+  <data name="The password is encrypted at rest and is never displayed, logged or written to the audit log." xml:space="preserve"><value>كلمة المرور مشفّرة عند التخزين، ولا تُعرض ولا تُسجَّل في السجلات أو سجل التدقيق.</value></data>
   <data name="The preview updates as you type. Nothing is published until you save." xml:space="preserve"><value>تتحدث المعاينة أثناء الكتابة، ولا يُنشر شيء قبل الحفظ.</value></data>
   <data name="The request could not be processed. Your session may have expired; please reload the page and try again." xml:space="preserve"><value>تعذّر تنفيذ الطلب. قد تكون الجلسة انتهت، يرجى إعادة تحميل الصفحة والمحاولة من جديد.</value></data>
+  <data name="The root entity cannot be disabled." xml:space="preserve"><value>لا يمكن تعطيل الجهة الرئيسية.</value></data>
+  <data name="The root entity uses the central branding and the login page, managed in Settings." xml:space="preserve"><value>تستخدم الجهة الرئيسية الهوية المركزية وصفحة الدخول، وتُدار من الإعدادات.</value></data>
   <data name="The saved theme is shown. Changes apply to all users immediately after saving - no rebuild or restart needed." xml:space="preserve"><value>تظهر الهوية المحفوظة. تُطبّق التغييرات على جميع المستخدمين فور الحفظ دون إعادة بناء أو إعادة تشغيل.</value></data>
   <data name="The small icon in the browser tab." xml:space="preserve"><value>الأيقونة الصغيرة في تبويب المتصفح.</value></data>
   <data name="The small icon in the browser tab. ICO or PNG." xml:space="preserve"><value>الأيقونة الصغيرة في تبويب المتصفح. ICO أو PNG.</value></data>
@@ -835,6 +1041,7 @@
   <data name="Theme presets" xml:space="preserve"><value>السمات الجاهزة</value></data>
   <data name="There are no assessments available right now." xml:space="preserve"><value>لا توجد اختبارات متاحة حالياً.</value></data>
   <data name="There is no short description; it is shown in lists and on the dashboard." xml:space="preserve"><value>لا يوجد وصف مختصر؛ يظهر الوصف في القوائم ولوحة الموظف.</value></data>
+  <data name="This account has administrative rights; only the central administrator can change it." xml:space="preserve"><value>لهذا الحساب صلاحيات إدارية؛ لا يعدّله إلا المدير المركزي.</value></data>
   <data name="This account signs in with Windows; no password to change." xml:space="preserve"><value>هذا الحساب يسجّل الدخول عبر Windows، ولا توجد كلمة مرور لتغييرها.</value></data>
   <data name="This account uses Windows authentication." xml:space="preserve"><value>هذا الحساب يستخدم مصادقة Windows.</value></data>
   <data name="This assessment already has attempts, so it cannot be removed. Unpublish it from the Assessments page instead." xml:space="preserve"><value>لهذا الاختبار محاولات، لذا لا يمكن إزالته. ألغِ نشره من صفحة الاختبارات بدلاً من ذلك.</value></data>
@@ -842,15 +1049,22 @@
   <data name="This assessment already has {0} attempt(s), so its questions are locked to keep the results consistent. You can still change its name, passing score and attempts." xml:space="preserve"><value>لهذا الاختبار {0} محاولة، لذا أُقفلت أسئلته حفاظاً على اتساق النتائج. ما زال بإمكانك تعديل اسمه ودرجة النجاح وعدد المحاولات.</value></data>
   <data name="This assessment has attempts and cannot be deleted. Unpublish it instead." xml:space="preserve"><value>لهذا الاختبار محاولات ولا يمكن حذفه. ألغِ نشره بدلاً من ذلك.</value></data>
   <data name="This assessment has attempts, so questions are locked to protect historical results. Use Duplicate on the assessments list to create an editable copy." xml:space="preserve"><value>لهذا الاختبار محاولات سابقة، لذلك الأسئلة مقفلة حفاظاً على النتائج السابقة. استخدم «نسخ» في قائمة الاختبارات لإنشاء نسخة قابلة للتعديل.</value></data>
+  <data name="This code is already used by another entity." xml:space="preserve"><value>هذا الرمز مستخدم لجهة أخرى.</value></data>
   <data name="This content has acknowledgment records and cannot be deleted (compliance evidence). Keep it unpublished." xml:space="preserve"><value>لهذا المحتوى سجلات إقرار ولا يمكن حذفه (أدلة امتثال). أبقِه غير منشور.</value></data>
   <data name="This content has {0} more linked assessment(s); manage them from the Assessments page." xml:space="preserve"><value>لهذا المحتوى {0} اختبار/اختبارات أخرى مرتبطة؛ تُدار من صفحة الاختبارات.</value></data>
   <data name="This document is password-protected and cannot be shown here. You can download it instead." xml:space="preserve"><value>هذا المستند محمي بكلمة مرور ولا يمكن عرضه هنا، ويمكنك تنزيله بدلاً من ذلك.</value></data>
+  <data name="This domain is already mapped to another entity." xml:space="preserve"><value>هذا النطاق مربوط بجهة أخرى.</value></data>
+  <data name="This entity only" xml:space="preserve"><value>هذه الجهة فقط</value></data>
+  <data name="This entity overrides part of the inherited branding; everything else follows its parent and the central branding." xml:space="preserve"><value>تخصّص هذه الجهة جزءًا من الهوية الموروثة، والباقي يتبع الجهة الأم والهوية المركزية.</value></data>
+  <data name="This entity uses the branding of its parent chain and the central branding. Nothing is copied: central changes reach it automatically." xml:space="preserve"><value>تستخدم هذه الجهة هوية جهاتها الأم والهوية المركزية دون نسخ؛ فتصلها التغييرات المركزية تلقائيًا.</value></data>
   <data name="This file type is not allowed ({0})." xml:space="preserve"><value>نوع الملف غير مسموح ({0}).</value></data>
   <data name="This is part of learning. Review the material, then try again if an attempt is available." xml:space="preserve"><value>التعلّم رحلة مستمرة. راجع المحتوى، ثم أعد المحاولة إن كانت هناك محاولة متاحة.</value></data>
   <data name="This is the employee page, built with the same components. Buttons are inactive in the preview." xml:space="preserve"><value>هذه صفحة الموظف بنفس المكوّنات، والأزرار غير فعّالة في المعاينة.</value></data>
+  <data name="This is the root entity: the central organization. It always holds every capability." xml:space="preserve"><value>هذه هي الجهة الرئيسية: الجهة المركزية، ولها جميع الصلاحيات دائمًا.</value></data>
   <data name="This item has no text body. See the attachments below." xml:space="preserve"><value>لا يحتوي هذا العنصر على نص. راجع المرفقات أدناه.</value></data>
   <data name="This item is completed through its acknowledgment or assessment." xml:space="preserve"><value>تُكمَل هذه المادة من خلال الإقرار أو الاختبار المرتبط بها.</value></data>
   <data name="This material is published: every change you save is visible to employees immediately." xml:space="preserve"><value>هذه المادة منشورة: أي تغيير تحفظه يظهر للموظفين فوراً.</value></data>
+  <data name="This user is already a central administrator." xml:space="preserve"><value>هذا المستخدم مدير مركزي بالفعل.</value></data>
   <data name="This video cannot be played in your browser (unsupported format or the file is unavailable)." xml:space="preserve"><value>تعذّر تشغيل هذا الفيديو في متصفحك (صيغة غير مدعومة أو الملف غير متاح).</value></data>
   <data name="Time" xml:space="preserve"><value>الوقت</value></data>
   <data name="Tip: press the number keys 1-9 to choose an answer." xml:space="preserve"><value>تلميح: اضغط مفاتيح الأرقام 1-9 لاختيار إجابة.</value></data>
@@ -859,6 +1073,7 @@
   <data name="Title and type" xml:space="preserve"><value>العنوان والنوع</value></data>
   <data name="Top" xml:space="preserve"><value>أعلى</value></data>
   <data name="Top left" xml:space="preserve"><value>أعلى اليسار</value></data>
+  <data name="Top level" xml:space="preserve"><value>المستوى الأعلى</value></data>
   <data name="Top right" xml:space="preserve"><value>أعلى اليمين</value></data>
   <data name="Total points" xml:space="preserve"><value>مجموع الدرجات</value></data>
   <data name="Total points: {0}" xml:space="preserve"><value>مجموع الدرجات: {0}</value></data>
@@ -889,8 +1104,10 @@
   <data name="Uploaded" xml:space="preserve"><value>مرفوع</value></data>
   <data name="Use an http(s) address (e.g. the intranet, SharePoint or the internal video portal) or a path starting with '/'." xml:space="preserve"><value>استخدم عنوان http(s) (مثل الشبكة الداخلية أو SharePoint أو بوابة الفيديو الداخلية) أو مساراً يبدأ بـ '/'.</value></data>
   <data name="Use the guided wizard" xml:space="preserve"><value>استخدام المعالج الموجّه</value></data>
+  <data name="Use the inherited one" xml:space="preserve"><value>استخدام الموروث</value></data>
   <data name="Use the suggested statement" xml:space="preserve"><value>استخدام النص المقترح</value></data>
   <data name="Use the toolbar for headings, lists, links, images and right-to-left paragraphs." xml:space="preserve"><value>استخدم شريط الأدوات للعناوين والقوائم والروابط والصور والفقرات من اليمين إلى اليسار.</value></data>
+  <data name="Use this directory for the entity" xml:space="preserve"><value>استخدام هذا الدليل للجهة</value></data>
   <data name="Used on the login page. If empty, the sidebar logo is used." xml:space="preserve"><value>يُستخدم في صفحة الدخول. إذا لم يُرفع يُستخدم شعار القائمة الجانبية.</value></data>
   <data name="Used only as the small icon in the browser tab. ICO or PNG." xml:space="preserve"><value>تُستخدم فقط كأيقونة صغيرة في تبويب المتصفح. ICO أو PNG.</value></data>
   <data name="Used only at the top of the navigation (sidebar). PNG/JPG/WebP/GIF." xml:space="preserve"><value>يُستخدم فقط أعلى القائمة الجانبية. PNG/JPG/WebP/GIF.</value></data>
@@ -898,6 +1115,7 @@
   <data name="User" xml:space="preserve"><value>المستخدم</value></data>
   <data name="User created." xml:space="preserve"><value>تم إنشاء المستخدم.</value></data>
   <data name="USER_CREATED" xml:space="preserve"><value>إنشاء مستخدم</value></data>
+  <data name="USER_ENTITY_CHANGED" xml:space="preserve"><value>نقل مستخدم إلى جهة أخرى</value></data>
   <data name="USER_PASSWORD_RESET" xml:space="preserve"><value>إعادة تعيين كلمة مرور</value></data>
   <data name="USER_UPDATED" xml:space="preserve"><value>تعديل مستخدم</value></data>
   <data name="Username" xml:space="preserve"><value>اسم المستخدم</value></data>
@@ -905,8 +1123,11 @@
   <data name="Username already exists." xml:space="preserve"><value>اسم المستخدم موجود مسبقاً.</value></data>
   <data name="Username: {0}" xml:space="preserve"><value>اسم المستخدم: {0}</value></data>
   <data name="Users" xml:space="preserve"><value>المستخدمون</value></data>
+  <data name="Users (with sub-entities)" xml:space="preserve"><value>المستخدمون (مع الجهات التابعة)</value></data>
   <data name="Users can switch language from the header at any time." xml:space="preserve"><value>يمكن للمستخدمين تغيير اللغة من الترويسة في أي وقت.</value></data>
+  <data name="users in this entity" xml:space="preserve"><value>مستخدم في هذه الجهة</value></data>
   <data name="USERS_IMPORTED" xml:space="preserve"><value>استيراد مستخدمين</value></data>
+  <data name="Validation status" xml:space="preserve"><value>حالة التحقق</value></data>
   <data name="Video" xml:space="preserve"><value>الفيديو</value></data>
   <data name="Videos and PDF files are shown inside the content page; other files are offered for download." xml:space="preserve"><value>يُعرض الفيديو وملفات PDF داخل صفحة المحتوى مباشرة، وتُتاح بقية الملفات للتنزيل.</value></data>
   <data name="View" xml:space="preserve"><value>عرض</value></data>
@@ -915,6 +1136,8 @@
   <data name="View details" xml:space="preserve"><value>عرض التفاصيل</value></data>
   <data name="View report" xml:space="preserve"><value>عرض التقرير</value></data>
   <data name="View result" xml:space="preserve"><value>عرض النتيجة</value></data>
+  <data name="Visible" xml:space="preserve"><value>ظاهرة</value></data>
+  <data name="Visual composition" xml:space="preserve"><value>التكوين البصري</value></data>
   <data name="Visual panel" xml:space="preserve"><value>اللوحة المرئية</value></data>
   <data name="Visual panel first" xml:space="preserve"><value>اللوحة المرئية أولاً</value></data>
   <data name="Weak" xml:space="preserve"><value>ضعيف</value></data>
@@ -925,23 +1148,29 @@
   <data name="Welcome, {0}" xml:space="preserve"><value>مرحباً بك، {0}</value></data>
   <data name="Well done, you passed the assessment" xml:space="preserve"><value>أحسنت، اجتزت الاختبار بنجاح</value></data>
   <data name="What do I need to do now?" xml:space="preserve"><value>ما المطلوب مني الآن؟</value></data>
+  <data name="What this entity may be delegated" xml:space="preserve"><value>ما يجوز تفويضه لهذه الجهة</value></data>
   <data name="When you have read the content and viewed its attachments, record that you have completed it." xml:space="preserve"><value>بعد قراءة المحتوى والاطلاع على مرفقاته، سجّل إكمالك للمادة.</value></data>
   <data name="White plate behind the login logo" xml:space="preserve"><value>خلفية بيضاء خلف شعار الدخول</value></data>
+  <data name="Who should see this content?" xml:space="preserve"><value>من يرى هذا المحتوى؟</value></data>
   <data name="Whole page" xml:space="preserve"><value>الصفحة كاملة</value></data>
+  <data name="whole subtree" xml:space="preserve"><value>مع الجهات التابعة</value></data>
   <data name="Width as a share of the text column." xml:space="preserve"><value>العرض كنسبة من عمود النص.</value></data>
   <data name="Will be published with the content" xml:space="preserve"><value>سيُنشر مع المحتوى</value></data>
   <data name="Will be removed when you save." xml:space="preserve"><value>سيُزال عند الحفظ.</value></data>
   <data name="Windows / AD (no password)" xml:space="preserve"><value>Windows / AD (بدون كلمة مرور)</value></data>
   <data name="Write it as the employee will confirm it, in the first person." xml:space="preserve"><value>اكتبه كما سيؤكده الموظف، بصيغة المتكلم.</value></data>
   <data name="Write the content" xml:space="preserve"><value>كتابة المحتوى</value></data>
+  <data name="Yes" xml:space="preserve"><value>نعم</value></data>
   <data name="Yes, acknowledgment is required" xml:space="preserve"><value>نعم، يتطلب إقراراً</value></data>
   <data name="Yes, add an assessment" xml:space="preserve"><value>نعم، أضف اختباراً</value></data>
   <data name="You answered {0} of {1} questions." xml:space="preserve"><value>عدد الأسئلة المجاب عنها: {0} من {1}.</value></data>
   <data name="You can move between questions freely before submitting." xml:space="preserve"><value>يمكنك التنقل بين الأسئلة بحرية قبل الإرسال.</value></data>
+  <data name="You can only target entities you administer." xml:space="preserve"><value>لا يمكنك استهداف جهات لا تديرها.</value></data>
   <data name="You cannot remove your own admin role or deactivate yourself." xml:space="preserve"><value>لا يمكنك إزالة صلاحية المدير عن نفسك أو تعطيل حسابك.</value></data>
   <data name="You did not reach the passing score this time" xml:space="preserve"><value>لم تحقق درجة الاجتياز هذه المرة</value></data>
   <data name="You did not reach the passing score. Review the material and try again if attempts remain." xml:space="preserve"><value>لم تبلغ درجة النجاح. راجع المحتوى وأعد المحاولة إن كانت لديك محاولات متبقية.</value></data>
   <data name="You do not have permission to view this page." xml:space="preserve"><value>ليست لديك صلاحية لعرض هذه الصفحة.</value></data>
+  <data name="You do not hold the directory capability for this entity." xml:space="preserve"><value>لا تملك صلاحية الدليل لهذه الجهة.</value></data>
   <data name="You have an assessment in progress." xml:space="preserve"><value>لديك اختبار قيد التنفيذ.</value></data>
   <data name="You have been signed out." xml:space="preserve"><value>تم تسجيل الخروج بنجاح.</value></data>
   <data name="You have completed every required item. New items will appear here when they are published." xml:space="preserve"><value>أكملت جميع المواد المطلوبة. ستظهر المواد الجديدة هنا عند نشرها.</value></data>
@@ -960,9 +1189,11 @@
   <data name="Your achievements will appear here after you complete your first item." xml:space="preserve"><value>ستظهر إنجازاتك هنا بعد إكمال أول مادة.</value></data>
   <data name="Your acknowledgment is needed" xml:space="preserve"><value>بانتظار إقرارك</value></data>
   <data name="Your acknowledgment is required" xml:space="preserve"><value>إقرارك مطلوب</value></data>
+  <data name="Your administration scope" xml:space="preserve"><value>نطاق إدارتك</value></data>
   <data name="Your answer" xml:space="preserve"><value>إجابتك</value></data>
   <data name="Your assessment results will appear here after you complete your first assessment." xml:space="preserve"><value>ستظهر نتائج اختباراتك هنا بعد إكمال أول اختبار.</value></data>
   <data name="Your browser cannot play this video." xml:space="preserve"><value>متصفحك لا يدعم تشغيل هذا الفيديو.</value></data>
+  <data name="Your capabilities here" xml:space="preserve"><value>صلاحياتك هنا</value></data>
   <data name="Your completed assessments and the policies you have acknowledged." xml:space="preserve"><value>اختباراتك المكتملة والسياسات التي أقررت بها.</value></data>
   <data name="Your cybersecurity awareness journey" xml:space="preserve"><value>رحلتك في الوعي السيبراني</value></data>
   <data name="Your journey in this item" xml:space="preserve"><value>رحلتك في هذه المادة</value></data>
@@ -979,8 +1210,11 @@
   <data name="Zoom in" xml:space="preserve"><value>تكبير</value></data>
   <data name="Zoom out" xml:space="preserve"><value>تصغير</value></data>
   <data name="{0} (copy)" xml:space="preserve"><value>{0} (نسخة)</value></data>
+  <data name="{0} ({1}) under {2}; allowed: {3}" xml:space="preserve"><value>{0} ({1}) تحت {2}؛ الصلاحيات المسموحة: {3}</value></data>
+  <data name="{0} @ {1}: {2} → {3}; sub-entities: {4}" xml:space="preserve"><value>{0} @ {1}: {2} ← {3}؛ الجهات التابعة: {4}</value></data>
   <data name="{0} acknowledged" xml:space="preserve"><value>{0} تم الإقرار</value></data>
   <data name="{0} acknowledgment(s) reset." xml:space="preserve"><value>تمت إعادة تعيين {0} إقرار.</value></data>
+  <data name="{0} administrators" xml:space="preserve"><value>{0} مدير</value></data>
   <data name="{0} and {1} do not match." xml:space="preserve"><value>الحقلان {0} و{1} غير متطابقين.</value></data>
   <data name="{0} attachment(s)" xml:space="preserve"><value>{0} مرفق/مرفقات</value></data>
   <data name="{0} attempt(s)" xml:space="preserve"><value>{0} محاولة</value></data>
@@ -993,6 +1227,7 @@
   <data name="{0} email(s) queued." xml:space="preserve"><value>تمت جدولة {0} رسالة بريد إلكتروني للإرسال.</value></data>
   <data name="{0} emails" xml:space="preserve"><value>{0} رسالة بريد</value></data>
   <data name="{0} employee(s) have already acknowledged this content. Changing the statement does not reset their acknowledgments." xml:space="preserve"><value>أقرّ {0} موظف/موظفين بهذا المحتوى. تعديل نص الإقرار لا يلغي إقراراتهم السابقة.</value></data>
+  <data name="{0} entities" xml:space="preserve"><value>{0} جهة</value></data>
   <data name="{0} files selected" xml:space="preserve"><value>تم اختيار {0} ملفات</value></data>
   <data name="{0} min read" xml:space="preserve"><value>قراءة {0} دقيقة</value></data>
   <data name="{0} of {1}" xml:space="preserve"><value>{0} من {1}</value></data>
@@ -1003,6 +1238,12 @@
   <data name="{0} remaining" xml:space="preserve"><value>متبقٍ {0}</value></data>
   <data name="{0} reminder email(s) queued (users without an email address are skipped)." xml:space="preserve"><value>تمت جدولة {0} رسالة تذكير (يتم تخطي المستخدمين الذين لا يملكون بريداً إلكترونياً).</value></data>
   <data name="{0} rows, {1}" xml:space="preserve"><value>{0} صف، الصيغة {1}</value></data>
+  <data name="{0} selected entities" xml:space="preserve"><value>{0} جهات محددة</value></data>
+  <data name="{0} users ({1} with sub-entities)" xml:space="preserve"><value>{0} مستخدم ({1} مع الجهات التابعة)</value></data>
   <data name="{0} videos" xml:space="preserve"><value>{0} مقاطع فيديو</value></data>
+  <data name="{0} → {1}: {2}; sub-entities: {3}" xml:space="preserve"><value>{0} ← {1}: {2}؛ الجهات التابعة: {3}</value></data>
+  <data name="{0}: enabled={1}; domain={2}; ldap={3}; bind user={4}; secret {5}" xml:space="preserve"><value>{0}: مفعّل={1}؛ النطاق={2}؛ LDAP={3}؛ حساب الخدمة={4}؛ كلمة المرور {5}</value></data>
+  <data name="{0}: entity {1} → {2}" xml:space="preserve"><value>{0}: الجهة {1} ← {2}</value></data>
+  <data name="{0}: parent {1} → {2}" xml:space="preserve"><value>{0}: الجهة الأم {1} ← {2}</value></data>
   <data name="~{0} min" xml:space="preserve"><value>حوالي {0} د</value></data>
 </root>

@@ -32,6 +32,9 @@ public class User
     public DateTime? LockoutUntil { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
+    /// <summary>Primary organizational scope (entity) of the user.</summary>
+    public int EntityId { get; set; }
+    public OrgEntity Entity { get; set; } = null!;
     public List<UserRole> UserRoles { get; set; } = new();
 }
 
@@ -70,6 +73,11 @@ public class Content
     public DateTime? PublishedAt { get; set; }
     public int? CreatedById { get; set; }
     public User? CreatedBy { get; set; }
+    /// <summary>Owning entity (who may manage it). Central content is owned by the root entity.</summary>
+    public int OwnerEntityId { get; set; }
+    public OrgEntity OwnerEntity { get; set; } = null!;
+    public ContentTargetScope TargetScope { get; set; } = ContentTargetScope.OwnerOnly;
+    public List<ContentEntityTarget> Targets { get; set; } = new();
     public List<ContentAttachment> Attachments { get; set; } = new();
 }
 
@@ -127,6 +135,9 @@ public class Assessment
     public bool IsPublished { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+    /// <summary>Owning entity. A linked assessment follows its content's owner and audience; a standalone one is visible to the owner subtree.</summary>
+    public int OwnerEntityId { get; set; }
+    public OrgEntity OwnerEntity { get; set; } = null!;
     public List<Question> Questions { get; set; } = new();
 }
 
@@ -196,10 +207,128 @@ public class AuditLog
     public string? EntityId { get; set; }
     public string? Details { get; set; }
     public string? IpAddress { get; set; }
+    /// <summary>Entity of the acting user (their primary entity) at the time of the action.</summary>
+    public int? ActorEntityId { get; set; }
+    /// <summary>Entity the action affected (used to scope the audit trail for entity administrators).</summary>
+    public int? ScopeEntityId { get; set; }
 }
 
 public class SystemSetting
 {
     public string Key { get; set; } = "";
     public string? Value { get; set; }
+}
+
+// ===================================================================== organizational hierarchy (enterprise v1)
+
+/// <summary>
+/// Capabilities that can be delegated to an entity administrator. The central administrator (Admin role) implicitly holds all of
+/// them for the whole hierarchy. An entity administrator holds the intersection of the capabilities granted on the assignment and
+/// the capabilities the central administrator allows for that entity (<see cref="OrgEntity.AllowedCapabilities"/>).
+/// </summary>
+[Flags]
+public enum Capability
+{
+    None = 0,
+    ManageUsers = 1 << 0,
+    ManageContent = 1 << 1,
+    PublishContent = 1 << 2,
+    ManageAssessments = 1 << 3,
+    ManageAcknowledgments = 1 << 4,
+    ViewReports = 1 << 5,
+    ExportReports = 1 << 6,
+    ManageBranding = 1 << 7,
+    ManageDirectory = 1 << 8,
+    ManageNotifications = 1 << 9,
+    ManageAdmins = 1 << 10,
+    ViewAudit = 1 << 11,
+    All = (1 << 12) - 1,
+    /// <summary>What a new entity may be granted unless the central administrator changes it: no branding, directory or
+    /// administrator delegation (safe by default).</summary>
+    DefaultAllowed = ManageUsers | ManageContent | PublishContent | ManageAssessments | ManageAcknowledgments | ViewReports | ExportReports | ManageNotifications | ViewAudit,
+}
+
+/// <summary>Who sees a content item (no copies are made per entity).</summary>
+public enum ContentTargetScope
+{
+    /// <summary>Employees of the owning entity only (for central content: "root entity only").</summary>
+    OwnerOnly = 0,
+    /// <summary>The owning entity and all its descendants (for central content: "all entities").</summary>
+    OwnerAndDescendants = 1,
+    /// <summary>Only the entities listed in <see cref="Content.Targets"/> (optionally with their descendants).</summary>
+    Selected = 2,
+}
+
+/// <summary>An organizational unit. Exactly one root (ParentEntityId null); any depth below it.</summary>
+public class OrgEntity
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    /// <summary>Short unique code (e.g. MOH, AGY-01).</summary>
+    public string Code { get; set; } = "";
+    public int? ParentEntityId { get; set; }
+    public OrgEntity? Parent { get; set; }
+    /// <summary>Materialized path of ids, e.g. "/1/5/9/" (root "/1/"). Maintained by EntityTree.</summary>
+    public string Path { get; set; } = "";
+    public int Depth { get; set; }
+    public bool IsActive { get; set; } = true;
+    /// <summary>Ceiling for anything delegated to administrators of this entity (set by the central administrator).</summary>
+    public Capability AllowedCapabilities { get; set; } = Capability.DefaultAllowed;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
+    public bool IsRoot => ParentEntityId == null;
+}
+
+/// <summary>Delegated administration: a user administers an entity (and optionally its descendants) with explicit capabilities.</summary>
+public class EntityAdminAssignment
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
+    public int EntityId { get; set; }
+    public OrgEntity Entity { get; set; } = null!;
+    public Capability Capabilities { get; set; }
+    public bool IncludeDescendants { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
+    public int? CreatedById { get; set; }
+}
+
+/// <summary>One audience entry of a content item whose <see cref="Content.TargetScope"/> is Selected.</summary>
+public class ContentEntityTarget
+{
+    public int ContentId { get; set; }
+    public Content Content { get; set; } = null!;
+    public int EntityId { get; set; }
+    public OrgEntity Entity { get; set; } = null!;
+    public bool IncludeDescendants { get; set; } = true;
+}
+
+/// <summary>Per-entity setting override (branding keys "Branding.*"); absent = inherited from the parent chain / root settings.</summary>
+public class EntitySetting
+{
+    public int EntityId { get; set; }
+    public string Key { get; set; } = "";
+    public string? Value { get; set; }
+}
+
+/// <summary>
+/// Directory source of an entity (Active Directory domain used for user provisioning / attribute lookup). This is directory
+/// synchronization and mapping only; it does not configure authentication (Windows Integrated Authentication stays an IIS /
+/// domain-trust concern). The bind secret is stored encrypted (ASP.NET Data Protection) and never displayed or logged.
+/// </summary>
+public class EntityDirectorySource
+{
+    public int EntityId { get; set; }
+    public OrgEntity Entity { get; set; } = null!;
+    public bool Enabled { get; set; }
+    /// <summary>NetBIOS domain name as it appears in DOMAIN\user (used to map new Windows users to this entity).</summary>
+    public string Domain { get; set; } = "";
+    public string? LdapPath { get; set; }
+    public string? SearchBase { get; set; }
+    public string? BindUser { get; set; }
+    public string? BindSecretProtected { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public DateTime? LastValidatedAt { get; set; }
+    public string? ValidationNote { get; set; }
 }

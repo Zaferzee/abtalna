@@ -7,15 +7,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberLms.Web.Controllers;
 
-public class FilesController(AppDbContext db, StorageService storage, SettingsService settings, ILogger<FilesController> log) : AppController
+public class FilesController(AppDbContext db, StorageService storage, SettingsService settings, BrandingAccessor brand, EntityBrandingService entityBranding, EntityAccess access, ILogger<FilesController> log) : AppController
 {
-    /// <summary>Authenticated download/stream of a content attachment. Non-admins can only reach attachments of published content.</summary>
+    /// <summary>Authenticated download/stream of a content attachment: employees only for published content targeted to their
+    /// entity; administrators for content they may manage (any status).</summary>
     [Authorize]
     public async Task<IActionResult> Attachment(int id, bool download = false)
     {
         var a = await db.ContentAttachments.AsNoTracking().Include(x => x.Content).FirstOrDefaultAsync(x => x.Id == id);
         if (a == null) return NotFound();
-        if (a.Content.Status != ContentStatus.Published && !User.IsInRole(RoleNames.Admin)) return NotFound();
+        var manage = await access.CanInAsync(Capability.ManageContent, a.Content.OwnerEntityId);
+        if (!manage)
+        {
+            var viewer = await EntityVisibility.ForUserAsync(db, User.UserId());
+            var visible = a.Content.Status == ContentStatus.Published && await db.Contents.Where(c => c.Id == a.ContentId).Where(EntityVisibility.Content(viewer)).AnyAsync();
+            if (!visible) return NotFound();
+        }
         var path = storage.Resolve(a.StoredPath);
         if (path == null || !System.IO.File.Exists(path))
         {
@@ -45,12 +52,19 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
         return PhysicalFile(path, StorageService.ContentTypeFor(path));
     }
 
-    /// <summary>Branding images are public (needed on the login page).</summary>
+    /// <summary>Central branding images are public (needed on the login page). An entity's own images (<paramref name="e"/>) are
+    /// served to signed-in users of that entity subtree and to administrators with scope over it.</summary>
     [AllowAnonymous]
-    public IActionResult Brand(string kind)
+    public async Task<IActionResult> Brand(string kind, int? e = null)
     {
         var key = Branding.Assets.FirstOrDefault(a => a.Kind == kind).Key;
-        var rel = key == null ? null : settings.Get(key);
+        if (e != null)
+        {
+            if (User.Identity?.IsAuthenticated != true) return NotFound();
+            var mine = (await EntityVisibility.ForUserAsync(db, User.UserId())).Ancestors.Contains(e.Value);
+            if (!mine && !(await access.AnyScopeAsync()).Contains(e.Value)) return NotFound();
+        }
+        var rel = key == null ? null : e == null ? settings.Get(key) : entityBranding.AssetPath(e, key);
         var path = rel == null ? null : storage.Resolve(rel);
         if (path == null || !System.IO.File.Exists(path)) return NotFound();
         Response.Headers.CacheControl = "public, max-age=86400"; // URL carries ?v=<version>, so changes show immediately
@@ -61,8 +75,9 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
     [AllowAnonymous, Route("branding/theme.css")]
     public IActionResult ThemeCss()
     {
-        // Only validated #rrggbb values reach the CSS (Branding falls back to defaults for anything else).
-        var b = Branding.From(settings);
+        // Only validated #rrggbb values reach the CSS (Branding falls back to defaults for anything else). Signed-in users get their
+        // entity's effective branding (inherited / overridden); anonymous pages get the central branding.
+        var b = brand.Current;
         var primary = b.PrimaryColor; var accent = b.AccentColor; var bg = b["BackgroundColor"];
         var css = $$"""
             :root{
@@ -85,7 +100,7 @@ public class FilesController(AppDbContext db, StorageService storage, SettingsSe
               --color-login-text:{{b["LoginTextColor"]}};
             }
             """;
-        Response.Headers.CacheControl = "public, max-age=3600";
+        Response.Headers.CacheControl = User.Identity?.IsAuthenticated == true ? "private, max-age=3600" : "public, max-age=3600";
         return Content(css, "text/css");
     }
 

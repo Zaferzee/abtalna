@@ -14,9 +14,10 @@ public static class ClaimsExtensions
 public class AuditService(AppDbContext db, IHttpContextAccessor http)
 {
     /// <summary>Adds an audit row to the context. Caller saves (so the entry commits with the change it describes).</summary>
-    public void Add(string action, string entityType, object? entityId = null, string? details = null)
+    public void Add(string action, string entityType, object? entityId = null, string? details = null, int? scopeEntityId = null)
     {
         var ctx = http.HttpContext;
+        var actorEntity = int.TryParse(ctx?.User.FindFirstValue("entity_id"), out var ae) ? ae : (int?)null;
         db.AuditLogs.Add(new AuditLog
         {
             UserId = ctx?.User.UserId() is > 0 and var id ? id : null,
@@ -26,6 +27,8 @@ public class AuditService(AppDbContext db, IHttpContextAccessor http)
             EntityId = entityId?.ToString(),
             Details = details is { Length: > 1000 } ? details[..1000] : details,
             IpAddress = ctx?.Connection.RemoteIpAddress?.ToString(),
+            ActorEntityId = actorEntity,
+            ScopeEntityId = scopeEntityId,
         });
     }
 }

@@ -46,6 +46,11 @@ builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 builder.Services.AddScoped<Localizer>();
 builder.Services.AddSingleton<IPostConfigureOptions<MvcOptions>, LocalizedMvcSetup>();
 builder.Services.AddScoped<AuditService>();
+builder.Services.AddSingleton<EntityTree>();
+builder.Services.AddScoped<EntityAccess>();
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, AdminAreaHandler>();
+builder.Services.AddScoped<EntityBrandingService>();
+builder.Services.AddSingleton<DirectorySecrets>();
 builder.Services.AddScoped<ContentAuthoring>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddSingleton<PasswordService>();
@@ -85,8 +90,10 @@ var auth = builder.Services.AddAuthentication(CookieAuthenticationDefaults.Authe
                     e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
                     var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
                     var u = await db.Users.AsNoTracking().Where(x => x.Id == id)
-                        .Select(x => new { x.IsActive, Roles = x.UserRoles.Select(r => r.Role.Name).OrderBy(n => n).ToList() }).FirstOrDefaultAsync();
-                    return u == null ? null : new UserState(u.IsActive, string.Join(",", u.Roles));
+                        .Select(x => new { x.IsActive, Roles = x.UserRoles.Select(r => r.Role.Name).OrderBy(n => n).ToList(),
+                            // the user's entity and all its ancestors must be active
+                            EntityActive = !db.Entities.Any(e => !e.IsActive && x.Entity.Path.StartsWith(e.Path)) }).FirstOrDefaultAsync();
+                    return u == null ? null : new UserState(u.IsActive && u.EntityActive, string.Join(",", u.Roles));
                 });
             }
             catch (Exception ex)
@@ -106,7 +113,9 @@ var auth = builder.Services.AddAuthentication(CookieAuthenticationDefaults.Authe
 if (windowsEnabled && !underIis) auth.AddNegotiate();
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("Admin", p => p.RequireRole(RoleNames.Admin));
+    .AddPolicy("Admin", p => p.RequireRole(RoleNames.Admin))
+    // Administration area: central administrator or delegated entity administrator; capabilities/scope are then enforced per action.
+    .AddPolicy("AdminArea", p => p.RequireAuthenticatedUser().AddRequirements(new AdminAreaRequirement()));
 
 builder.Services.AddAntiforgery(o => { o.Cookie.Name = "CyberLms.Csrf"; o.Cookie.HttpOnly = true; o.Cookie.SameSite = SameSiteMode.Strict;
     o.Cookie.SecurePolicy = builder.Configuration.GetValue("Security:RequireHttpsCookies", !builder.Environment.IsDevelopment()) ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest; });

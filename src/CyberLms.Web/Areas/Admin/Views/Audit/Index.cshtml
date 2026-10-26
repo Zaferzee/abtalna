@@ -4,6 +4,8 @@
     var pager = (Pager)ViewBag.Pager; var actions = (List<string>)ViewBag.Actions;
     var op = (string?)ViewBag.Op; var q = (string?)ViewBag.Q; var filtered = !string.IsNullOrWhiteSpace(op) || !string.IsNullOrWhiteSpace(q);
     var total = (int)ViewBag.All;
+    var entities = (List<EntityNode>)ViewBag.Entities; var names = (Dictionary<int, string>)ViewBag.EntityNames;
+    filtered = filtered || ViewBag.EntityId != null;
 }
 <div class="page-head reveal">
     <div>
@@ -16,6 +18,7 @@
 <div class="card table-card reveal" style="--i:1">
     <form class="toolbar" method="get" role="search">
         <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="@q" placeholder="@L["Search by user, details or record number"]" aria-label="@L["Search"]" /></div>
+        @if (entities.Count > 1) { @await Html.PartialAsync("_EntitySelect", new EntitySelectVm("entity", entities, (int?)ViewBag.EntityId, L["All entities in my scope"], "f-entity-filter")) }
         <select class="form-select" name="op" aria-label="@L["Action"]"><option value="">@L["All actions"]</option>@foreach (var a in actions) { <option value="@a" selected="@(op == a)">@L[a]</option> }</select>
         <div class="tb-end">
             <button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button>
@@ -23,7 +26,7 @@
         </div>
     </form>
     <div class="results-bar"><span class="rb-count">@pager.Total <small>@L["entries"]</small></span>@if (filtered) { <span class="small text-muted">@L.Format("of {0}", total)</span> }</div>
-    <div class="table-responsive"><table class="table table-hover mb-0 audit-table"><thead><tr><th>@L["Date and time"]</th><th>@L["Performed by"]</th><th>@L["Action"]</th><th>@L["Entity"]</th><th>@L["Details"]</th><th>@L["IP address"]</th></tr></thead><tbody>
+    <div class="table-responsive"><table class="table table-hover mb-0 audit-table"><thead><tr><th>@L["Date and time"]</th><th>@L["Performed by"]</th><th>@L["Action"]</th><th>@L["Record"]</th><th>@L["Entity"]</th><th>@L["Details"]</th><th>@L["IP address"]</th></tr></thead><tbody>
     @foreach (var a in Model)
     {
         <tr>
@@ -31,13 +34,14 @@
             <td><bdi dir="ltr" class="fw-semibold">@a.Username</bdi></td>
             <td><span class="audit-action"><span class="t-dot-sm"><i class="bi @Ui.AuditIcon(a.Action)"></i></span><span>@L[a.Action]<small class="audit-code" dir="ltr">@a.Action</small></span></span></td>
             <td class="text-nowrap">@L["Entity: " + a.EntityType] @if (!string.IsNullOrEmpty(a.EntityId)) { <bdi dir="ltr" class="text-muted">#@a.EntityId</bdi> }</td>
+            <td class="text-nowrap">@if (a.ScopeEntityId is int se && names.TryGetValue(se, out var en)) { <span class="chip-entity"><i class="bi bi-building"></i> <span class="bidi">@en</span></span> } else { <span class="text-muted">-</span> }</td>
             <td class="bidi audit-details">@if (string.IsNullOrWhiteSpace(a.Details)) { <span class="text-muted">-</span> } else { @a.Details }</td>
             <td dir="ltr" class="text-end text-muted small">@a.IpAddress</td>
         </tr>
     }
     @if (Model.Count == 0)
     {
-        <tr><td colspan="6"><div class="empty py-4"><div class="empty-icon"><i class="bi @(filtered ? "bi-search" : "bi-activity")"></i></div>
+        <tr><td colspan="7"><div class="empty py-4"><div class="empty-icon"><i class="bi @(filtered ? "bi-search" : "bi-activity")"></i></div>
             <h3>@L[filtered ? "No entries match the filter." : "No activity recorded yet."]</h3>
             @if (filtered) { <a class="btn btn-outline-primary mt-2" asp-action="Index">@L["Show all entries"]</a> }</div></td></tr>
     }

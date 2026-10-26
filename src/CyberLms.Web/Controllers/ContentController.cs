@@ -9,13 +9,15 @@ using Microsoft.EntityFrameworkCore;
 namespace CyberLms.Web.Controllers;
 
 [Authorize]
-public class ContentController(AppDbContext db, ContentAuthoring authoring) : AppController
+public class ContentController(AppDbContext db, ContentAuthoring authoring, EntityAccess access) : AppController
 {
-    private IQueryable<Content> Published => db.Contents.AsNoTracking().Where(c => c.Status == ContentStatus.Published);
+    /// <summary>Published content targeted to the current user's entity. Everything employees reach goes through this.</summary>
+    private async Task<IQueryable<Content>> Visible() =>
+        db.Contents.AsNoTracking().Where(EntityVisibility.Content(await EntityVisibility.ForUserAsync(db, User.UserId()))).Where(c => c.Status == ContentStatus.Published);
 
     private async Task<ContentIndexVm> Build(ContentType? type, string? q, bool policies)
     {
-        var query = Published;
+        var query = await Visible();
         if (policies) query = query.Where(c => c.Type == ContentType.Policy || c.Type == ContentType.Regulation);
         else if (type != null) query = query.Where(c => c.Type == type);
         if (!string.IsNullOrWhiteSpace(q)) { var s = q.Trim().ToLower(); query = query.Where(c => c.Title.ToLower().Contains(s) || (c.Description != null && c.Description.ToLower().Contains(s))); }
@@ -40,10 +42,12 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
         var c = await db.Contents.AsNoTracking().Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
         var preview = false;
         if (c == null) return NotFound();
-        if (c.Status != ContentStatus.Published)
+        // employees: published and targeted to their entity; administrators may preview content they manage (any status)
+        var visible = await (await Visible()).AnyAsync(x => x.Id == id);
+        if (!visible)
         {
-            if (!User.IsInRole(RoleNames.Admin)) return NotFound();
-            preview = true;
+            if (!await access.CanInAsync(Capability.ManageContent, c.OwnerEntityId)) return NotFound();
+            preview = c.Status != ContentStatus.Published;
         }
         var uid = User.UserId();
         // Employees see the published assessments of this content; an administrator previewing unpublished content also sees the draft one.
@@ -62,7 +66,7 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
     [HttpPost]
     public async Task<IActionResult> Acknowledge(int id)
     {
-        var c = await db.Contents.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.Status == ContentStatus.Published && x.RequiresAcknowledgment);
+        var c = await (await Visible()).FirstOrDefaultAsync(x => x.Id == id && x.RequiresAcknowledgment);
         if (c == null) return NotFound();
         var uid = User.UserId();
         if (!await db.UserAcknowledgments.AnyAsync(a => a.UserId == uid && a.ContentId == id && a.ContentVersion == c.Version))
@@ -81,7 +85,7 @@ public class ContentController(AppDbContext db, ContentAuthoring authoring) : Ap
     [HttpPost]
     public async Task<IActionResult> Complete(int id)
     {
-        var c = await db.Contents.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.Status == ContentStatus.Published);
+        var c = await (await Visible()).FirstOrDefaultAsync(x => x.Id == id);
         if (c == null) return NotFound();
         if (c.RequiresAcknowledgment || await db.Assessments.AnyAsync(a => a.ContentId == id && a.IsPublished && a.Questions.Any()))
         {

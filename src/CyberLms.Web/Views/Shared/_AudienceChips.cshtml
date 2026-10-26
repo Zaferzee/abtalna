@@ -1,0 +1,15 @@
+@model (Content Content, IReadOnlyList<EntityNode> All, IEnumerable<int> Targets)
+@* Owner entity + audience of a content item (lists). *@
+@{
+    var c = Model.Content;
+    var owner = Model.All.FirstOrDefault(e => e.Id == c.OwnerEntityId);
+    var names = Model.Targets.Select(t => Model.All.FirstOrDefault(e => e.Id == t)?.Name).Where(n => n != null).ToList();
+    var (icon, text) = c.TargetScope switch
+    {
+        ContentTargetScope.OwnerOnly => ("bi-building", owner?.IsRoot == true ? L["Root entity only"] : L["Owning entity only"]),
+        ContentTargetScope.OwnerAndDescendants => ("bi-diagram-3-fill", owner?.IsRoot == true ? L["All entities"] : L["Entity and sub-entities"]),
+        _ => ("bi-ui-checks", L.Format("{0} selected entities", names.Count)),
+    };
+}
+<span class="chip-entity" title="@L["Owning entity"]"><i class="bi bi-building"></i> <span class="bidi">@owner?.Name</span></span>
+<span class="chip-scope" title="@(names.Count > 0 ? string.Join(L.Sep, names) : L["Audience"])"><i class="bi @icon"></i> @text</span>

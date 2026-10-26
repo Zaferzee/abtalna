@@ -1,5 +1,10 @@
 @model UserListVm
-@{ ViewData["Title"] = L["Users"]; }
+@{
+    ViewData["Title"] = L["Users"];
+    var entities = (List<EntityNode>)ViewBag.Entities;
+    var adminIds = (HashSet<int>)ViewBag.AdminIds;
+    var multi = entities.Count > 1;
+}
 <div class="page-head reveal">
     <div>
         <div class="eyebrow"><i class="bi bi-people"></i> @L["Manage"]</div>
@@ -11,25 +16,27 @@
 <div class="collapse mb-3" id="import"><div class="panel"><div class="panel-body">
     <form method="post" asp-action="Import" enctype="multipart/form-data" class="row g-2 align-items-end" novalidate>
         <div class="col-md-4"><label class="form-label">@L["CSV file (header: username,displayname,email,department)"]</label><input type="file" class="form-control" name="file" accept=".csv" /></div>
-        <div class="col-md-3"><label class="form-label">@L["Sign-in type"]</label><select class="form-select" name="authSource"><option value="Windows">@L["Windows / AD (no password)"]</option><option value="Local">@L["Local (initial password)"]</option></select></div>
-        <div class="col-md-3"><label class="form-label">@L["Initial password (Local only)"]</label><input type="password" dir="ltr" class="form-control" name="initialPassword" autocomplete="new-password" /></div>
-        <div class="col-md-2"><button class="btn btn-primary w-100">@L["Import"]</button></div>
+        <div class="col-md-3"><label class="form-label" for="imp-entity">@L["Entity"]</label>@await Html.PartialAsync("_EntitySelect", new EntitySelectVm("entityId", entities, (int?)ViewBag.Selected ?? entities.FirstOrDefault()?.Id, null, "imp-entity", true))</div>
+        <div class="col-md-2"><label class="form-label">@L["Sign-in type"]</label><select class="form-select" name="authSource"><option value="Windows">@L["Windows / AD (no password)"]</option><option value="Local">@L["Local (initial password)"]</option></select></div>
+        <div class="col-md-2"><label class="form-label">@L["Initial password (Local only)"]</label><input type="password" dir="ltr" class="form-control" name="initialPassword" autocomplete="new-password" /></div>
+        <div class="col-md-1"><button class="btn btn-primary w-100">@L["Import"]</button></div>
     </form></div></div></div>
 <div class="card table-card reveal" style="--i:1">
 <form class="toolbar" method="get" role="search">
     <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="@Model.Q" placeholder="@L["Search by username, name or email"]" aria-label="@L["Search"]" /></div>
+    @if (multi) { @await Html.PartialAsync("_EntitySelect", new EntitySelectVm("entity", entities, Model.EntityId, L["All entities in my scope"], "f-entity-filter")) }
     <select class="form-select" name="role" aria-label="@L["Role"]"><option value="">@L["All roles"]</option><option value="Admin" selected="@(Model.Role == "Admin")">@L["Role: Administrator"]</option><option value="User" selected="@(Model.Role == "User")">@L["Role: Employee"]</option></select>
     <div class="tb-end"><button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> @L["Filter"]</button></div>
 </form>
 <div class="table-responsive"><table class="table table-hover mb-0">
-<thead><tr><th>@L["User"]</th><th>@L["Email"]</th><th>@L["Department"]</th><th>@L["Role"]</th><th>@L["Sign-in type"]</th><th>@L["Status"]</th><th>@L["Last sign-in"]</th><th><span class="visually-hidden">@L["Actions"]</span></th></tr></thead><tbody>
+<thead><tr><th>@L["User"]</th>@if (multi) { <th>@L["Entity"]</th> }<th>@L["Email"]</th><th>@L["Department"]</th><th>@L["Role"]</th><th>@L["Sign-in type"]</th><th>@L["Status"]</th><th>@L["Last sign-in"]</th><th><span class="visually-hidden">@L["Actions"]</span></th></tr></thead><tbody>
 @foreach (var u in Model.Items)
 {
-    <tr><td><div class="user-cell"><span class="avatar avatar-sm">@(u.DisplayName.Trim().Length > 0 ? u.DisplayName.Trim()[0] : '?')</span><div><strong class="bidi">@u.DisplayName</strong><small dir="ltr">@u.Username</small></div></div></td><td dir="ltr" class="text-end">@u.Email</td><td class="bidi">@u.Department</td>
-        <td>@string.Join(L.Sep, u.UserRoles.Select(r => L[Labels.Role(r.Role.Name)]))</td><td>@L[Labels.AuthSource(u.AuthSource)]</td>
+    <tr><td><div class="user-cell"><span class="avatar avatar-sm">@(u.DisplayName.Trim().Length > 0 ? u.DisplayName.Trim()[0] : '?')</span><div><strong class="bidi">@u.DisplayName</strong><small dir="ltr">@u.Username</small></div></div></td>@if (multi) { <td class="bidi"><span class="chip chip-entity"><i class="bi bi-diagram-3"></i> @u.Entity.Name</span></td> }<td dir="ltr" class="text-end">@u.Email</td><td class="bidi">@u.Department</td>
+        <td>@string.Join(L.Sep, u.UserRoles.Select(r => L[Labels.Role(r.Role.Name)]))@if (adminIds.Contains(u.Id)) { <span class="badge text-bg-info ms-1">@L["Entity administrator"]</span> }</td><td>@L[Labels.AuthSource(u.AuthSource)]</td>
         <td><span class="badge badge-dot text-bg-@(u.IsActive ? "success" : "secondary")">@L[u.IsActive ? "Active" : "Disabled"]</span></td><td>@Time.Html(u.LastLoginAt)</td>
         <td class="text-end"><a class="btn btn-sm btn-ghost btn-icon" asp-action="Edit" asp-route-id="@u.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a></td></tr>
 }
-@if (Model.Items.Count == 0) { <tr><td colspan="8"><div class="empty py-4"><div class="empty-icon"><i class="bi bi-people"></i></div><p>@L["No users found."]</p></div></td></tr> }
+@if (Model.Items.Count == 0) { <tr><td colspan="9"><div class="empty py-4"><div class="empty-icon"><i class="bi bi-people"></i></div><p>@L["No users found."]</p></div></td></tr> }
 </tbody></table></div></div>
 <partial name="_Pager" model="Model.Pager" />

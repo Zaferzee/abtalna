@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using CyberLms.Web.Domain;
 using CyberLms.Web.Models;
+using CyberLms.Web.Services;
 
 namespace CyberLms.Web.Areas.Admin.Models;
 
@@ -25,6 +26,14 @@ public class BasicsStepVm : AuthorPageVm
     [Required, StringLength(300), Display(Name = "Content title")] public string Title { get; set; } = "";
     public ContentType Type { get; set; } = ContentType.Regulation;
     [StringLength(2000), Display(Name = "Short description")] public string? Description { get; set; }
+    // ownership and audience
+    public int OwnerEntityId { get; set; }
+    public ContentTargetScope Audience { get; set; } = ContentTargetScope.OwnerAndDescendants;
+    public List<int> TargetIds { get; set; } = new();
+    public bool TargetsIncludeDescendants { get; set; } = true;
+    public List<EntityNode> Entities { get; set; } = new();
+    public bool Central { get; set; }
+    public bool Posted { get; set; }
 }
 
 public class WriteStepVm : AuthorPageVm

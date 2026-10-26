@@ -11,8 +11,64 @@ namespace CyberLms.Web.Services;
 /// Content/assessment authoring rules shared by the classic content form, the assessment pages and the authoring wizard,
 /// so every entry point sanitizes, stores files, publishes and validates questions in exactly the same way.
 /// </summary>
-public class ContentAuthoring(AppDbContext db, StorageService storage, AuditService audit, Localizer L)
+public class ContentAuthoring(AppDbContext db, StorageService storage, AuditService audit, Localizer L, EntityAccess access)
 {
+    // ---------------------------------------------------------------- ownership and audience (enterprise entities)
+
+    /// <summary>
+    /// Validates and applies the owning entity and audience of a content item. The owner must be an entity in which the current
+    /// administrator manages content; selected audience entities must also be within that scope (the central administrator may
+    /// target any entity). Linked assessments follow the content's owner. Returns an error resource key, or null on success;
+    /// <paramref name="changed"/> tells whether the audience changed (for the audit trail).
+    /// </summary>
+    public async Task<(string? Error, bool Changed)> ApplyAudienceAsync(Content c, int ownerEntityId, ContentTargetScope scope, IEnumerable<int>? targetIds, bool includeDescendants)
+    {
+        var manage = await access.ScopeAsync(Capability.ManageContent);
+        if (!manage.Contains(ownerEntityId)) return ("Choose an entity you administer.", false);
+        if (!Enum.IsDefined(scope)) return ("Choose who should see this content.", false);
+        var all = await access.AllEntitiesAsync();
+        var targets = (targetIds ?? []).Distinct().ToList();
+        if (scope == ContentTargetScope.Selected)
+        {
+            if (targets.Count == 0) return ("Select at least one entity.", false);
+            if (targets.Any(t => !manage.Contains(t) || all.All(e => e.Id != t))) return ("You can only target entities you administer.", false);
+        }
+        else targets.Clear();
+
+        if (c.Id != 0) await db.Entry(c).Collection(x => x.Targets).LoadAsync();
+        var before = Describe(c.OwnerEntityId, c.TargetScope, c.Targets.Select(t => t.EntityId), c.Targets.FirstOrDefault()?.IncludeDescendants ?? true);
+        var ownerChanged = c.OwnerEntityId != ownerEntityId;
+        c.OwnerEntityId = ownerEntityId;
+        c.TargetScope = scope;
+        foreach (var t in c.Targets.Where(t => !targets.Contains(t.EntityId) || t.IncludeDescendants != includeDescendants).ToList()) c.Targets.Remove(t);
+        foreach (var t in targets.Where(t => c.Targets.All(x => x.EntityId != t))) c.Targets.Add(new ContentEntityTarget { EntityId = t, IncludeDescendants = includeDescendants });
+        if (ownerChanged && c.Id != 0)
+            await db.Assessments.Where(a => a.ContentId == c.Id).ExecuteUpdateAsync(u => u.SetProperty(a => a.OwnerEntityId, ownerEntityId));
+        var after = Describe(ownerEntityId, scope, targets, includeDescendants);
+        return (null, before != after);
+    }
+
+    /// <summary>Stable text of an audience (for the audit trail): owner, scope and target ids.</summary>
+    public static string Describe(int owner, ContentTargetScope scope, IEnumerable<int> targets, bool desc) =>
+        $"owner={owner}; scope={scope}" + (scope == ContentTargetScope.Selected ? $"; targets={string.Join(",", targets.OrderBy(x => x))}; descendants={desc}" : "");
+
+    /// <summary>Entity ids whose employees see the content (for notifications and summaries).</summary>
+    public static HashSet<int> AudienceEntityIds(Content c, IReadOnlyList<EntityNode> all)
+    {
+        var owner = all.FirstOrDefault(e => e.Id == c.OwnerEntityId);
+        IEnumerable<EntityNode> set = c.TargetScope switch
+        {
+            ContentTargetScope.OwnerOnly => owner == null ? [] : [owner],
+            ContentTargetScope.OwnerAndDescendants => owner == null ? [] : EntityTree.Subtree(all, owner),
+            _ => c.Targets.SelectMany(t => all.FirstOrDefault(e => e.Id == t.EntityId) is { } n ? (t.IncludeDescendants ? EntityTree.Subtree(all, n) : [n]) : []),
+        };
+        return set.Select(e => e.Id).ToHashSet();
+    }
+
+    /// <summary>Default audience for new content: everyone below the owner for the central administrator (central content
+    /// normally addresses all entities), the owning entity only for an entity administrator.</summary>
+    public async Task<ContentTargetScope> DefaultScopeAsync() => await access.IsCentralAsync() ? ContentTargetScope.OwnerAndDescendants : ContentTargetScope.OwnerOnly;
+
     public static readonly HtmlSanitizer Sanitizer = CreateSanitizer();
 
     private static HtmlSanitizer CreateSanitizer()
@@ -43,13 +99,21 @@ public class ContentAuthoring(AppDbContext db, StorageService storage, AuditServ
     {
         c.Status = ContentStatus.Published;
         c.PublishedAt ??= DateTime.UtcNow;
-        audit.Add("CONTENT_PUBLISHED", "Content", c.Id, c.Title);
+        audit.Add("CONTENT_PUBLISHED", "Content", c.Id, c.Title, c.OwnerEntityId);
     }
 
     public void Unpublish(Content c)
     {
         c.Status = ContentStatus.Draft;
-        audit.Add("CONTENT_UNPUBLISHED", "Content", c.Id, c.Title);
+        audit.Add("CONTENT_UNPUBLISHED", "Content", c.Id, c.Title, c.OwnerEntityId);
+    }
+
+    /// <summary>Content the current administrator may manage (owner in the ManageContent scope), or null.</summary>
+    public async Task<Content?> ScopedAsync(int id, bool track = false, bool attachments = true)
+    {
+        var q = db.Contents.InScope(await access.ScopeAsync(Capability.ManageContent)).Where(c => c.Id == id);
+        if (attachments) q = q.Include(c => c.Attachments);
+        return track ? await q.FirstOrDefaultAsync() : await q.AsNoTracking().FirstOrDefaultAsync();
     }
 
     public async Task<List<string>> SaveFiles(Content c, IEnumerable<IFormFile>? files)
@@ -125,8 +189,10 @@ public class ContentAuthoring(AppDbContext db, StorageService storage, AuditServ
         {
             Title = Cut(L.Format("{0} (copy)", src.Title), 300), Description = src.Description, Body = src.Body, Type = src.Type,
             RequiresAcknowledgment = src.RequiresAcknowledgment, AcknowledgmentText = src.AcknowledgmentText, ExternalUrl = src.ExternalUrl,
-            Status = ContentStatus.Draft, CreatedById = userId,
+            Status = ContentStatus.Draft, CreatedById = userId, OwnerEntityId = src.OwnerEntityId, TargetScope = src.TargetScope,
         };
+        foreach (var t in await db.ContentEntityTargets.AsNoTracking().Where(t => t.ContentId == id).ToListAsync())
+            copy.Targets.Add(new ContentEntityTarget { EntityId = t.EntityId, IncludeDescendants = t.IncludeDescendants });
         db.Contents.Add(copy);
         await db.SaveChangesAsync();
         foreach (var a in src.Attachments.OrderBy(a => a.Id))
@@ -138,7 +204,7 @@ public class ContentAuthoring(AppDbContext db, StorageService storage, AuditServ
         var asm = await PrimaryAssessment(id);
         if (asm != null)
         {
-            var na = new Assessment { Title = Cut(L.Format("{0} (copy)", asm.Title), 300), Description = asm.Description, ContentId = copy.Id, PassingPercentage = asm.PassingPercentage, MaxAttempts = asm.MaxAttempts };
+            var na = new Assessment { OwnerEntityId = copy.OwnerEntityId, Title = Cut(L.Format("{0} (copy)", asm.Title), 300), Description = asm.Description, ContentId = copy.Id, PassingPercentage = asm.PassingPercentage, MaxAttempts = asm.MaxAttempts };
             foreach (var q in asm.Questions.OrderBy(q => q.SortOrder).ThenBy(q => q.Id))
                 na.Questions.Add(new Question { Text = q.Text, Type = q.Type, Points = q.Points, SortOrder = q.SortOrder, Options = q.Options.OrderBy(o => o.SortOrder).Select(o => new QuestionOption { Text = o.Text, IsCorrect = o.IsCorrect, SortOrder = o.SortOrder }).ToList() });
             db.Assessments.Add(na);

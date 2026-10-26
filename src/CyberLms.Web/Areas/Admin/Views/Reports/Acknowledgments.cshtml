@@ -16,7 +16,10 @@
 </tbody></table></div>
 </div>
 <partial name="_Pager" model="Model.Pager" />
+@if (Model.CanRemind)
+{
 <form method="post" asp-action="Remind" class="mt-3" data-confirm="@L["Email a reminder to every user who has not acknowledged (for the current content filter)?"]">
-    <input type="hidden" name="kind" value="ack" /><input type="hidden" name="contentId" value="@Model.Filter.ContentId" />
+    <input type="hidden" name="entityId" value="@Model.Filter.EntityId" /><input type="hidden" name="kind" value="ack" /><input type="hidden" name="contentId" value="@Model.Filter.ContentId" />
     <button class="btn btn-outline-secondary"><i class="bi bi-envelope"></i> @L["Email a reminder to users who have not acknowledged"]</button>
 </form>
+}

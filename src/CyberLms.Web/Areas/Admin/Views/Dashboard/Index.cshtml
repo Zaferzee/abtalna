@@ -11,19 +11,30 @@
     var segs = new[] { (Val: s.Passed, Cls: "var(--color-success)"), (Val: s.Failed, Cls: "var(--color-danger)"), (Val: s.NotAttempted, Cls: "var(--color-border-strong)") };
     double offset = 0;
     var ackOf = L.Format("{0} of {1}", s.Acknowledged, ackPairs);
+    var cap = Model.Capabilities;
+    bool Has(Capability c) => Model.Central || cap.HasFlag(c);
 }
 <div class="page-head reveal">
     <div>
         <div class="eyebrow"><i class="bi bi-grid-1x2"></i> @L["Overview"]</div>
         <h1>@L["Dashboard"]</h1>
-        <p class="lead">@L["Awareness, acknowledgment and assessment status across the organization."]</p>
+        <p class="lead">@L[Model.Central ? "Awareness, acknowledgment and assessment status across all entities." : "Awareness, acknowledgment and assessment status of the entities you administer."]</p>
     </div>
     <div class="page-actions cluster">
-        <a class="btn btn-outline-primary" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line"></i> @L["Reports"]</a>
-        <a class="btn btn-primary" asp-controller="Authoring" asp-action="New"><i class="bi bi-plus-lg"></i> @L["New content"]</a>
+        @if (Has(Capability.ViewReports)) { <a class="btn btn-outline-primary" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line"></i> @L["Reports"]</a> }
+        @if (Has(Capability.ManageContent)) { <a class="btn btn-primary" asp-controller="Authoring" asp-action="New"><i class="bi bi-plus-lg"></i> @L["New content"]</a> }
     </div>
 </div>
 
+@if (!Model.Central)
+{
+    <div class="scope-banner reveal" data-scope-banner>
+        <span class="sb-ic"><i class="bi bi-diagram-3"></i></span>
+        <div class="flex-grow-1"><strong>@L["Your administration scope"]</strong>
+            <div class="cluster mt-1">@foreach (var e in Model.ScopeEntities.Take(8)) { <a class="chip-entity" asp-controller="Entities" asp-action="Details" asp-route-id="@e.Id"><i class="bi bi-building"></i> <span class="bidi">@e.Name</span></a> }</div></div>
+        <div class="cluster">@foreach (var c in CyberLms.Web.Areas.Admin.Controllers.EntitiesController.Delegable.Where(c => cap.HasFlag(c))) { <span class="cap-pill on" title="@L[Labels.Capability(c)]"><i class="bi @Labels.CapabilityIcon(c)"></i></span> }</div>
+    </div>
+}
 <div class="kpi-grid">
     <a class="kpi reveal" style="--i:0" asp-controller="Users" asp-action="Index" asp-route-role="User">
         <div class="kpi-top"><span class="icon-chip"><i class="bi bi-people"></i></span><i class="bi bi-arrow-left kpi-go flip-rtl"></i></div>
@@ -111,12 +122,13 @@
     <section class="panel reveal" style="--i:5">
         <div class="panel-head"><h2><i class="bi bi-lightning-charge"></i> @L["Quick actions"]</h2></div>
         <div class="panel-body qa-grid">
-            <a class="qa" asp-controller="Authoring" asp-action="New"><span class="icon-chip"><i class="bi bi-file-earmark-plus"></i></span>@L["New content"]</a>
-            <a class="qa" asp-controller="Assessments" asp-action="Create"><span class="icon-chip accent"><i class="bi bi-patch-plus"></i></span>@L["New assessment"]</a>
-            <a class="qa" asp-controller="Users" asp-action="Create"><span class="icon-chip"><i class="bi bi-person-plus"></i></span>@L["New user"]</a>
-            <a class="qa" asp-controller="Reports" asp-action="Assessments"><span class="icon-chip success"><i class="bi bi-bar-chart-line"></i></span>@L["Assessment results"]</a>
-            <a class="qa" asp-controller="Settings" asp-action="Index"><span class="icon-chip warning"><i class="bi bi-palette2"></i></span>@L["Branding"]</a>
-            <a class="qa" asp-controller="Audit" asp-action="Index"><span class="icon-chip neutral"><i class="bi bi-clock-history"></i></span>@L["Audit log"]</a>
+            @if (Has(Capability.ManageContent)) { <a class="qa" asp-controller="Authoring" asp-action="New"><span class="icon-chip"><i class="bi bi-file-earmark-plus"></i></span>@L["New content"]</a> }
+            @if (Has(Capability.ManageAssessments)) { <a class="qa" asp-controller="Assessments" asp-action="Create"><span class="icon-chip accent"><i class="bi bi-patch-plus"></i></span>@L["New assessment"]</a> }
+            @if (Has(Capability.ManageUsers)) { <a class="qa" asp-controller="Users" asp-action="Create"><span class="icon-chip"><i class="bi bi-person-plus"></i></span>@L["New user"]</a> }
+            @if (Has(Capability.ViewReports)) { <a class="qa" asp-controller="Reports" asp-action="Assessments"><span class="icon-chip success"><i class="bi bi-bar-chart-line"></i></span>@L["Assessment results"]</a> }
+            @if (Model.Central) { <a class="qa" asp-controller="Settings" asp-action="Index"><span class="icon-chip warning"><i class="bi bi-palette2"></i></span>@L["Branding"]</a> }
+            <a class="qa" asp-controller="Entities" asp-action="Index"><span class="icon-chip"><i class="bi bi-diagram-3"></i></span>@L[Model.Central ? "Organization" : "My entities"]</a>
+            @if (Has(Capability.ViewAudit)) { <a class="qa" asp-controller="Audit" asp-action="Index"><span class="icon-chip neutral"><i class="bi bi-clock-history"></i></span>@L["Audit log"]</a> }
         </div>
     </section>
 </div>

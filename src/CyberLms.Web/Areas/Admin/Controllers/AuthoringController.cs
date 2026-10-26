@@ -13,14 +13,34 @@ namespace CyberLms.Web.Areas.Admin.Controllers;
 /// records (basics -> write -> acknowledgment -> assessment -> preview -> publish). Every step saves to the database, so the item can be
 /// left as a draft at any point. Publishing uses the same rules as the rest of the application.
 /// </summary>
-public class AuthoringController(AppDbContext db, ContentAuthoring authoring, AuditService audit, StorageService storage) : AdminController
+[Capability(Capability.ManageContent)]
+public class AuthoringController(AppDbContext db, ContentAuthoring authoring, AuditService audit, StorageService storage, EntityAccess access) : AdminController
 {
     // ---------------------------------------------------------------- helpers
 
-    private Task<Content?> Load(int id, bool track = false)
+    /// <summary>Only content owned by an entity in the administrator's ManageContent scope (else 404). Central content is out of
+    /// reach for entity administrators.</summary>
+    private Task<Content?> Load(int id, bool track = false) => authoring.ScopedAsync(id, track);
+
+    /// <summary>Assessment changes need ManageAssessments in the owning entity.</summary>
+    private Task<bool> CanAssess(Content c) => access.CanInAsync(Capability.ManageAssessments, c.OwnerEntityId);
+
+    private async Task<BasicsStepVm> Audience(BasicsStepVm vm, Content? c)
     {
-        var q = db.Contents.Include(c => c.Attachments).Where(c => c.Id == id);
-        return track ? q.FirstOrDefaultAsync() : q.AsNoTracking().FirstOrDefaultAsync();
+        vm.Entities = await access.EntitiesAsync(Capability.ManageContent);
+        vm.Central = await access.IsCentralAsync();
+        if (c != null && !vm.Posted)
+        {
+            vm.OwnerEntityId = c.OwnerEntityId; vm.Audience = c.TargetScope;
+            vm.TargetIds = await db.ContentEntityTargets.Where(t => t.ContentId == c.Id).Select(t => t.EntityId).ToListAsync();
+            vm.TargetsIncludeDescendants = await db.ContentEntityTargets.Where(t => t.ContentId == c.Id).AllAsync(t => t.IncludeDescendants);
+        }
+        else if (c == null && !vm.Posted)
+        {
+            vm.OwnerEntityId = await access.DefaultEntityAsync(Capability.ManageContent) ?? 0;
+            vm.Audience = await authoring.DefaultScopeAsync();
+        }
+        return vm;
     }
 
     private async Task<T> Fill<T>(T vm, Content c) where T : AuthorPageVm
@@ -51,13 +71,13 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
 
     // ---------------------------------------------------------------- step 1: basics
 
-    public IActionResult New() => View("Basics", new BasicsStepVm());
+    public async Task<IActionResult> New() => View("Basics", await Audience(new BasicsStepVm(), null));
 
     public async Task<IActionResult> Basics(int id)
     {
         var c = await Load(id);
         if (c == null) return NotFound();
-        return View(await Fill(new BasicsStepVm { Title = c.Title, Type = c.Type, Description = c.Description }, c));
+        return View(await Audience(await Fill(new BasicsStepVm { Title = c.Title, Type = c.Type, Description = c.Description }, c), c));
     }
 
     [HttpPost]
@@ -65,17 +85,25 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
     {
         Content? c = null;
         if (id is > 0) { c = await Load(id.Value, track: true); if (c == null) return NotFound(); }
+        vm.Posted = true;
         if (!Enum.IsDefined(vm.Type)) ModelState.AddModelError(nameof(vm.Type), L["Choose a content type."]);
-        if (!ModelState.IsValid) return c == null ? View(vm) : View(await Fill(vm, c));
-        if (c == null)
+        if (!ModelState.IsValid) return c == null ? View(await Audience(vm, null)) : View(await Audience(await Fill(vm, c), c));
+        var isNew = c == null;
+        c ??= new Content { CreatedById = User.UserId(), Status = ContentStatus.Draft };
+        var (error, changed) = await authoring.ApplyAudienceAsync(c, vm.OwnerEntityId, vm.Audience, vm.TargetIds, vm.TargetsIncludeDescendants);
+        if (error != null)
         {
-            c = new Content { CreatedById = User.UserId(), Status = ContentStatus.Draft };
-            db.Contents.Add(c);
+            ModelState.AddModelError("", L[error]);
+            if (isNew) { db.ChangeTracker.Clear(); return View(await Audience(vm, null)); }
+            db.ChangeTracker.Clear();
+            return View(await Audience(await Fill(vm, (await Load(c.Id))!), c));
         }
-        else c.UpdatedAt = DateTime.UtcNow;
+        if (isNew) db.Contents.Add(c); else c.UpdatedAt = DateTime.UtcNow;
         c.Title = vm.Title.Trim(); c.Type = vm.Type; c.Description = string.IsNullOrWhiteSpace(vm.Description) ? null : vm.Description.Trim();
         await db.SaveChangesAsync();
-        audit.Add(id is > 0 ? "CONTENT_UPDATED" : "CONTENT_CREATED", "Content", c.Id, c.Title);
+        audit.Add(id is > 0 ? "CONTENT_UPDATED" : "CONTENT_CREATED", "Content", c.Id, c.Title, c.OwnerEntityId);
+        if (changed || isNew)
+            audit.Add("CONTENT_TARGETING_CHANGED", "Content", c.Id, ContentAuthoring.Describe(c.OwnerEntityId, c.TargetScope, c.Targets.Select(t => t.EntityId), vm.TargetsIncludeDescendants), c.OwnerEntityId);
         await db.SaveChangesAsync();
         return Go(c, go ?? "next", AuthorStep.Basics);
     }
@@ -200,6 +228,7 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
     {
         var c = await Load(id);
         if (c == null) return NotFound();
+        if (!await CanAssess(c)) return Forbid();
         var a = await db.Assessments.Where(x => x.ContentId == id).OrderBy(x => x.Id).FirstOrDefaultAsync();
         if (!include)
         {
@@ -219,7 +248,7 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
         if (!ModelState.IsValid)
             return View(nameof(Assessment), await BuildAssessment(c, new AssessmentStepVm { Include = true, Settings = settings }));
         var created = a == null;
-        a ??= new Assessment { ContentId = id };
+        a ??= new Assessment { ContentId = id, OwnerEntityId = c.OwnerEntityId };
         a.Title = settings.Title.Trim(); a.Description = string.IsNullOrWhiteSpace(settings.Description) ? null : settings.Description.Trim();
         a.PassingPercentage = settings.PassingPercentage; a.MaxAttempts = settings.MaxAttempts;
         if (created) db.Assessments.Add(a); else a.UpdatedAt = DateTime.UtcNow;
@@ -239,6 +268,7 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
     {
         var c = await Load(id);
         if (c == null) return NotFound();
+        if (!await CanAssess(c)) return Forbid();
         var a = await db.Assessments.Where(x => x.ContentId == id).OrderBy(x => x.Id).FirstOrDefaultAsync();
         if (a == null) return RedirectToAction(nameof(Assessment), new { id });
         if (await authoring.QuestionsLocked(a.Id)) { Failure("This assessment already has attempts; its questions are locked. Duplicate it to change questions."); return RedirectToAction(nameof(Assessment), new { id }); }
@@ -274,6 +304,8 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
     [HttpPost]
     public async Task<IActionResult> DeleteQuestion(int id, int questionId)
     {
+        if (await Load(id) is not { } owner) return NotFound();
+        if (!await CanAssess(owner)) return Forbid();
         var q = await db.Questions.Include(x => x.Assessment).FirstOrDefaultAsync(x => x.Id == questionId && x.Assessment.ContentId == id);
         if (q == null) return NotFound();
         if (await authoring.QuestionsLocked(q.AssessmentId)) { Failure("Questions are locked because attempts exist."); return RedirectToAction(nameof(Assessment), new { id }); }
@@ -287,6 +319,8 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
     [HttpPost]
     public async Task<IActionResult> MoveQuestion(int id, int questionId, int dir)
     {
+        if (await Load(id) is not { } owner) return NotFound();
+        if (!await CanAssess(owner)) return Forbid();
         var q = await db.Questions.Include(x => x.Assessment).FirstOrDefaultAsync(x => x.Id == questionId && x.Assessment.ContentId == id);
         if (q == null) return NotFound();
         if (await authoring.QuestionsLocked(q.AssessmentId)) { Failure("Questions are locked because attempts exist."); return RedirectToAction(nameof(Assessment), new { id }); }
@@ -342,6 +376,7 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
     {
         var c = await Load(id, track: true);
         if (c == null) return NotFound();
+        if (go is "publish" or "unpublish" && !await access.CanInAsync(Capability.PublishContent, c.OwnerEntityId)) return Forbid();
         var a = await authoring.PrimaryAssessment(id, track: true);
         IActionResult Done() => back == "list" ? RedirectToAction("Index", "Content") : RedirectToAction(nameof(Publish), new { id });
         switch (go)
@@ -370,7 +405,7 @@ public class AuthoringController(AppDbContext db, ContentAuthoring authoring, Au
     [HttpPost]
     public async Task<IActionResult> Copy(int id)
     {
-        if (!await db.Contents.AnyAsync(c => c.Id == id)) return NotFound();
+        if (await Load(id) == null) return NotFound();
         var copy = await authoring.CopyAsync(id, User.UserId());
         Success("A copy was created as a draft. Review it before publishing.");
         return RedirectToAction(nameof(Basics), new { id = copy.Id });

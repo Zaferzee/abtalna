@@ -20,7 +20,10 @@
 </tbody></table></div>
 </div>
 <partial name="_Pager" model="Model.Pager" />
+@if (Model.CanRemind)
+{
 <form method="post" asp-action="Remind" class="mt-3" data-confirm="@L["Email a reminder to every user who has not attempted (for the current assessment filter)?"]">
-    <input type="hidden" name="kind" value="assessment" /><input type="hidden" name="assessmentId" value="@Model.Filter.AssessmentId" />
+    <input type="hidden" name="entityId" value="@Model.Filter.EntityId" /><input type="hidden" name="kind" value="assessment" /><input type="hidden" name="assessmentId" value="@Model.Filter.AssessmentId" />
     <button class="btn btn-outline-secondary"><i class="bi bi-envelope"></i> @L["Email a reminder to users who have not attempted"]</button>
 </form>
+}

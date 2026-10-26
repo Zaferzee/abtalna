@@ -1,0 +1,32 @@
+@model EntityFormVm
+@{
+    ViewData["Title"] = Model.Id == 0 ? L["New entity"] : L["Edit entity"];
+}
+<nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">@L["Organization"]</a></li><li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li></ol></nav>
+<div class="page-head reveal"><div><div class="eyebrow"><i class="bi bi-building"></i> @L["Organization"]</div><h1>@ViewData["Title"]</h1></div></div>
+<form method="post" class="row g-3 reveal" style="--i:1" novalidate>
+    <div class="col-lg-6"><div class="panel"><div class="panel-head"><h2><i class="bi bi-card-heading"></i> @L["Entity details"]</h2></div><div class="panel-body stack" style="--gap:1rem">
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
+        <div><label class="form-label" for="f-Name">@L["Entity name"]</label><input class="form-control bidi" id="f-Name" name="Name" value="@Model.Name" maxlength="300" required /></div>
+        <div><label class="form-label" for="f-Code">@L["Entity code"]</label><input class="form-control" dir="ltr" id="f-Code" name="Code" value="@Model.Code" maxlength="50" required /><div class="form-text">@L["Short unique code, e.g. MOH or AGY-01."]</div></div>
+        @if (!Model.IsRoot)
+        {
+            <div><label class="form-label" for="f-ParentEntityId">@L["Parent entity"]</label>@await Html.PartialAsync("_EntitySelect", new EntitySelectVm("ParentEntityId", Model.Parents, Model.ParentEntityId, null, null, true))<div class="form-text">@L["Any depth is supported: ministry, agency, general directorate, department…"]</div></div>
+            <div class="form-check form-switch"><input type="hidden" name="IsActive" value="false" /><input class="form-check-input" type="checkbox" id="f-IsActive" name="IsActive" value="true" checked="@Model.IsActive" /><label class="form-check-label" for="f-IsActive">@L["Active"]<small class="d-block text-muted">@L["Disabling an entity blocks sign-in for its users and all its sub-entities and suspends its administrators."]</small></label></div>
+        }
+        else { <input type="hidden" name="IsActive" value="true" /><p class="form-text"><i class="bi bi-star"></i> @L["This is the root entity: the central organization. It always holds every capability."]</p> }
+    </div></div></div>
+    @if (!Model.IsRoot)
+    {
+    <div class="col-lg-6"><div class="panel"><div class="panel-head"><h2><i class="bi bi-shield-lock"></i> @L["What this entity may be delegated"]</h2></div><div class="panel-body">
+        <p class="form-text mt-0">@L["A ceiling set by the central administrator: administrators of this entity can only exercise capabilities allowed here, whatever is granted to them."]</p>
+        <div class="cap-grid">
+        @foreach (var c in CyberLms.Web.Areas.Admin.Controllers.EntitiesController.Delegable)
+        {
+            <label class="cap-opt"><input type="checkbox" class="form-check-input" name="Allowed" value="@c" checked="@Model.Allowed.Contains(c)" /><i class="bi @Labels.CapabilityIcon(c)"></i><span>@L[Labels.Capability(c)]</span></label>
+        }
+        </div>
+    </div></div></div>
+    }
+    <div class="col-12"><button class="btn btn-primary btn-lg"><i class="bi bi-check2"></i> @L["Save"]</button> <a class="btn btn-ghost" asp-action="@(Model.Id == 0 ? "Index" : "Details")" asp-route-id="@(Model.Id == 0 ? null : Model.Id)">@L["Cancel"]</a></div>
+</form>

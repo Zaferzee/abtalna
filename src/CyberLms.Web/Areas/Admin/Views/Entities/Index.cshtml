@@ -1,0 +1,59 @@
+@model EntityListVm
+@{
+    ViewData["Title"] = L["Organization"];
+    var minDepth = Model.Rows.Count > 0 ? Model.Rows.Min(r => r.Node.Depth) : 0;
+}
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-diagram-3"></i> @L["Central governance"]</div>
+        <h1>@L["Organization and entities"]</h1>
+        <p class="lead">@L["One platform, one governance: entities receive delegated administration; the central administrator keeps visibility and control over the whole hierarchy."]</p>
+    </div>
+    @if (Model.Central) { <div class="page-actions"><a class="btn btn-primary btn-lg" asp-action="Create"><i class="bi bi-plus-lg"></i> @L["New entity"]</a></div> }
+</div>
+
+<div class="org-grid reveal" style="--i:1">
+    <section class="panel org-tree-panel">
+        <div class="panel-head"><h2><i class="bi bi-diagram-3"></i> @L["Hierarchy"]</h2><span class="small text-muted">@L.Format("{0} entities", Model.Rows.Count)</span></div>
+        <div class="panel-body">
+            <ul class="org-tree" role="tree">
+                @foreach (var r in Model.Rows)
+                {
+                    var n = r.Node;
+                    <li role="treeitem" class="ot-node @(n.EffectiveActive ? "" : "is-off")" style="--d:@(n.Depth - minDepth)">
+                        <a asp-action="Details" asp-route-id="@n.Id" class="ot-link">
+                            <span class="ot-icon"><i class="bi @(n.IsRoot ? "bi-bank2" : r.Children > 0 ? "bi-buildings" : "bi-building")"></i></span>
+                            <span class="ot-text"><strong class="bidi">@n.Name</strong><small dir="ltr">@n.Code</small></span>
+                            <span class="ot-meta"><i class="bi bi-people"></i> @r.SubtreeUsers</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </section>
+
+    <section class="card table-card">
+        <div class="table-responsive"><table class="table table-hover mb-0 entity-table">
+        <thead><tr><th>@L["Entity"]</th><th>@L["Parent entity"]</th><th>@L["Status"]</th><th>@L["Users"]</th><th>@L["Administrators"]</th><th>@L["Branding"]</th><th>@L["Directory"]</th><th><span class="visually-hidden">@L["Actions"]</span></th></tr></thead>
+        <tbody>
+        @foreach (var r in Model.Rows)
+        {
+            var n = r.Node;
+            <tr>
+                <td><div class="t-title"><span class="icon-chip"><i class="bi @(n.IsRoot ? "bi-bank2" : "bi-building")"></i></span><div><a class="t-name bidi" asp-action="Details" asp-route-id="@n.Id">@n.Name</a><small class="d-block text-muted" dir="ltr">@n.Code · L@(n.Depth)</small></div></div></td>
+                <td class="bidi">@(r.Parent?.Name ?? "—")</td>
+                <td><span class="badge badge-dot text-bg-@(n.EffectiveActive ? "success" : "secondary")">@L[n.EffectiveActive ? "Active" : "Disabled"]</span></td>
+                <td><span title="@L["Own / including sub-entities"]">@r.Users <small class="text-muted">/ @r.SubtreeUsers</small></span></td>
+                <td>@r.Admins</td>
+                <td>@if (n.IsRoot) { <span class="chip-scope"><i class="bi bi-star"></i> @L["Central"]</span> } else if (r.CustomBranding) { <span class="chip-entity"><i class="bi bi-palette2"></i> @L["Custom"]</span> } else { <span class="chip-scope">@L["Inherited"]</span> }</td>
+                <td>@switch (r.Directory) { case "enabled": <span class="chip-entity"><i class="bi bi-hdd-network"></i> @L["Configured"]</span> break; case "disabled": <span class="chip-scope">@L["Disabled"]</span> break; default: <span class="text-muted small">@L["No directory source"]</span> break; }</td>
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-ghost btn-icon" asp-action="Details" asp-route-id="@n.Id" title="@L["Open"]" aria-label="@L["Open"]"><i class="bi bi-box-arrow-in-left flip-rtl"></i></a>
+                    @if (Model.Central) { <a class="btn btn-sm btn-ghost btn-icon" asp-action="Edit" asp-route-id="@n.Id" title="@L["Edit"]" aria-label="@L["Edit"]"><i class="bi bi-pencil"></i></a>
+                                          <a class="btn btn-sm btn-ghost btn-icon" asp-action="Create" asp-route-parentId="@n.Id" title="@L["Add sub-entity"]" aria-label="@L["Add sub-entity"]"><i class="bi bi-node-plus"></i></a> }
+                </td>
+            </tr>
+        }
+        </tbody></table></div>
+    </section>
+</div>

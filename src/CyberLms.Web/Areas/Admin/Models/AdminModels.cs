@@ -64,6 +64,8 @@ public class UserFormVm
     [StringLength(256), Display(Name = "Department")] public string? Department { get; set; }
     public bool IsAdmin { get; set; }
     public bool IsActive { get; set; } = true;
+    /// <summary>Primary entity (must be in the administrator's scope).</summary>
+    public int EntityId { get; set; }
     public string AuthSource { get; set; } = "Local";
     [DataType(DataType.Password), Display(Name = "Password")] public string? Password { get; set; }
 }
@@ -73,6 +75,7 @@ public class UserListVm
     public List<User> Items { get; set; } = new();
     public string? Q { get; set; }
     public string? Role { get; set; }
+    public int? EntityId { get; set; }
     public Pager Pager { get; set; } = new();
 }
 
@@ -85,9 +88,22 @@ public class ReportVm
     public List<AttemptRow> Attempts { get; set; } = new();
     public List<Assessment> AllAssessments { get; set; } = new();
     public List<Content> AllContent { get; set; } = new();
+    public List<EntityNode> Entities { get; set; } = new();
+    public List<EntityBreakdownRow> Breakdown { get; set; } = new();
+    public EntityNode? DrillEntity { get; set; }
+    public bool CanExport { get; set; }
+    public bool CanRemind { get; set; }
 }
 
-public class DashboardVm { public ReportService.Summary S { get; set; } = null!; public List<AuditLog> Recent { get; set; } = new(); }
+public class DashboardVm
+{
+    public ReportService.Summary S { get; set; } = null!;
+    public List<AuditLog> Recent { get; set; } = new();
+    public bool Central { get; set; }
+    /// <summary>Entities an entity administrator works in (empty for the central administrator).</summary>
+    public List<EntityNode> ScopeEntities { get; set; } = new();
+    public Capability Capabilities { get; set; }
+}
 
 public class AttemptDetailVm
 {
@@ -111,4 +127,67 @@ public class SettingsVm
     public string? SmtpUsername { get; set; }
     public string SmtpSecurity { get; set; } = "Auto";
     public bool SmtpPasswordConfigured { get; set; }
+}
+
+// ===================================================================== organization / entities
+
+public class EntityRowVm
+{
+    public EntityNode Node { get; set; } = null!;
+    public EntityNode? Parent { get; set; }
+    public int Users { get; set; }
+    public int SubtreeUsers { get; set; }
+    public int Admins { get; set; }
+    public int Children { get; set; }
+    public bool CustomBranding { get; set; }
+    /// <summary>none | enabled | disabled</summary>
+    public string Directory { get; set; } = "none";
+}
+
+public class EntityListVm { public List<EntityRowVm> Rows { get; set; } = new(); public bool Central { get; set; } }
+
+public class EntityFormVm
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string Code { get; set; } = "";
+    public int? ParentEntityId { get; set; }
+    public bool IsActive { get; set; } = true;
+    public List<Capability> Allowed { get; set; } = new();
+    public List<EntityNode> Parents { get; set; } = new();
+    public bool IsRoot { get; set; }
+}
+
+public class DirectoryFormVm
+{
+    public bool Enabled { get; set; }
+    public string? Domain { get; set; }
+    public string? LdapPath { get; set; }
+    public string? SearchBase { get; set; }
+    public string? BindUser { get; set; }
+    /// <summary>Write-only; never rendered back.</summary>
+    public string? BindSecret { get; set; }
+    public bool ClearSecret { get; set; }
+}
+
+public class EntityDetailsVm
+{
+    public EntityNode Node { get; set; } = null!;
+    public string Tab { get; set; } = "overview";
+    public bool Central { get; set; }
+    public Capability MyCapabilities { get; set; }
+    public List<EntityNode> Ancestors { get; set; } = new();
+    public List<EntityNode> Children { get; set; } = new();
+    public int UsersOwn { get; set; }
+    public int UsersSubtree { get; set; }
+    public int ContentOwned { get; set; }
+    public bool CustomBranding { get; set; }
+    public List<EntityAdminAssignment> Admins { get; set; } = new();
+    public EntityDirectorySource? Directory { get; set; }
+    public bool DirectorySecretSet { get; set; }
+    public List<User> Users { get; set; } = new();
+    public List<Content> ContentOwnedList { get; set; } = new();
+    public List<Content> ContentTargeted { get; set; } = new();
+    public List<EntityBreakdownRow> Breakdown { get; set; } = new();
+    public List<AuditLog> Audit { get; set; } = new();
 }

@@ -1,0 +1,49 @@
+@model ReportVm
+@{
+    ViewData["Title"] = L["Reports"];
+    string Rate(decimal? r) => r == null ? "-" : r.Value.ToString("0.#") + "%";
+    string Tone(decimal? r) => r == null ? "" : r >= 80 ? "ok" : r >= 50 ? "mid" : "bad";
+}
+<partial name="_Head" />
+<partial name="_Tabs" />
+<form class="panel filters mb-3" method="get" role="search">
+    <div><label class="form-label" for="f-ent">@L["Drill down into"]</label>@await Html.PartialAsync("_EntitySelect", new EntitySelectVm("entityId", Model.Entities, Model.Filter.EntityId, L["Top level"], "f-ent"))</div>
+    <div class="d-flex gap-2"><button class="btn btn-primary"><i class="bi bi-funnel"></i> @L["Show"]</button></div>
+</form>
+@if (Model.DrillEntity is { } d)
+{
+    <nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb">
+        @foreach (var id in d.AncestorIds)
+        {
+            var n = Model.Entities.FirstOrDefault(e => e.Id == id);
+            if (n == null) continue;
+            if (id == d.Id) { <li class="breadcrumb-item active" aria-current="page">@n.Name</li> }
+            else { <li class="breadcrumb-item"><a asp-action="Entities" asp-route-entityId="@n.Id">@n.Name</a></li> }
+        }
+    </ol></nav>
+}
+<div class="card table-card reveal" style="--i:1">
+<div class="table-responsive"><table class="table table-hover mb-0 entity-compare">
+<thead><tr><th>@L["Entity"]</th><th>@L["Employees"]</th><th>@L["Completion rate"]</th><th>@L["Acknowledgment rate"]</th><th>@L["Pass rate"]</th><th>@L["Passed"]</th><th>@L["Failed"]</th><th>@L["Not attempted"]</th><th></th></tr></thead><tbody>
+@foreach (var r in Model.Breakdown)
+{
+    var self = Model.DrillEntity?.Id == r.Entity.Id || (Model.DrillEntity == null && r.Entity.IsRoot);
+    <tr class="@(self ? "row-total" : "")">
+        <td><div class="t-title"><span class="icon-chip"><i class="bi @(r.Entity.IsRoot ? "bi-bank" : "bi-building")"></i></span><div><strong class="bidi">@r.Entity.Name</strong><small dir="ltr" class="d-block text-muted">@r.Entity.Code@(self ? " · " + L["whole subtree"] : "")</small></div></div></td>
+        <td>@r.Employees</td>
+        @foreach (var rate in new[] { r.CompletionRate, r.AckRate, r.PassRate })
+        {
+            <td><div class="score-cell"><div class="meter"><span class="@Tone(rate)" data-w="@(rate ?? 0)"></span></div><bdi dir="ltr">@Rate(rate)</bdi></div></td>
+        }
+        <td>@r.Passed</td><td>@r.Failed</td><td>@r.NotAttempted</td>
+        <td class="text-end text-nowrap">
+            @if (!self && Model.Entities.Any(e => e.ParentId == r.Entity.Id)) { <a class="btn btn-sm btn-ghost" asp-action="Entities" asp-route-entityId="@r.Entity.Id" title="@L["Drill down"]"><i class="bi bi-zoom-in"></i></a> }
+            <a class="btn btn-sm btn-ghost" asp-action="Assessments" asp-route-entityId="@r.Entity.Id" title="@L["Assessment results"]"><i class="bi bi-clipboard-data"></i></a>
+            <a class="btn btn-sm btn-ghost" asp-action="Acknowledgments" asp-route-entityId="@r.Entity.Id" title="@L["Acknowledgments"]"><i class="bi bi-check2-square"></i></a>
+        </td>
+    </tr>
+}
+@if (Model.Breakdown.Count == 0) { <tr><td colspan="9"><div class="empty py-4"><div class="empty-icon"><i class="bi bi-diagram-3"></i></div><p>@L["No entities in your scope."]</p></div></td></tr> }
+</tbody></table></div>
+</div>
+<p class="form-text mt-2"><i class="bi bi-info-circle"></i> @L["Completion rate = acknowledgments given + assessments passed, divided by all acknowledgment and assessment requirements of the entity's employees (including its sub-entities). Only content targeted to each employee is counted."]</p>

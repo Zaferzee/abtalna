@@ -3,7 +3,10 @@
     var isAdminArea = (string?)ViewContext.RouteData.Values["area"] == "Admin";
     var ctl = (string?)ViewContext.RouteData.Values["controller"];
     var act = (string?)ViewContext.RouteData.Values["action"];
-    var isAdmin = User.IsInRole(RoleNames.Admin);
+    // navigation mirrors EntityAccess (the server enforces the same rules on every request)
+    var central = User.IsInRole(RoleNames.Admin);
+    var isAdmin = User.Identity?.IsAuthenticated == true && await Access.IsAdminAsync();
+    async Task<bool> Can(Capability c) => await Access.CanAsync(c);
     var navPolicies = act == "Policies" || (string?)ViewData["Nav"] == "Policies";
     var displayName = User.FindFirst("display_name")?.Value ?? User.Identity?.Name ?? "";
     var initial = displayName.Trim().Length > 0 ? displayName.Trim()[0].ToString() : "؟";
@@ -41,15 +44,25 @@
             {
                 <div class="sb-label">@L["Overview"]</div>
                 <a class="sb-link @Active("Dashboard", true)" aria-current="@Aria("Dashboard", true)" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-grid-1x2"></i><span>@L["Dashboard"]</span></a>
-                <div class="sb-label">@L["Manage"]</div>
-                <a class="sb-link @Active("Content", true)" aria-current="@Aria("Content", true)" asp-area="Admin" asp-controller="Content" asp-action="Index"><i class="bi bi-journal-richtext"></i><span>@L["Content Management"]</span></a>
-                <a class="sb-link @Active("Assessments", true)" aria-current="@Aria("Assessments", true)" asp-area="Admin" asp-controller="Assessments" asp-action="Index"><i class="bi bi-patch-question"></i><span>@L["Assessments"]</span></a>
-                <a class="sb-link @Active("Users", true)" aria-current="@Aria("Users", true)" asp-area="Admin" asp-controller="Users" asp-action="Index"><i class="bi bi-people"></i><span>@L["Users"]</span></a>
-                <div class="sb-label">@L["Insights"]</div>
-                <a class="sb-link @Active("Reports", true)" aria-current="@Aria("Reports", true)" asp-area="Admin" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line"></i><span>@L["Reports"]</span></a>
-                <a class="sb-link @Active("Audit", true)" aria-current="@Aria("Audit", true)" asp-area="Admin" asp-controller="Audit" asp-action="Index"><i class="bi bi-clock-history"></i><span>@L["Audit log"]</span></a>
-                <div class="sb-label">@L["System"]</div>
-                <a class="sb-link @Active("Settings", true)" aria-current="@Aria("Settings", true)" asp-area="Admin" asp-controller="Settings" asp-action="Index"><i class="bi bi-palette2"></i><span>@L["Settings"]</span></a>
+                <a class="sb-link @Active("Entities", true)@(ctl == "EntityBranding" ? " active" : "")" aria-current="@Aria("Entities", true)" asp-area="Admin" asp-controller="Entities" asp-action="Index"><i class="bi bi-diagram-3"></i><span>@L[central ? "Organization" : "My entities"]</span></a>
+                @if (await Can(Capability.ManageContent) || await Can(Capability.ManageAssessments) || await Can(Capability.ManageUsers))
+                {
+                    <div class="sb-label">@L["Manage"]</div>
+                    @if (await Can(Capability.ManageContent)) { <a class="sb-link @Active("Content", true)" aria-current="@Aria("Content", true)" asp-area="Admin" asp-controller="Content" asp-action="Index"><i class="bi bi-journal-richtext"></i><span>@L["Content Management"]</span></a> }
+                    @if (await Can(Capability.ManageAssessments)) { <a class="sb-link @Active("Assessments", true)" aria-current="@Aria("Assessments", true)" asp-area="Admin" asp-controller="Assessments" asp-action="Index"><i class="bi bi-patch-question"></i><span>@L["Assessments"]</span></a> }
+                    @if (await Can(Capability.ManageUsers)) { <a class="sb-link @Active("Users", true)" aria-current="@Aria("Users", true)" asp-area="Admin" asp-controller="Users" asp-action="Index"><i class="bi bi-people"></i><span>@L["Users"]</span></a> }
+                }
+                @if (await Can(Capability.ViewReports) || await Can(Capability.ViewAudit))
+                {
+                    <div class="sb-label">@L["Insights"]</div>
+                    @if (await Can(Capability.ViewReports)) { <a class="sb-link @Active("Reports", true)" aria-current="@Aria("Reports", true)" asp-area="Admin" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line"></i><span>@L["Reports"]</span></a> }
+                    @if (await Can(Capability.ViewAudit)) { <a class="sb-link @Active("Audit", true)" aria-current="@Aria("Audit", true)" asp-area="Admin" asp-controller="Audit" asp-action="Index"><i class="bi bi-clock-history"></i><span>@L["Audit log"]</span></a> }
+                }
+                @if (central)
+                {
+                    <div class="sb-label">@L["System"]</div>
+                    <a class="sb-link @Active("Settings", true)" aria-current="@Aria("Settings", true)" asp-area="Admin" asp-controller="Settings" asp-action="Index"><i class="bi bi-palette2"></i><span>@L["Settings"]</span></a>
+                }
             }
             else
             {
@@ -69,7 +82,7 @@
             }
             <div class="sb-user">
                 <span class="avatar avatar-sm">@initial</span>
-                <span class="sb-user-names"><strong class="bidi">@displayName</strong><small>@L[isAdmin ? "Role: Administrator" : "Role: Employee"]</small></span>
+                <span class="sb-user-names"><strong class="bidi">@displayName</strong><small>@L[central ? "Role: Central administrator" : isAdmin ? "Role: Entity administrator" : "Role: Employee"]</small></span>
             </div>
         </div>
     </aside>

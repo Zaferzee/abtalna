@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CyberLms.Web.Areas.Admin.Controllers;
 
+/// <summary>System-wide settings (general, SMTP, central branding and the login page): central administrator only.
+/// Entity branding overrides are managed per entity (EntityBrandingController).</summary>
+[CentralOnly]
 public class SettingsController(SettingsService settings, AppDbContext db, StorageService storage, AuditService audit, SmtpConfigProvider smtp, IConfiguration cfg, ILogger<SettingsController> log) : AdminController
 {
     private SettingsVm Load()

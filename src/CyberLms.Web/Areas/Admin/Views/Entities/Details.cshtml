@@ -1,0 +1,226 @@
+@model EntityDetailsVm
+@{
+    var n = Model.Node;
+    ViewData["Title"] = n.Name;
+    var caps = Model.MyCapabilities;
+    var canAdmins = Model.Central || caps.HasFlag(Capability.ManageAdmins);
+    var grantable = caps & n.Allowed;
+    var names = (Dictionary<int, string>)ViewBag.EntityNames;
+    var tabs = new List<(string Key, string Label, string Icon, bool Show)>
+    {
+        ("overview", "Overview", "bi-grid-1x2", true),
+        ("admins", "Administrators & permissions", "bi-person-gear", true),
+        ("users", "Users", "bi-people", caps.HasFlag(Capability.ManageUsers)),
+        ("branding", "Branding", "bi-palette2", true),
+        ("directory", "Directory integration", "bi-hdd-network", true),
+        ("content", "Content", "bi-journal-richtext", true),
+        ("reports", "Reports", "bi-bar-chart-line", caps.HasFlag(Capability.ViewReports)),
+        ("audit", "Audit", "bi-clock-history", caps.HasFlag(Capability.ViewAudit)),
+    };
+    string Rate(decimal? r) => r == null ? "-" : r.Value.ToString("0.#") + "%";
+}
+<nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb">
+    <li class="breadcrumb-item"><a asp-action="Index">@L["Organization"]</a></li>
+    @foreach (var a in Model.Ancestors.Where(a => a.Id != n.Id)) { <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@a.Id">@a.Name</a></li> }
+    <li class="breadcrumb-item active" aria-current="page">@n.Name</li>
+</ol></nav>
+
+<div class="entity-hero reveal">
+    <span class="eh-icon"><i class="bi @(n.IsRoot ? "bi-bank2" : "bi-building")"></i></span>
+    <div class="eh-text">
+        <div class="eyebrow">@L[n.IsRoot ? "Root entity" : "Entity"] · <bdi dir="ltr">@n.Code</bdi></div>
+        <h1 class="bidi">@n.Name</h1>
+        <div class="cluster">
+            <span class="badge badge-dot text-bg-@(n.EffectiveActive ? "success" : "secondary")">@L[n.EffectiveActive ? "Active" : "Disabled"]</span>
+            <span class="chip-scope"><i class="bi bi-people"></i> @L.Format("{0} users ({1} with sub-entities)", Model.UsersOwn, Model.UsersSubtree)</span>
+            <span class="chip-scope"><i class="bi bi-person-gear"></i> @L.Format("{0} administrators", Model.Admins.Count)</span>
+        </div>
+    </div>
+    @if (Model.Central)
+    {
+        <div class="eh-actions"><a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@n.Id"><i class="bi bi-pencil"></i> @L["Edit"]</a> <a class="btn btn-outline-secondary" asp-action="Create" asp-route-parentId="@n.Id"><i class="bi bi-node-plus"></i> @L["Add sub-entity"]</a></div>
+    }
+</div>
+
+<nav class="nav nav-tabs mb-3 entity-tabs" aria-label="@L["Entity sections"]">
+    @foreach (var t in tabs.Where(t => t.Show))
+    {
+        <a class="nav-link @(Model.Tab == t.Key ? "active" : "")" aria-current="@(Model.Tab == t.Key ? "page" : null)" asp-action="Details" asp-route-id="@n.Id" asp-route-tab="@t.Key"><i class="bi @t.Icon"></i> @L[t.Label]</a>
+    }
+</nav>
+
+@switch (Model.Tab)
+{
+    case "admins":
+        <div class="row g-3">
+            <div class="col-xl-7">
+                <section class="panel"><div class="panel-head"><h2><i class="bi bi-person-gear"></i> @L["Entity administrators"]</h2></div>
+                <div class="panel-body stack" style="--gap:.9rem">
+                    @if (Model.Admins.Count == 0) { <div class="empty py-3"><div class="empty-icon"><i class="bi bi-person-gear"></i></div><p>@L["No administrators assigned to this entity yet."]</p></div> }
+                    @foreach (var a in Model.Admins)
+                    {
+                        var editable = canAdmins && a.UserId != User.UserId() && (Model.Central || (a.Capabilities & ~grantable) == 0);
+                        <form method="post" asp-action="UpdateAdmin" asp-route-id="@n.Id" class="admin-card">
+                            <input type="hidden" name="assignmentId" value="@a.Id" />
+                            <div class="ac-head">
+                                <span class="avatar avatar-sm">@(a.User.DisplayName.Trim().Length > 0 ? a.User.DisplayName.Trim()[0] : '?')</span>
+                                <div class="min-w-0"><strong class="bidi">@a.User.DisplayName</strong><small dir="ltr" class="d-block text-muted">@a.User.Username</small></div>
+                                <span class="chip-scope ms-auto"><i class="bi @(a.IncludeDescendants ? "bi-diagram-3-fill" : "bi-building")"></i> @L[a.IncludeDescendants ? "Entity and sub-entities" : "This entity only"]</span>
+                            </div>
+                            <div class="cap-grid compact">
+                                @foreach (var c in CyberLms.Web.Areas.Admin.Controllers.EntitiesController.Delegable)
+                                {
+                                    var allowedHere = n.Allowed.HasFlag(c);
+                                    <label class="cap-opt @(allowedHere ? "" : "is-blocked")" title="@(allowedHere ? "" : L["Not allowed for this entity by the central administrator"])"><input type="checkbox" class="form-check-input" name="caps" value="@c" checked="@a.Capabilities.HasFlag(c)" disabled="@(!editable || !grantable.HasFlag(c))" /><i class="bi @Labels.CapabilityIcon(c)"></i><span>@L[Labels.Capability(c)]</span></label>
+                                }
+                            </div>
+                            @if (editable)
+                            {
+                                <div class="ac-actions">
+                                    <div class="form-check form-switch m-0"><input type="hidden" name="includeDescendants" value="false" /><input class="form-check-input" type="checkbox" id="desc-@a.Id" name="includeDescendants" value="true" checked="@a.IncludeDescendants" /><label class="form-check-label" for="desc-@a.Id">@L["Also for sub-entities"]</label></div>
+                                    <button class="btn btn-sm btn-primary"><i class="bi bi-check2"></i> @L["Save permissions"]</button>
+                                    <button class="btn btn-sm btn-outline-danger" formaction="@Url.Action("RevokeAdmin", new { id = n.Id })" data-confirm-click="@L["Remove this administrator from the entity?"]"><i class="bi bi-person-dash"></i> @L["Remove"]</button>
+                                </div>
+                            }
+                        </form>
+                    }
+                </div></section>
+            </div>
+            <div class="col-xl-5">
+                @if (canAdmins)
+                {
+                    <section class="panel"><div class="panel-head"><h2><i class="bi bi-person-plus"></i> @L["Assign an administrator"]</h2></div><div class="panel-body">
+                        <form method="post" asp-action="AssignAdmin" asp-route-id="@n.Id" class="stack" style="--gap:.9rem">
+                            <div><label class="form-label" for="f-username">@L["Username"]</label><input class="form-control" dir="ltr" id="f-username" name="username" required autocomplete="off" /><div class="form-text">@L[Model.Central ? "Any active user. Administrators receive only the capabilities you tick." : "A user of your own entities. You can only grant capabilities you hold yourself."]</div></div>
+                            <div class="cap-grid compact">
+                                @foreach (var c in CyberLms.Web.Areas.Admin.Controllers.EntitiesController.Delegable.Where(c => grantable.HasFlag(c)))
+                                { <label class="cap-opt"><input type="checkbox" class="form-check-input" name="caps" value="@c" /><i class="bi @Labels.CapabilityIcon(c)"></i><span>@L[Labels.Capability(c)]</span></label> }
+                            </div>
+                            <div class="form-check form-switch"><input type="hidden" name="includeDescendants" value="false" /><input class="form-check-input" type="checkbox" id="f-desc" name="includeDescendants" value="true" checked /><label class="form-check-label" for="f-desc">@L["Also for sub-entities"]</label></div>
+                            <button class="btn btn-primary"><i class="bi bi-person-check"></i> @L["Assign"]</button>
+                        </form>
+                    </div></section>
+                }
+                <section class="panel mt-3"><div class="panel-head"><h2><i class="bi bi-shield-lock"></i> @L["Allowed for this entity"]</h2></div><div class="panel-body">
+                    <p class="form-text mt-0">@L["Set by the central administrator. Delegated capabilities outside this list have no effect."]</p>
+                    <div class="cluster">@foreach (var c in CyberLms.Web.Areas.Admin.Controllers.EntitiesController.Delegable) { <span class="cap-pill @(n.Allowed.HasFlag(c) ? "on" : "off")"><i class="bi @(n.Allowed.HasFlag(c) ? "bi-check-lg" : "bi-x-lg")"></i> @L[Labels.Capability(c)]</span> }</div>
+                </div></section>
+            </div>
+        </div>
+        break;
+
+    case "users":
+        <section class="card table-card"><div class="results-bar"><span class="rb-count">@Model.UsersOwn <small>@L["users in this entity"]</small></span><a class="btn btn-sm btn-outline-primary" asp-controller="Users" asp-action="Index" asp-route-entity="@n.Id"><i class="bi bi-people"></i> @L["Open in user management"]</a></div>
+        <div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>@L["User"]</th><th>@L["Email"]</th><th>@L["Department"]</th><th>@L["Status"]</th></tr></thead><tbody>
+        @foreach (var u in Model.Users)
+        {
+            <tr><td><div class="user-cell"><span class="avatar avatar-sm">@(u.DisplayName.Trim().Length > 0 ? u.DisplayName.Trim()[0] : '?')</span><div><strong class="bidi">@u.DisplayName</strong><small dir="ltr">@u.Username</small></div></div></td><td dir="ltr" class="text-end">@u.Email</td><td class="bidi">@u.Department</td><td><span class="badge badge-dot text-bg-@(u.IsActive ? "success" : "secondary")">@L[u.IsActive ? "Active" : "Disabled"]</span></td></tr>
+        }
+        </tbody></table></div></section>
+        break;
+
+    case "branding":
+        var canBrand = caps.HasFlag(Capability.ManageBranding);
+        <section class="panel"><div class="panel-body branding-status">
+            <span class="bs-icon"><i class="bi bi-palette2"></i></span>
+            <div class="flex-grow-1">
+                <h2 class="h5 mb-1">@L[n.IsRoot ? "Central branding" : Model.CustomBranding ? "Custom branding" : "Inherited branding"]</h2>
+                <p class="text-muted mb-2">@L[n.IsRoot ? "The root entity uses the central branding and the login page, managed in Settings." : Model.CustomBranding ? "This entity overrides part of the inherited branding; everything else follows its parent and the central branding." : "This entity uses the branding of its parent chain and the central branding. Nothing is copied: central changes reach it automatically."]</p>
+                <div class="cluster">
+                    <span class="cap-pill @(n.Allowed.HasFlag(Capability.ManageBranding) ? "on" : "off")"><i class="bi bi-shield-lock"></i> @L[n.Allowed.HasFlag(Capability.ManageBranding) ? "Local branding allowed" : "Local branding not allowed: centrally controlled"]</span>
+                </div>
+            </div>
+            @if (n.IsRoot && Model.Central) { <a class="btn btn-primary" asp-controller="Settings" asp-action="Index" asp-fragment="t-brand"><i class="bi bi-palette2"></i> @L["Open the branding studio"]</a> }
+            else if (!n.IsRoot && canBrand) { <a class="btn btn-primary" asp-controller="EntityBranding" asp-action="Index" asp-route-id="@n.Id"><i class="bi bi-palette2"></i> @L["Open the entity branding studio"]</a> }
+        </div></section>
+        break;
+
+    case "directory":
+        var canDir = caps.HasFlag(Capability.ManageDirectory);
+        var d = Model.Directory;
+        <div class="row g-3">
+        <div class="col-xl-7"><section class="panel"><div class="panel-head"><h2><i class="bi bi-hdd-network"></i> @L["Directory source"]</h2>@if (d != null) { <span class="chip-scope">@L[d.Enabled ? "Enabled" : "Disabled"]</span> }</div><div class="panel-body">
+            @if (!canDir)
+            {
+                <div class="alert alert-info"><i class="bi bi-lock"></i><span>@L[n.Allowed.HasFlag(Capability.ManageDirectory) ? "You do not hold the directory capability for this entity." : "Directory integration is not allowed for this entity by the central administrator."]</span></div>
+                @if (d != null) { <dl class="kv"><dt>@L["Domain"]</dt><dd dir="ltr">@d.Domain</dd><dt>@L["LDAP path"]</dt><dd dir="ltr">@(d.LdapPath ?? "-")</dd></dl> }
+            }
+            else
+            {
+                <form method="post" asp-action="SaveDirectory" asp-route-id="@n.Id" class="stack" style="--gap:1rem" autocomplete="off">
+                    <div class="form-check form-switch"><input type="hidden" name="Enabled" value="false" /><input class="form-check-input" type="checkbox" id="f-den" name="Enabled" value="true" checked="@(d?.Enabled == true)" /><label class="form-check-label" for="f-den">@L["Use this directory for the entity"]</label></div>
+                    <div class="row g-3">
+                        <div class="col-md-5"><label class="form-label" for="f-dom">@L["Domain (NetBIOS)"]</label><input class="form-control" dir="ltr" id="f-dom" name="Domain" value="@d?.Domain" maxlength="15" placeholder="AGENCY" /></div>
+                        <div class="col-md-7"><label class="form-label" for="f-ldap">@L["LDAP path"]</label><input class="form-control" dir="ltr" id="f-ldap" name="LdapPath" value="@d?.LdapPath" maxlength="500" placeholder="LDAP://dc01.agency.local" /></div>
+                        <div class="col-md-7"><label class="form-label" for="f-sb">@L["Search base"]</label><input class="form-control" dir="ltr" id="f-sb" name="SearchBase" value="@d?.SearchBase" maxlength="500" placeholder="OU=Staff,DC=agency,DC=local" /></div>
+                        <div class="col-md-5"><label class="form-label" for="f-bu">@L["Service account"]</label><input class="form-control" dir="ltr" id="f-bu" name="BindUser" value="@d?.BindUser" maxlength="256" placeholder="AGENCY\svc-abtalna" /></div>
+                        <div class="col-md-7"><label class="form-label" for="f-bs">@L["Service account password"]</label><input type="password" class="form-control" dir="ltr" id="f-bs" name="BindSecret" autocomplete="new-password" placeholder="@L[Model.DirectorySecretSet ? "Stored (hidden). Leave empty to keep." : "Not set"]" /></div>
+                        <div class="col-md-5 pt-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" id="f-clr" name="ClearSecret" value="true" /><label class="form-check-label" for="f-clr">@L["Remove the stored password"]</label></div></div>
+                    </div>
+                    <div><button class="btn btn-primary"><i class="bi bi-check2"></i> @L["Save directory settings"]</button></div>
+                </form>
+            }
+        </div></section></div>
+        <div class="col-xl-5"><section class="panel"><div class="panel-head"><h2><i class="bi bi-info-circle"></i> @L["How this is used"]</h2></div><div class="panel-body small stack" style="--gap:.6rem">
+            <p class="m-0">@L["Directory mapping only: new Windows accounts from this domain are placed in this entity, and the directory can be used for user attributes."]</p>
+            <p class="m-0">@L["It does not configure sign-in. Windows Integrated Authentication (Kerberos/NTLM) across domains or forests depends on IIS and domain trusts and is validated on the Windows Server."]</p>
+            <p class="m-0"><i class="bi bi-shield-lock"></i> @L["The password is encrypted at rest and is never displayed, logged or written to the audit log."]</p>
+            @if (d != null) { <p class="m-0 text-muted">@L["Validation status"]: @L[d.ValidationNote ?? "Not validated yet."]</p> }
+        </div></section></div>
+        </div>
+        break;
+
+    case "content":
+        async Task ContentTable(List<Content> items, string empty)
+        {
+            <div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>@L["Content title"]</th><th>@L["Audience"]</th><th>@L["Status"]</th></tr></thead><tbody>
+            @foreach (var c in items)
+            {
+                <tr><td class="bidi"><span class="icon-chip tc type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i></span> @c.Title</td>
+                    <td>@await Html.PartialAsync("_AudienceChips", (c, (IReadOnlyList<EntityNode>)ViewBag.All, c.Targets.Select(t => t.EntityId)))</td>
+                    <td><span class="badge badge-dot text-bg-@(c.Status == ContentStatus.Published ? "success" : "secondary")">@L[Labels.ContentStatus(c.Status)]</span></td></tr>
+            }
+            @if (items.Count == 0) { <tr><td colspan="3" class="text-muted">@L[empty]</td></tr> }
+            </tbody></table></div>
+        }
+        <section class="card table-card mb-3"><div class="panel-head"><h2><i class="bi bi-building"></i> @L["Owned by this entity"]</h2></div>@{ await ContentTable(Model.ContentOwnedList, "No content owned by this entity."); }</section>
+        <section class="card table-card"><div class="panel-head"><h2><i class="bi bi-diagram-3-fill"></i> @L["Distributed to this entity by other entities"]</h2></div>@{ await ContentTable(Model.ContentTargeted, "No content is distributed to this entity."); }</section>
+        break;
+
+    case "reports":
+        <section class="card table-card"><div class="table-responsive"><table class="table mb-0 entity-compare"><thead><tr><th>@L["Entity"]</th><th>@L["Employees"]</th><th>@L["Completion rate"]</th><th>@L["Acknowledgment rate"]</th><th>@L["Pass rate"]</th></tr></thead><tbody>
+        @foreach (var r in Model.Breakdown)
+        {
+            <tr class="@(r.Entity.Id == n.Id ? "row-total" : "")"><td class="bidi">@r.Entity.Name</td><td>@r.Employees</td><td><bdi dir="ltr">@Rate(r.CompletionRate)</bdi></td><td><bdi dir="ltr">@Rate(r.AckRate)</bdi></td><td><bdi dir="ltr">@Rate(r.PassRate)</bdi></td></tr>
+        }
+        </tbody></table></div></section>
+        <div class="mt-2 cluster"><a class="btn btn-outline-primary btn-sm" asp-controller="Reports" asp-action="Entities" asp-route-entityId="@n.Id"><i class="bi bi-diagram-3"></i> @L["Entity comparison"]</a><a class="btn btn-outline-primary btn-sm" asp-controller="Reports" asp-action="Assessments" asp-route-entityId="@n.Id"><i class="bi bi-clipboard-data"></i> @L["Assessment results"]</a><a class="btn btn-outline-primary btn-sm" asp-controller="Reports" asp-action="Acknowledgments" asp-route-entityId="@n.Id"><i class="bi bi-check2-square"></i> @L["Acknowledgments"]</a></div>
+        break;
+
+    case "audit":
+        <section class="card table-card"><div class="table-responsive"><table class="table table-hover mb-0 audit-table"><thead><tr><th>@L["Date and time"]</th><th>@L["Performed by"]</th><th>@L["Action"]</th><th>@L["Entity"]</th><th>@L["Details"]</th></tr></thead><tbody>
+        @foreach (var a in Model.Audit)
+        {
+            <tr><td class="text-nowrap">@Time.Html(a.Timestamp)</td><td><bdi dir="ltr">@a.Username</bdi></td><td>@L[a.Action]</td><td class="text-nowrap bidi">@(a.ScopeEntityId is int se && names.TryGetValue(se, out var en) ? en : "-")</td><td class="bidi audit-details">@a.Details</td></tr>
+        }
+        @if (Model.Audit.Count == 0) { <tr><td colspan="5" class="text-muted">@L["No activity recorded yet."]</td></tr> }
+        </tbody></table></div></section>
+        <div class="mt-2"><a class="btn btn-outline-primary btn-sm" asp-controller="Audit" asp-action="Index" asp-route-entity="@n.Id"><i class="bi bi-clock-history"></i> @L["Full audit log"]</a></div>
+        break;
+
+    default:
+        <div class="row g-3">
+            <div class="col-lg-4"><div class="kpi"><span class="kpi-icon"><i class="bi bi-people"></i></span><div><div class="kpi-value">@Model.UsersSubtree</div><div class="kpi-label">@L["Users (with sub-entities)"]</div></div></div></div>
+            <div class="col-lg-4"><div class="kpi"><span class="kpi-icon"><i class="bi bi-journal-richtext"></i></span><div><div class="kpi-value">@Model.ContentOwned</div><div class="kpi-label">@L["Content owned"]</div></div></div></div>
+            <div class="col-lg-4"><div class="kpi"><span class="kpi-icon"><i class="bi bi-person-gear"></i></span><div><div class="kpi-value">@Model.Admins.Count</div><div class="kpi-label">@L["Administrators"]</div></div></div></div>
+            <div class="col-lg-6"><section class="panel"><div class="panel-head"><h2><i class="bi bi-diagram-3"></i> @L["Sub-entities"]</h2></div><div class="panel-body">
+                @if (Model.Children.Count == 0) { <p class="text-muted m-0">@L["No sub-entities."]</p> }
+                <ul class="list-plain">@foreach (var c in Model.Children) { <li><a asp-action="Details" asp-route-id="@c.Id"><i class="bi bi-building"></i> <span class="bidi">@c.Name</span></a> <code dir="ltr" class="text-muted">@c.Code</code></li> }</ul>
+            </div></section></div>
+            <div class="col-lg-6"><section class="panel"><div class="panel-head"><h2><i class="bi bi-key"></i> @L["Your capabilities here"]</h2></div><div class="panel-body">
+                <div class="cluster">@foreach (var c in CyberLms.Web.Areas.Admin.Controllers.EntitiesController.Delegable.Where(c => caps.HasFlag(c))) { <span class="cap-pill on"><i class="bi @Labels.CapabilityIcon(c)"></i> @L[Labels.Capability(c)]</span> }</div>
+                @if (caps == Capability.None) { <p class="text-muted m-0">@L["Read-only."]</p> }
+            </div></section></div>
+        </div>
+        break;
+}

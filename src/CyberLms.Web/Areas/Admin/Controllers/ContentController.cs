@@ -8,11 +8,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CyberLms.Web.Areas.Admin.Controllers;
 
-public class ContentController(AppDbContext db, StorageService storage, AuditService audit, NotificationService notify, ContentAuthoring authoring) : AdminController
+/// <summary>Content management, scoped to content owned by entities in the administrator's ManageContent scope. Centrally owned
+/// content is out of reach for entity administrators (404), unless a future explicit permission is introduced.</summary>
+[Capability(Capability.ManageContent)]
+public class ContentController(AppDbContext db, StorageService storage, AuditService audit, NotificationService notify, ContentAuthoring authoring, EntityAccess access) : AdminController
 {
-    public async Task<IActionResult> Index(string? q, ContentType? type, ContentStatus? status, int page = 1)
+    private Task<Content?> Scoped(int id, bool track = true) => authoring.ScopedAsync(id, track);
+
+    public async Task<IActionResult> Index(string? q, ContentType? type, ContentStatus? status, int? entity, int page = 1)
     {
-        var query = db.Contents.AsNoTracking().AsQueryable();
+        var scope = await access.ScopeAsync(Capability.ManageContent);
+        var query = db.Contents.AsNoTracking().InScope(scope);
+        var all = await access.AllEntitiesAsync();
+        if (entity is int eid && scope.Contains(eid) && all.FirstOrDefault(x => x.Id == eid) is { } node) query = query.Where(c => c.OwnerEntity.Path.StartsWith(node.Path));
         if (!string.IsNullOrWhiteSpace(q)) { var s = q.Trim().ToLower(); query = query.Where(c => c.Title.ToLower().Contains(s)); }
         if (type != null) query = query.Where(c => c.Type == type);
         if (status != null) query = query.Where(c => c.Status == status);
@@ -23,6 +31,11 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
                 db.Assessments.Where(a => a.ContentId == c.Id).OrderBy(a => a.Id).Select(a => a.Title).FirstOrDefault(),
                 db.Assessments.Where(a => a.ContentId == c.Id).OrderBy(a => a.Id).Select(a => a.Questions.Count).FirstOrDefault(),
                 db.Assessments.Where(a => a.ContentId == c.Id).OrderBy(a => a.Id).Select(a => a.IsPublished).FirstOrDefault())).ToListAsync();
+        ViewBag.Entities = await access.EntitiesAsync(Capability.ManageContent);
+        ViewBag.EntityId = entity;
+        var ids = items.Select(i => i.Content.Id).ToList();
+        ViewBag.Targets = (await db.ContentEntityTargets.AsNoTracking().Where(t => ids.Contains(t.ContentId)).ToListAsync()).ToLookup(t => t.ContentId, t => t.EntityId);
+        ViewBag.All = all;
         return View(new ContentListVm { Items = items, Q = q, Type = type, Status = status, Pager = pager });
     }
 
@@ -33,13 +46,16 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     {
         Validate(vm);
         if (!ModelState.IsValid) return View("Form", vm);
-        var c = new Content { CreatedById = User.UserId() };
+        var owner = await access.DefaultEntityAsync(Capability.ManageContent);
+        if (owner == null) return Forbid();
+        var c = new Content { CreatedById = User.UserId(), OwnerEntityId = owner.Value, TargetScope = await authoring.DefaultScopeAsync() };
         Apply(c, vm);
         db.Contents.Add(c);
         await db.SaveChangesAsync();
         var errors = await SaveFiles(c, files);
-        audit.Add("CONTENT_CREATED", "Content", c.Id, c.Title);
-        if (publish && errors.Count == 0) { Publish(c); }
+        audit.Add("CONTENT_CREATED", "Content", c.Id, c.Title, c.OwnerEntityId);
+        audit.Add("CONTENT_TARGETING_CHANGED", "Content", c.Id, ContentAuthoring.Describe(c.OwnerEntityId, c.TargetScope, [], true), c.OwnerEntityId);
+        if (publish && errors.Count == 0 && await access.CanInAsync(Capability.PublishContent, c.OwnerEntityId)) { Publish(c); }
         await db.SaveChangesAsync();
         if (errors.Count > 0) { TempData["Error"] = string.Join(" ", errors); return RedirectToAction(nameof(Edit), new { id = c.Id }); }
         Success(publish ? "Content created and published." : "Content created as draft.");
@@ -48,7 +64,7 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
 
     public async Task<IActionResult> Edit(int id)
     {
-        var c = await db.Contents.Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
+        var c = await Scoped(id, false);
         if (c == null) return NotFound();
         return View("Form", new ContentFormVm
         {
@@ -60,14 +76,15 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     [HttpPost]
     public async Task<IActionResult> Edit(int id, ContentFormVm vm, List<IFormFile> files, string? command)
     {
-        var c = await db.Contents.Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
+        var c = await Scoped(id);
         if (c == null) return NotFound();
+        if (command == "publish" && !await access.CanInAsync(Capability.PublishContent, c.OwnerEntityId)) return Forbid();
         Validate(vm);
         if (!ModelState.IsValid) { vm.Id = id; vm.Status = c.Status; vm.Attachments = c.Attachments.ToList(); return View("Form", vm); }
         Apply(c, vm);
         c.UpdatedAt = DateTime.UtcNow;
         var errors = await SaveFiles(c, files);
-        audit.Add("CONTENT_UPDATED", "Content", c.Id, c.Title);
+        audit.Add("CONTENT_UPDATED", "Content", c.Id, c.Title, c.OwnerEntityId);
         if (command == "publish" && errors.Count == 0 && c.Status != ContentStatus.Published) Publish(c);
         await db.SaveChangesAsync();
         TempData[errors.Count > 0 ? "Error" : "Success"] = errors.Count > 0 ? string.Join(" ", errors) : L["Saved."];
@@ -77,10 +94,11 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     [HttpPost]
     public async Task<IActionResult> SetStatus(int id, bool publish)
     {
-        var c = await db.Contents.FindAsync(id);
+        var c = await Scoped(id);
         if (c == null) return NotFound();
+        if (!await access.CanInAsync(Capability.PublishContent, c.OwnerEntityId)) return Forbid();
         if (publish) Publish(c);
-        else { c.Status = ContentStatus.Draft; audit.Add("CONTENT_UNPUBLISHED", "Content", c.Id, c.Title); }
+        else authoring.Unpublish(c);
         await db.SaveChangesAsync();
         Success(publish ? "Published." : "Unpublished.");
         return RedirectToAction(nameof(Index));
@@ -89,13 +107,13 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
-        var c = await db.Contents.Include(x => x.Attachments).FirstOrDefaultAsync(x => x.Id == id);
+        var c = await Scoped(id);
         if (c == null) return NotFound();
         if (c.Status == ContentStatus.Published) { Failure("Unpublish the content before deleting it."); return RedirectToAction(nameof(Index)); }
         if (await db.UserAcknowledgments.AnyAsync(a => a.ContentId == id))
         { Failure("This content has acknowledgment records and cannot be deleted (compliance evidence). Keep it unpublished."); return RedirectToAction(nameof(Index)); }
         var paths = c.Attachments.Select(a => a.StoredPath).ToList();
-        audit.Add("CONTENT_DELETED", "Content", c.Id, c.Title);
+        audit.Add("CONTENT_DELETED", "Content", c.Id, c.Title, c.OwnerEntityId);
         db.Contents.Remove(c);
         await db.SaveChangesAsync();
         paths.ForEach(storage.Delete);
@@ -107,7 +125,7 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     public async Task<IActionResult> DeleteAttachment(int id)
     {
         var a = await db.ContentAttachments.FindAsync(id);
-        if (a == null) return NotFound();
+        if (a == null || await Scoped(a.ContentId, false) == null) return NotFound();
         var cid = a.ContentId;
         audit.Add("ATTACHMENT_DELETED", "Content", cid, a.FileName);
         db.ContentAttachments.Remove(a);
@@ -117,31 +135,40 @@ public class ContentController(AppDbContext db, StorageService storage, AuditSer
     }
 
     [HttpPost]
+    [Capability(Capability.ManageAcknowledgments)]
     public async Task<IActionResult> ResetAcknowledgments(int id, int? userId)
     {
-        var q = db.UserAcknowledgments.Where(a => a.ContentId == id);
+        var c = await Scoped(id, false);
+        if (c == null || !await access.CanInAsync(Capability.ManageAcknowledgments, c.OwnerEntityId)) return NotFound();
+        // only the acknowledgments of employees the administrator may act for
+        var users = db.Users.InScope(await access.ScopeAsync(Capability.ManageAcknowledgments)).Select(u => u.Id);
+        var q = db.UserAcknowledgments.Where(a => a.ContentId == id && users.Contains(a.UserId));
         if (userId != null) q = q.Where(a => a.UserId == userId);
         var n = await q.ExecuteDeleteAsync();
-        audit.Add("ACKNOWLEDGMENTS_RESET", "Content", id, userId == null ? Res.Ar("All ({0}) acknowledgments reset", n) : Res.Ar("Reset for user {0}", userId));
+        audit.Add("ACKNOWLEDGMENTS_RESET", "Content", id, userId == null ? Res.Ar("All ({0}) acknowledgments reset", n) : Res.Ar("Reset for user {0}", userId), c.OwnerEntityId);
         await db.SaveChangesAsync();
         Success("{0} acknowledgment(s) reset.", n);
         return Redirect(Request.Headers.Referer.ToString() is { Length: > 0 } r && Url.IsLocalUrl(new Uri(r).PathAndQuery) ? new Uri(r).PathAndQuery : Url.Action(nameof(Index))!);
     }
 
     [HttpPost]
+    [Capability(Capability.ManageNotifications)]
     public async Task<IActionResult> Notify(int id)
     {
-        var c = await db.Contents.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.Status == ContentStatus.Published);
+        var c = await db.Contents.AsNoTracking().Include(x => x.Targets).InScope(await access.ScopeAsync(Capability.ManageNotifications)).FirstOrDefaultAsync(x => x.Id == id && x.Status == ContentStatus.Published);
         if (c == null) return NotFound();
         if (!notify.Ready) { Failure("SMTP is not configured (Settings → Email)."); return RedirectToAction(nameof(Index)); }
-        var users = db.Users.AsNoTracking().Where(u => u.IsActive && u.Email != null && u.UserRoles.Any(r => r.Role.Name == RoleNames.User));
+        // recipients: the content's audience ∩ the employees the administrator may notify
+        var audience = ContentAuthoring.AudienceEntityIds(c, await access.AllEntitiesAsync()).ToList();
+        var users = db.Users.AsNoTracking().InScope(await access.ScopeAsync(Capability.ManageNotifications))
+            .Where(u => audience.Contains(u.EntityId) && u.IsActive && u.Email != null && u.UserRoles.Any(r => r.Role.Name == RoleNames.User));
         if (c.RequiresAcknowledgment)
             users = users.Where(u => !db.UserAcknowledgments.Any(a => a.UserId == u.Id && a.ContentId == id && a.ContentVersion == c.Version));
         var list = await users.Select(u => new { u.Email, u.DisplayName }).ToListAsync();
         var n = notify.Send(list.Select(u => (u.Email, u.DisplayName)),
             c.RequiresAcknowledgment ? "Acknowledgment required: {0}" : "New content: {0}",
             c.RequiresAcknowledgment ? "Please read and acknowledge: {0}" : "New content has been published: {0}", [c.Title], $"/Content/Details/{id}");
-        audit.Add("NOTIFICATION_QUEUED", "Content", id, Res.Ar("{0} emails", n));
+        audit.Add("NOTIFICATION_QUEUED", "Content", id, Res.Ar("{0} emails", n), c.OwnerEntityId);
         await db.SaveChangesAsync();
         Success("{0} email(s) queued.", n);
         return RedirectToAction(nameof(Index));

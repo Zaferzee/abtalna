@@ -11,10 +11,14 @@ namespace CyberLms.Web.Controllers;
 [Authorize]
 public class AssessmentsController(AppDbContext db) : AppController
 {
+    /// <summary>Published assessments targeted to the current user's entity (linked: the content's audience; standalone: owner subtree).</summary>
+    private async Task<IQueryable<Assessment>> Visible() =>
+        db.Assessments.Where(EntityVisibility.Assessment(await EntityVisibility.ForUserAsync(db, User.UserId()))).Where(a => a.IsPublished && a.Questions.Any());
+
     public async Task<IActionResult> Index()
     {
         var uid = User.UserId();
-        var list = await db.Assessments.AsNoTracking().Include(a => a.Content).Where(a => a.IsPublished && a.Questions.Any()).OrderBy(a => a.Title).ToListAsync();
+        var list = await (await Visible()).AsNoTracking().Include(a => a.Content).OrderBy(a => a.Title).ToListAsync();
         var items = await AssessmentQueries.ForUser(db, uid, list);
         return View(items);
     }
@@ -37,7 +41,7 @@ public class AssessmentsController(AppDbContext db) : AppController
     public async Task<IActionResult> Start(int id)
     {
         var uid = User.UserId();
-        var a = await db.Assessments.FirstOrDefaultAsync(x => x.Id == id && x.IsPublished && x.Questions.Any());
+        var a = await (await Visible()).FirstOrDefaultAsync(x => x.Id == id);
         if (a == null) return NotFound();
         if (await AckRequired(a) is { } gate) return gate; // no attempt is created before the required acknowledgment
         var existing = await db.AssessmentAttempts.FirstOrDefaultAsync(t => t.UserId == uid && t.AssessmentId == id && t.Status == AttemptStatus.InProgress);
@@ -58,6 +62,7 @@ public class AssessmentsController(AppDbContext db) : AppController
         var attempt = await OwnAttempt(id);
         if (attempt == null) return NotFound();
         if (attempt.Status == AttemptStatus.Completed) return RedirectToAction(nameof(Result), new { id });
+        if (!await (await Visible()).AnyAsync(x => x.Id == attempt.AssessmentId)) return NotFound(); // no longer targeted / unpublished
         if (await AckRequired(attempt.Assessment) is { } gate) return gate;
         var qs = await db.Questions.AsNoTracking().Include(q => q.Options).Where(q => q.AssessmentId == attempt.AssessmentId).OrderBy(q => q.SortOrder).ThenBy(q => q.Id).ToListAsync();
         var previous = await db.AssessmentAttempts.CountAsync(t => t.UserId == attempt.UserId && t.AssessmentId == attempt.AssessmentId && t.Status == AttemptStatus.Completed);
@@ -70,6 +75,7 @@ public class AssessmentsController(AppDbContext db) : AppController
         var attempt = await OwnAttempt(id);
         if (attempt == null) return NotFound();
         if (attempt.Status == AttemptStatus.Completed) return RedirectToAction(nameof(Result), new { id });
+        if (!await (await Visible()).AnyAsync(x => x.Id == attempt.AssessmentId)) return NotFound(); // no longer targeted / unpublished
         if (await AckRequired(attempt.Assessment) is { } gate) return gate;
 
         var questions = await db.Questions.Include(q => q.Options).Where(q => q.AssessmentId == attempt.AssessmentId).OrderBy(q => q.SortOrder).ThenBy(q => q.Id).ToListAsync();

@@ -46,13 +46,23 @@
 .auth-overlay { position: absolute; inset: 0; z-index: 0; background: var(--ov, #0b1a3f); opacity: 0; transition: opacity .2s; }
 .auth.has-image .auth-overlay { opacity: var(--ov-op, .7); }
 .auth.no-decor .auth-decor, .auth.no-decor .auth-hero::before { display: none; }
-/* decoration styles: each element lists the styles it belongs to (dc-<style>); the dotted texture belongs to shield and orbs */
-.auth .dc { display: none; }
-.auth.decor-shield .dc-shield, .auth.decor-orbs .dc-orbs, .auth.decor-checklist .dc-checklist, .auth.decor-grid .dc-grid,
-.auth.decor-document .dc-document, .auth.decor-journey .dc-journey { display: block; }
-.auth:not(.decor-shield):not(.decor-orbs) .auth-hero::before { display: none; }
-.auth-art { position: absolute; inset-inline-end: 7%; top: 50%; transform: translateY(-50%); width: min(30%, 250px); opacity: .1; z-index: 0; }
-.auth.decor-grid .auth-art, .auth.decor-journey .auth-art { width: min(33%, 270px); }
+/* ---------- visual composition (LoginCompositions): up to three line-art layers behind the content ----------
+   Sizes use container units of the hero (cqi) so the studio preview (a scaled 1280px frame) and the real page match exactly.
+   Layers never take pointer events, sit under the text (z-index 0) and are simplified on phones. */
+.auth-hero { container-type: inline-size; }
+.auth-hero::before { display: none; }                 /* the v1 dotted texture is replaced by the compositions */
+.auth-motifs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.auth-layers { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; color: var(--hero-text, var(--color-login-text, #fff)); }
+.auth-layer { position: absolute; width: calc(44cqi * var(--l-scale, 1)); height: auto; aspect-ratio: 1; opacity: var(--l-op, .14);
+  --tx: 0%; --ty: 0%; transform: translate(var(--tx), var(--ty)) rotate(var(--l-rot, 0deg)); transition: opacity .25s, transform .25s, width .25s; }
+.auth-layer.pos-top-start, .auth-layer.pos-top-center, .auth-layer.pos-top-end { top: 4%; }
+.auth-layer.pos-center-start, .auth-layer.pos-center, .auth-layer.pos-center-end { top: 50%; --ty: -50%; }
+.auth-layer.pos-bottom-start, .auth-layer.pos-bottom-center, .auth-layer.pos-bottom-end { bottom: 4%; }
+.auth-layer.pos-top-start, .auth-layer.pos-center-start, .auth-layer.pos-bottom-start { inset-inline-start: 3%; }
+.auth-layer.pos-top-center, .auth-layer.pos-center, .auth-layer.pos-bottom-center { left: 50%; --tx: -50%; }
+.auth-layer.pos-top-end, .auth-layer.pos-bottom-end { inset-inline-end: -2%; }
+.auth-layer.pos-center-end { inset-inline-end: -7%; }   /* oversized motifs bleed off the outer edge, away from the text */
+.auth.has-image .auth-layer { opacity: calc(var(--l-op, .14) * .65); }   /* quieter over a photograph */
 .auth.has-image .auth-hero::before { opacity: .25; }
 .auth-logo { display: grid; place-items: center; flex: none; max-width: 12rem; }
 .auth-logo img { display: block; max-height: 3rem; max-width: 11rem; object-fit: contain; }
@@ -74,7 +84,8 @@
 .auth.align-center .auth-hero-foot { text-align: center; }
 
 @media (max-width: 991.98px) {
-  .auth .auth-shield, .auth .auth-art { display: none !important; }
+  .auth .auth-layer:not([data-motif="circles"]) { display: none !important; }   /* phones: only the soft accent remains */
+  .auth .auth-layer { opacity: calc(var(--l-op, .14) * .7); }
   .auth.layout-full .auth-hero { position: relative; inset: auto; padding: 2rem 1.5rem; }
   .auth.layout-full .auth-panel { width: 100%; justify-self: stretch; background: var(--color-login-bg); }
   .auth.layout-split-reverse .auth-hero { order: 0; }
@@ -84,7 +95,9 @@
    so the phone rules are repeated for .auth.is-compact. */
 .auth.is-compact { grid-template-columns: minmax(0, 1fr); }
 .auth.is-compact .auth-hero { padding: 1.6rem 1.2rem; min-height: auto; position: relative; inset: auto; order: 0; }
-.auth.is-compact .auth-points, .auth.is-compact .auth-shield, .auth.is-compact .auth-art { display: none !important; }
+.auth.is-compact .auth-points { display: none !important; }
+.auth.is-compact .auth-layer:not([data-motif="circles"]) { display: none !important; }
+.auth.is-compact .auth-layer { opacity: calc(var(--l-op, .14) * .7); }
 .auth.is-compact .auth-title { font-size: 1.5rem; }
 .auth.is-compact .auth-panel { width: 100%; justify-self: stretch; padding: 1.5rem 1rem; background: var(--color-login-bg); }
 .auth.is-compact .auth-card { padding: 1.6rem 1.2rem; }
@@ -206,4 +219,39 @@ body.studio-expanded { overflow: hidden; }
 /* save bar */
 .studio-bar { position: sticky; bottom: 0; z-index: 10; margin-top: 1.4rem; display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; padding: .8rem 1rem;
   background: color-mix(in srgb, var(--color-surface) 92%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 -6px 20px rgba(15, 25, 50, .08); }
-@media (prefers-reduced-motion: reduce) { .decor-opt, .preset-card, .pv-device, .pc-check { transition: none; } .pv-flash { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .auth-layer, .decor-opt, .preset-card, .pv-device, .pc-check { transition: none; } .pv-flash { animation: none; } }
+/* entity branding page */
+.eb-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 1rem; align-items: start; }
+.eb-preview { position: sticky; top: 5rem; }
+@media (max-width: 1199.98px) { .eb-grid { grid-template-columns: minmax(0, 1fr); } .eb-preview { position: static; } }
+.eb-preview .pv-device { overflow: hidden; border-radius: 12px; border: 1px solid var(--color-border); }
+/* studio: composition editor */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .6rem; }
+.comp-card { position: relative; text-align: start; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); padding: .5rem .5rem .7rem; display: flex; flex-direction: column; gap: .15rem; transition: border-color .16s, box-shadow .2s, transform .2s; }
+.comp-card:hover { border-color: var(--primary-300); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.comp-card.active { border-color: var(--color-primary); box-shadow: var(--ring); }
+.comp-card strong { font-size: .86rem; padding-inline: .2rem; } .comp-card small { font-size: .74rem; color: var(--color-muted); padding-inline: .2rem; line-height: 1.4; }
+.comp-card .pc-check { position: absolute; top: .55rem; inset-inline-end: .55rem; color: var(--color-primary); opacity: 0; z-index: 2; }
+.comp-card.active .pc-check { opacity: 1; }
+.comp-thumb { position: relative; display: block; aspect-ratio: 16 / 10; border-radius: 10px; overflow: hidden; margin-bottom: .4rem; container-type: inline-size; color: #fff;
+  background: linear-gradient(140deg, color-mix(in srgb, var(--color-primary) 92%, #000), color-mix(in srgb, var(--color-primary) 55%, var(--color-accent))); }
+.comp-thumb .ct-lines { position: absolute; inset-inline-start: 9%; top: 34%; display: grid; gap: 5px; width: 42%; }
+.comp-thumb .ct-lines i { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,.85); }
+.comp-thumb .ct-lines i:nth-child(2) { width: 80%; opacity: .55; height: 3px; } .comp-thumb .ct-lines i:nth-child(3) { width: 60%; opacity: .4; height: 3px; }
+.layer-list { display: grid; gap: .8rem; }
+.layer-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: .8rem .9rem; background: var(--color-surface); display: grid; gap: .7rem; }
+.layer-card.is-off { opacity: .6; }
+.lc-head { display: flex; align-items: center; gap: .55rem; }
+.lc-num { width: 1.6rem; height: 1.6rem; border-radius: 8px; display: grid; place-items: center; background: var(--primary-50); color: var(--color-primary); font-weight: 700; font-size: .8rem; }
+.lc-motifs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: .35rem; }
+.lc-motif { position: relative; display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .45rem .3rem; border: 1px solid var(--color-border); border-radius: 10px; font-size: .72rem; text-align: center; cursor: pointer; color: var(--color-muted); }
+.lc-motif i { font-size: 1.05rem; color: var(--color-primary); }
+.lc-motif input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.lc-motif.active { border-color: var(--color-primary); background: var(--primary-50); color: var(--color-primary); font-weight: 600; }
+.lc-motif:has(input:focus-visible) { outline: 3px solid color-mix(in srgb, var(--color-primary) 55%, transparent); }
+.lc-controls { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; align-items: start; }
+.lc-ranges { display: grid; gap: .1rem; } .lc-ranges .form-label { margin: .2rem 0 0; }
+.pos-grid.mini { grid-template-columns: repeat(3, 26px); gap: 4px; }
+.pos-grid.mini label { width: 26px; height: 26px; }
+.lc-note { font-size: .78rem; color: var(--warning-ink, #8a5a00); background: var(--warning-bg, #fff6e0); border-radius: 8px; padding: .35rem .6rem; }
+@media (max-width: 575.98px) { .lc-controls { grid-template-columns: minmax(0, 1fr); } }

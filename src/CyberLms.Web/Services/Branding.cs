@@ -46,7 +46,12 @@ public class Branding
         ("LoginImageMode", ["background", "large", "medium", "small", "hidden"]),
         ("LoginImageAlign", ["start", "center", "end"]),
         ("LoginImageSlot", ["above", "below"]),
-        ("LoginDecorStyle", ["shield", "orbs", "checklist", "grid", "document", "journey", "none"]),
+        ("LoginDecorStyle", ["shield", "orbs", "checklist", "grid", "document", "journey", "none"]),   // legacy (v1.1); see LoginCompositionId
+        // visual composition (preset or "custom" = the three layers below)
+        ("LoginComposition", LoginCompositions.Ids),
+        ("Layer1Motif", LoginCompositions.Motifs), ("Layer1Position", LoginCompositions.Positions),
+        ("Layer2Motif", LoginCompositions.Motifs), ("Layer2Position", LoginCompositions.Positions),
+        ("Layer3Motif", LoginCompositions.Motifs), ("Layer3Position", LoginCompositions.Positions),
     ];
 
     /// <summary>Integers: range and default.</summary>
@@ -55,6 +60,9 @@ public class Branding
         ("LoginImageZoom", 100, 200, 100), ("LoginFocusX", 0, 100, 50), ("LoginFocusY", 0, 100, 50), ("LoginOverlayOpacity", 0, 95, 70),
         ("LoginImageSize", 10, 100, 0),   // width of a framed image in % of the text column; 0 = the mode's default
         ("LoginImageInset", 0, 64, 0),    // spacing (px) from the panel edges (background) or around the framed image
+        ("Layer1Opacity", LoginCompositions.MinOpacity, LoginCompositions.MaxOpacity, 14), ("Layer1Scale", LoginCompositions.MinScale, LoginCompositions.MaxScale, 100), ("Layer1Rotate", -LoginCompositions.MaxRotate, LoginCompositions.MaxRotate, 0),
+        ("Layer2Opacity", LoginCompositions.MinOpacity, LoginCompositions.MaxOpacity, 14), ("Layer2Scale", LoginCompositions.MinScale, LoginCompositions.MaxScale, 100), ("Layer2Rotate", -LoginCompositions.MaxRotate, LoginCompositions.MaxRotate, 0),
+        ("Layer3Opacity", LoginCompositions.MinOpacity, LoginCompositions.MaxOpacity, 14), ("Layer3Scale", LoginCompositions.MinScale, LoginCompositions.MaxScale, 100), ("Layer3Rotate", -LoginCompositions.MaxRotate, LoginCompositions.MaxRotate, 0),
     ];
 
     /// <summary>On/off options and defaults.</summary>
@@ -62,6 +70,7 @@ public class Branding
     [
         ("ShowOrgInSidebar", true), ("ShowNamesOnLogin", true), ("LogoPlate", true), ("LoginLogoPlate", true), ("LoginDecor", true),
         ("ShowLoginBadge", true), ("ShowLoginFeatures", true),
+        ("Layer1Visible", true), ("Layer2Visible", true), ("Layer3Visible", true),
     ];
 
     /// <summary>Uploaded assets: form field, setting key, public "kind" for /Files/Brand.</summary>
@@ -99,6 +108,7 @@ public class Branding
     private readonly Dictionary<string, string> _v = new();
     private readonly Dictionary<string, string> _raw = new();
     private readonly HashSet<string> _assets = new();
+    private readonly Dictionary<string, int> _assetEntity = new();
     public string Version { get; private init; } = "0";
     public string Preset { get; private init; } = "";
 
@@ -109,7 +119,9 @@ public class Branding
     public bool Flag(string field) => _v.TryGetValue(field, out var x) && x == "true";
     public int Number(string field) => int.TryParse(this[field], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? n : 0;
     public bool Has(string kind) => _assets.Contains(kind);
-    public string AssetUrl(string kind) => $"/Files/Brand?kind={kind}&v={Version}";
+    public string AssetUrl(string kind) => _assetEntity.TryGetValue(kind, out var e) ? $"/Files/Brand?kind={kind}&e={e}&v={Version}" : $"/Files/Brand?kind={kind}&v={Version}";
+    /// <summary>Entity whose branding this is (null = central branding).</summary>
+    public int? EntityId { get; internal set; }
 
     // Typed shortcuts used across the application.
     public string OrgName => this["OrgName"];
@@ -156,24 +168,31 @@ public class Branding
         _ => "",
     };
 
-    public static Branding From(SettingsService s, CultureInfo? culture = null)
+    public static Branding From(SettingsService s, CultureInfo? culture = null) => From(k => s.Get(k), culture);
+
+    /// <summary>Resolves branding from any value source (root settings, or root settings overlaid with an entity's overrides).
+    /// <paramref name="assetSource"/> names the entity an uploaded asset comes from (null = the central branding).</summary>
+    public static Branding From(Func<string, string?> get, CultureInfo? culture = null, Func<string, int?>? assetSource = null)
     {
-        var b = new Branding { Version = s.Get(Keys.Version, "0")!, Preset = s.Get(Keys.Preset, "") ?? "" };
+        Func<string, string?> s0 = get;
+        get = k => s0(k) is { } v && !string.IsNullOrWhiteSpace(v) ? v : null;
+        var b = new Branding { Version = get(Keys.Version) ?? "0", Preset = get(Keys.Preset) ?? "" };
         foreach (var (name, def) in Colors)
         {
-            var v = s.Get(Key(name)); var ok = v != null && ColorRegex.IsMatch(v);
+            var v = get(Key(name)); var ok = v != null && ColorRegex.IsMatch(v);
             b._raw[name] = ok ? v! : ""; b._v[name] = ok ? v! : def;
         }
         // texts: the system name is needed first (hero title default)
         foreach (var (name, _, _) in Texts.OrderBy(t => t.Name == "SystemName" ? 0 : 1))
         {
-            var v = s.Get(Key(name)); b._raw[name] = v ?? "";
+            var v = get(Key(name)); b._raw[name] = v ?? "";
             b._v[name] = !string.IsNullOrWhiteSpace(v) ? v! : DefaultText(name, culture, name == "LoginHeroTitle" ? b._v.GetValueOrDefault("SystemName") : null);
         }
-        foreach (var (name, allowed) in Choices) { var v = s.Get(Key(name)); b._raw[name] = v ?? ""; b._v[name] = v != null && allowed.Contains(v) ? v : allowed[0]; }
-        foreach (var (name, min, max, def) in Numbers) { var v = s.Get(Key(name)); b._raw[name] = v ?? ""; b._v[name] = (int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? Math.Clamp(n, min, max) : def).ToString(CultureInfo.InvariantCulture); }
-        foreach (var (name, def) in Flags) { var v = s.Get(Key(name)); b._v[name] = (bool.TryParse(v, out var f) ? f : def) ? "true" : "false"; b._raw[name] = b._v[name]; }
-        foreach (var (_, key, kind) in Assets) if (!string.IsNullOrEmpty(s.Get(key))) b._assets.Add(kind);
+        foreach (var (name, allowed) in Choices) { var v = get(Key(name)); b._raw[name] = v ?? ""; b._v[name] = v != null && allowed.Contains(v) ? v : allowed[0]; }
+        foreach (var (name, min, max, def) in Numbers) { var v = get(Key(name)); b._raw[name] = v ?? ""; b._v[name] = (int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? Math.Clamp(n, min, max) : def).ToString(CultureInfo.InvariantCulture); }
+        foreach (var (name, def) in Flags) { var v = get(Key(name)); b._v[name] = (bool.TryParse(v, out var f) ? f : def) ? "true" : "false"; b._raw[name] = b._v[name]; }
+        foreach (var (_, key, kind) in Assets)
+            if (!string.IsNullOrEmpty(get(key))) { b._assets.Add(kind); if (assetSource?.Invoke(key) is int src) b._assetEntity[kind] = src; }
         return b;
     }
 
@@ -192,8 +211,25 @@ public class Branding
     /// <summary>Default width (% of the text column) of a framed image per mode.</summary>
     public static int DefaultImageWidth(string mode) => mode switch { "large" => 100, "small" => 22, _ => 60 };
     public int LoginImageWidth => Number("LoginImageSize") is > 0 and var n ? n : DefaultImageWidth(this["LoginImageMode"]);
-    /// <summary>Decoration actually shown ("none" when decorations are switched off).</summary>
+    /// <summary>Decoration actually shown ("none" when decorations are switched off). Legacy (v1.1).</summary>
     public string LoginDecorStyle => Flag("LoginDecor") ? this["LoginDecorStyle"] : "none";
+
+    /// <summary>Composition in use: the saved one; before compositions existed, the closest one to the saved decoration
+    /// pattern (so an upgraded installation keeps its intent); "executive" on a fresh installation.</summary>
+    public string LoginCompositionId => Raw("LoginComposition") is { Length: > 0 } ? this["LoginComposition"]
+        : !Flag("LoginDecor") ? "clean" : Raw("LoginDecorStyle") is { Length: > 0 } ? LoginCompositions.FromLegacy(this["LoginDecorStyle"]) : "executive";
+
+    /// <summary>The three layers actually rendered (preset definition, or the saved custom layers), after the safety rules.</summary>
+    public IReadOnlyList<LoginCompositions.Layer> LoginLayers
+    {
+        get
+        {
+            var preset = LoginCompositions.All.FirstOrDefault(c => c.Id == LoginCompositionId);
+            var raw = preset != null ? preset.Layers
+                : Enumerable.Range(1, 3).Select(n => new LoginCompositions.Layer(this[$"Layer{n}Motif"], this[$"Layer{n}Position"], Number($"Layer{n}Opacity"), Number($"Layer{n}Scale"), Number($"Layer{n}Rotate"), Flag($"Layer{n}Visible"))).ToArray();
+            return raw.Select(LoginCompositions.Safe).ToList();
+        }
+    }
     public string LoginImageSizeCss => this["LoginImageFit"] switch { "contain" => "contain", "fill" => "100% 100%", "auto" => "auto", _ => "cover" };
 
     /// <summary>Inline CSS variables for the login hero (media layer, overlay, text color). Only validated values.</summary>
@@ -211,9 +247,9 @@ public class Branding
     }
 
     /// <summary>Classes on the login root for layout, text alignment, image mode and decoration.</summary>
-    public string LoginClasses => $"layout-{this["LoginLayout"]} align-{this["LoginTextAlign"]} logo-{this["LoginLogoPlacement"]}" + (LoginDecorStyle == "none" ? " no-decor" : "") + (LoginImageMode == "background" ? " has-image" : "") +
+    public string LoginClasses => $"layout-{this["LoginLayout"]} align-{this["LoginTextAlign"]} logo-{this["LoginLogoPlacement"]}" + (LoginLayers.All(l => !l.Visible) ? " no-decor" : "") + (LoginImageMode == "background" ? " has-image" : "") +
         (Flag("ShowLoginBadge") ? "" : " no-badge") + (Flag("ShowLoginFeatures") ? "" : " no-features") + (Flag("ShowNamesOnLogin") ? "" : " no-names") +
-        $" decor-{LoginDecorStyle} img-{LoginImageMode} img-align-{this["LoginImageAlign"]} img-slot-{this["LoginImageSlot"]}";
+        $" comp-{LoginCompositionId} img-{LoginImageMode} img-align-{this["LoginImageAlign"]} img-slot-{this["LoginImageSlot"]}";
 
     // ---------- contrast ----------
     public static double Luminance(string hex)
@@ -229,8 +265,11 @@ public class Branding
 }
 
 /// <summary>Per-request access to branding for views.</summary>
-public class BrandingAccessor(SettingsService settings)
+public class BrandingAccessor(SettingsService settings, EntityBrandingService entityBranding, IHttpContextAccessor http)
 {
     private Branding? _b;
-    public Branding Current => _b ??= Branding.From(settings);
+    /// <summary>Branding of the signed-in user's entity (inherited from the root and the entity's ancestors unless overridden);
+    /// the central branding for anonymous pages (the login page: no entity is known before sign-in).</summary>
+    public Branding Current => _b ??= int.TryParse(http.HttpContext?.User.FindFirst("entity_id")?.Value, out var e) && http.HttpContext!.User.Identity?.IsAuthenticated == true
+        ? entityBranding.For(e) : Branding.From(settings);
 }

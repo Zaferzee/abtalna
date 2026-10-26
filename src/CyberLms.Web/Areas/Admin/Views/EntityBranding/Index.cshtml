@@ -1,0 +1,89 @@
+@using CyberLms.Web.Areas.Admin.Controllers
+@{
+    var node = (EntityNode)ViewBag.Node;
+    var ov = (IReadOnlyDictionary<string, string?>)ViewBag.Overrides;
+    var inh = (Branding)ViewBag.Inherited;
+    var eff = (Branding)ViewBag.Effective;
+    ViewData["Title"] = L["Entity branding"];
+    var previewData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData) { ["preview"] = true };
+    var presetsJson = System.Text.Json.JsonSerializer.Serialize(BrandingPresets.All.Select(p => new { p.Id, p.Colors }));
+    string Own(string field) => ov.GetValueOrDefault(Branding.Key(field)) ?? "";
+    string InhColor(string f) => f == "ButtonColor" ? inh.ButtonColor : f == "ButtonTextColor" ? inh.ButtonTextColor : inh[f];
+    var hasLogo = ov.ContainsKey(Branding.Keys.Logo); var hasIcon = ov.ContainsKey(Branding.Keys.Icon);
+}
+<nav aria-label="@L["Breadcrumb trail"]"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-controller="Entities" asp-action="Index">@L["Organization"]</a></li><li class="breadcrumb-item"><a asp-controller="Entities" asp-action="Details" asp-route-id="@node.Id" asp-route-tab="branding">@node.Name</a></li><li class="breadcrumb-item active" aria-current="page">@L["Entity branding"]</li></ol></nav>
+<div class="page-head reveal">
+    <div>
+        <div class="eyebrow"><i class="bi bi-palette2"></i> @L["Entity branding"] · <bdi dir="ltr">@node.Code</bdi></div>
+        <h1 class="bidi">@node.Name</h1>
+        <p class="lead">@L["Empty fields inherit from the parent entity and the central branding. Only this entity and its sub-entities are affected; the login page stays central."]</p>
+    </div>
+    <form method="post" asp-action="Reset" asp-route-id="@node.Id" class="page-actions"><button class="btn btn-outline-danger" data-confirm-click="@L["Remove all overrides of this entity and inherit again?"]"><i class="bi bi-arrow-counterclockwise"></i> @L["Inherit everything again"]</button></form>
+</div>
+
+<form method="post" asp-action="Save" asp-route-id="@node.Id" enctype="multipart/form-data" class="eb-grid" data-eb data-presets="@presetsJson" novalidate>
+    <div class="stack" style="--gap:1rem">
+        <section class="panel"><div class="panel-head"><h2><i class="bi bi-building"></i> @L["Identity"]</h2></div><div class="panel-body row g-3">
+            <div class="col-md-6"><label class="form-label" for="f-OrgName">@L["Organization name"]</label><textarea class="form-control bidi" id="f-OrgName" name="OrgName" rows="2" maxlength="200" placeholder="@inh.OrgName" data-eb-text="OrgName">@Own("OrgName")</textarea></div>
+            <div class="col-md-6"><label class="form-label" for="f-SystemName">@L["System name"]</label><textarea class="form-control bidi" id="f-SystemName" name="SystemName" rows="2" maxlength="200" placeholder="@inh.SystemName" data-eb-text="SystemName">@Own("SystemName")</textarea></div>
+            <div class="col-12"><label class="form-label" for="f-WelcomeText">@L["Welcome text (employee dashboard)"]</label><textarea class="form-control bidi" id="f-WelcomeText" name="WelcomeText" rows="2" maxlength="1000" placeholder="@inh.WelcomeText" data-eb-text="WelcomeText">@Own("WelcomeText")</textarea></div>
+            <div class="col-12"><label class="form-label" for="f-FooterText">@L["Footer text (copyright, contact, etc.)"]</label><input class="form-control bidi" id="f-FooterText" name="FooterText" maxlength="500" value="@Own("FooterText")" placeholder="@inh.FooterText" data-eb-text="FooterText" /></div>
+            @foreach (var (f, label) in new[] { ("ShowOrgInSidebar", "Show the organization name in the sidebar"), ("LogoPlate", "Show the sidebar logo on a white plate") })
+            {
+                var own = Own(f);
+                <div class="col-md-6"><label class="form-label" for="f-@f">@L[label]</label><select class="form-select" id="f-@f" name="@f" data-eb-flag="@f" data-inherited="@(inh.Flag(f) ? "true" : "false")"><option value="">@L.Format("Inherit ({0})", L[inh.Flag(f) ? "Yes" : "No"])</option><option value="true" selected="@(own == "true")">@L["Yes"]</option><option value="false" selected="@(own == "false")">@L["No"]</option></select></div>
+            }
+        </div></section>
+
+        <section class="panel"><div class="panel-head"><h2><i class="bi bi-images"></i> @L["Entity logo"]</h2></div><div class="panel-body row g-3">
+            @foreach (var (field, kind, label, has) in new[] { ("logo", "logo", "Sidebar logo", hasLogo), ("icon", "icon", "Compact logo (icon)", hasIcon) })
+            {
+                <div class="col-md-6"><div class="asset-tile" data-eb-asset="@kind">
+                    <div class="at-thumb">@if (eff.Has(kind)) { <img src="@eff.AssetUrl(kind)" alt="" data-eb-img /> } else { <img alt="" data-eb-img hidden /> }</div>
+                    <div class="at-main"><strong>@L[label]</strong><small>@L[has ? "Own file of this entity." : eff.Has(kind) ? "Inherited." : "Not set."]</small>
+                        <div class="at-actions">
+                            <label class="btn btn-outline-primary btn-sm"><i class="bi bi-upload"></i> @L[has ? "Replace" : "Upload"]<input type="file" name="@field" accept=".png,.jpg,.jpeg,.webp,.gif" class="visually-hidden" data-native data-eb-file="@kind" /></label>
+                            @if (has) { <label class="btn btn-ghost btn-sm"><input type="checkbox" name="remove@(char.ToUpperInvariant(field[0]) + field[1..])" value="true" class="form-check-input me-1" /> @L["Use the inherited one"]</label> }
+                        </div></div>
+                </div></div>
+            }
+        </div></section>
+
+        <section class="panel"><div class="panel-head"><h2><i class="bi bi-palette"></i> @L["Colors"]</h2></div><div class="panel-body">
+            <input type="hidden" name="Preset" value="@Own("Preset")" data-eb-preset />
+            <div class="preset-grid mb-3">
+                @foreach (var p in BrandingPresets.All)
+                {
+                    <button type="button" class="preset-card @(Own("Preset") == p.Id ? "active" : "")" data-preset-id="@p.Id">
+                        <span class="pc-stripes" aria-hidden="true"><i style="background:@p.Colors["SidebarColor"]"></i><i style="background:@p.Colors["PrimaryColor"]"></i><i style="background:@p.Colors["AccentColor"]"></i><i style="background:@p.Colors["BackgroundColor"]"></i></span>
+                        <strong>@L[p.Name]</strong><small>@L[p.Description]</small>
+                    </button>
+                }
+            </div>
+            <div class="swatch-grid">
+                @foreach (var f in EntityBrandingController.ColorFields)
+                {
+                    var own = Own(f); var inherited = InhColor(f);
+                    <div class="swatch is-optional" data-eb-swatch="@f">
+                        <input type="color" value="@(string.IsNullOrEmpty(own) ? inherited : own)" aria-label="@L[SettingsController.ColorLabel(f)]" data-eb-pick="@f" />
+                        <div class="sw-text"><label for="f-@f">@L[SettingsController.ColorLabel(f)]</label>
+                            <input class="sw-hex" dir="ltr" id="f-@f" name="@f" value="@own" maxlength="7" spellcheck="false" autocomplete="off" placeholder="@L.Format("Inherit {0}", inherited)" data-eb-color="@f" data-inherited="@inherited" /></div>
+                        <button type="button" class="btn btn-ghost btn-sm sw-auto" data-eb-inherit="@f" title="@L["Inherit"]"><i class="bi bi-arrow-90deg-up"></i></button>
+                    </div>
+                }
+            </div>
+        </div></section>
+        <div class="d-flex gap-2"><button class="btn btn-primary btn-lg"><i class="bi bi-check2"></i> @L["Save entity branding"]</button><a class="btn btn-ghost" asp-controller="Entities" asp-action="Details" asp-route-id="@node.Id" asp-route-tab="branding">@L["Cancel"]</a></div>
+    </div>
+
+    <aside class="eb-preview">
+        <div class="panel"><div class="panel-head"><h2><i class="bi bi-eye"></i> @L["Live preview"]</h2></div><div class="panel-body">
+            <div class="pv-stage theme-scope" data-eb-scope>
+                <div class="pv-device" data-device-frame="desktop"><div class="pv-viewport" data-eb-viewport style="--vw:1280px;--vh:800px">
+                    @await Html.PartialAsync("_AppPreview", eff, previewData)
+                </div></div>
+            </div>
+        </div></div>
+    </aside>
+</form>
+@section Scripts { <script src="~/js/entity-branding.js" asp-append-version="true"></script> }

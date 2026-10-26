@@ -161,6 +161,31 @@ public class WindowsAuthTests(WindowsTestApp app) : IClassFixture<WindowsTestApp
     }
 
     [Fact]
+    public async Task A_domain_mapped_to_an_entity_places_new_windows_accounts_there_without_changing_authentication()
+    {
+        // directory mapping (entity directory source) is separate from authentication: sign-in still goes through Windows/IIS
+        var entityId = await app.Db(async d =>
+        {
+            var root = await d.Entities.SingleAsync(e => e.ParentEntityId == null);
+            var e = new OrgEntity { Name = "هيئة الدليل", Code = "DIR-MAP", ParentEntityId = root.Id, Depth = 1, Path = "" };
+            d.Entities.Add(e); await d.SaveChangesAsync();
+            e.Path = root.Path + e.Id + "/";
+            d.EntityDirectorySources.Add(new EntityDirectorySource { EntityId = e.Id, Enabled = true, Domain = "CORP" });
+            await d.SaveChangesAsync();
+            return e.Id;
+        });
+        try
+        {
+            Assert.Equal(HttpStatusCode.Redirect, (await As(@"CORP\mapped.user").GetAsync("/Account/WindowsLogin")).StatusCode);
+            var u = await app.Db(d => d.Users.Include(x => x.UserRoles).ThenInclude(x => x.Role).SingleAsync(x => x.NormalizedUsername == @"corp\mapped.user"));
+            Assert.Equal(entityId, u.EntityId);
+            Assert.Equal([RoleNames.User], u.UserRoles.Select(x => x.Role.Name).ToArray());   // never an administrator
+            Assert.False(await app.Db(d => d.EntityAdminAssignments.AnyAsync(a => a.UserId == u.Id)));
+        }
+        finally { await app.Db(async d => { d.EntityDirectorySources.RemoveRange(d.EntityDirectorySources); return await d.SaveChangesAsync(); }); }
+    }
+
+    [Fact]
     public void Ldap_filter_values_are_escaped()
     {
         Assert.Equal(@"a\2a\28b\29\5c", ActiveDirectoryLookup.EscapeFilter(@"a*(b)\"));

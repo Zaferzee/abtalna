@@ -1,0 +1,10 @@
+@model EntitySelectVm
+@* Entity picker: entities in tree order, indented by depth. Only entities the caller is allowed to use are passed in. *@
+<select class="form-select entity-select" name="@Model.Name" id="@(Model.Id ?? "f-" + Model.Name)" required="@Model.Required">
+    @if (Model.AllLabel != null) { <option value="">@Model.AllLabel</option> }
+    @foreach (var e in Model.Entities)
+    {
+        var minDepth = Model.Entities.Min(x => x.Depth);
+        <option value="@e.Id" selected="@(Model.Selected == e.Id)">@(new string(' ', (e.Depth - minDepth) * 3))@(e.Depth > minDepth ? "› " : "")@e.Name@(e.EffectiveActive ? "" : " ⦸")</option>
+    }
+</select>

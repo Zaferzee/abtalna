@@ -26,7 +26,7 @@ public class AuthService(AppDbContext db, PasswordService passwords, IConfigurat
         var n = username.Trim().ToLowerInvariant();
         var user = await db.Users.Include(u => u.UserRoles).ThenInclude(r => r.Role).FirstOrDefaultAsync(u => u.NormalizedUsername == n);
         const string generic = "Invalid username or password.";
-        if (user == null || user.PasswordHash == null || !user.IsActive) { passwords.Verify(new User { PasswordHash = null }, password); return (null, generic); }
+        if (user == null || user.PasswordHash == null || !user.IsActive || !await EntityActiveAsync(user.EntityId)) { passwords.Verify(new User { PasswordHash = null }, password); return (null, generic); }
         if (user.LockoutUntil > DateTime.UtcNow) return (null, "Account temporarily locked. Try again later.");
         if (!passwords.Verify(user, password))
         {
@@ -72,8 +72,13 @@ public class AuthService(AppDbContext db, PasswordService passwords, IConfigurat
             }
             var info = directory.Find(domain, sam);
             var role = await db.Roles.FirstAsync(r => r.Name == RoleNames.User);
+            // Directory mapping (not authentication): a domain configured as an entity's directory source places new accounts in that
+            // entity; otherwise they start in the root entity. Never an administrator.
+            var entityId = await db.EntityDirectorySources.Where(d => d.Enabled && d.Domain.ToLower() == domain.ToLower() && d.Entity.IsActive)
+                .Select(d => (int?)d.EntityId).FirstOrDefaultAsync() ?? await db.Entities.Where(e => e.ParentEntityId == null).Select(e => e.Id).FirstAsync();
             user = new User
             {
+                EntityId = entityId,
                 Username = windowsName, NormalizedUsername = n, ExternalId = windowsName, AuthSource = "Windows",
                 DisplayName = string.IsNullOrWhiteSpace(info?.DisplayName) ? sam : info!.DisplayName!, Email = info?.Email,
             };
@@ -93,9 +98,13 @@ public class AuthService(AppDbContext db, PasswordService passwords, IConfigurat
                 if (user.DisplayName == sam && !string.IsNullOrWhiteSpace(info.DisplayName)) user.DisplayName = info.DisplayName!;
             }
         }
-        if (!user.IsActive) { log.LogWarning("Windows sign-in rejected: account '{Identity}' is disabled.", windowsName); return (null, "Your account is disabled."); }
+        if (!user.IsActive || !await EntityActiveAsync(user.EntityId)) { log.LogWarning("Windows sign-in rejected: account '{Identity}' or its entity is disabled.", windowsName); return (null, "Your account is disabled."); }
         return (user, null);
     }
+
+    /// <summary>The entity and all its ancestors are active (a disabled entity blocks sign-in of everyone in its subtree).</summary>
+    private Task<bool> EntityActiveAsync(int entityId) =>
+        db.Entities.Where(e => e.Id == entityId).AllAsync(x => !db.Entities.Any(a => !a.IsActive && x.Path.StartsWith(a.Path)));
 
     public async Task SignInAsync(HttpContext http, User user)
     {
@@ -107,6 +116,7 @@ public class AuthService(AppDbContext db, PasswordService passwords, IConfigurat
             new(ClaimTypes.Name, user.Username),
             new("display_name", user.DisplayName),
             new("must_change_password", user.MustChangePassword ? "1" : "0"),
+            new("entity_id", user.EntityId.ToString()),
         };
         claims.AddRange(user.UserRoles.Select(r => new Claim(ClaimTypes.Role, r.Role.Name)));
         var id = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

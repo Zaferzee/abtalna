@@ -118,11 +118,13 @@ public static class LearningProgress
     /// are not linked to published content. Optionally restricted to one content item.</summary>
     public static async Task<List<LearningItem>> ForUser(AppDbContext db, int userId, int? contentId = null)
     {
-        var contents = await db.Contents.AsNoTracking()
+        // only material targeted to the user's entity (audience rules in EntityVisibility)
+        var viewer = await EntityVisibility.ForUserAsync(db, userId);
+        var contents = await db.Contents.AsNoTracking().Where(EntityVisibility.Content(viewer))
             .Where(c => c.Status == ContentStatus.Published && (contentId == null || c.Id == contentId))
             .OrderByDescending(c => c.PublishedAt).Take(1000).ToListAsync();
         var cids = contents.Select(c => c.Id).ToList();
-        var asmQuery = db.Assessments.AsNoTracking().Where(a => a.IsPublished && a.Questions.Any());
+        var asmQuery = db.Assessments.AsNoTracking().Where(EntityVisibility.Assessment(viewer)).Where(a => a.IsPublished && a.Questions.Any());
         asmQuery = contentId == null ? asmQuery : asmQuery.Where(a => a.ContentId == contentId);
         var assessments = await asmQuery.OrderBy(a => a.Id).ToListAsync();
         var status = await AssessmentQueries.ForUser(db, userId, assessments);
