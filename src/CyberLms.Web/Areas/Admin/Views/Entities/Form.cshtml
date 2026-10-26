@@ -12,7 +12,7 @@
         @if (!Model.IsRoot)
         {
             <div><label class="form-label" for="f-ParentEntityId">@L["Parent entity"]</label>@await Html.PartialAsync("_EntitySelect", new EntitySelectVm("ParentEntityId", Model.Parents, Model.ParentEntityId, null, null, true))<div class="form-text">@L["Any depth is supported: ministry, agency, general directorate, department…"]</div></div>
-            <div class="form-check form-switch"><input type="hidden" name="IsActive" value="false" /><input class="form-check-input" type="checkbox" id="f-IsActive" name="IsActive" value="true" checked="@Model.IsActive" /><label class="form-check-label" for="f-IsActive">@L["Active"]<small class="d-block text-muted">@L["Disabling an entity blocks sign-in for its users and all its sub-entities and suspends its administrators."]</small></label></div>
+            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="f-IsActive" name="IsActive" value="true" checked="@Model.IsActive" /><input type="hidden" name="IsActive" value="false" /><label class="form-check-label" for="f-IsActive">@L["Active"]<small class="d-block text-muted">@L["Disabling an entity blocks sign-in for its users and all its sub-entities and suspends its administrators."]</small></label></div>
         }
         else { <input type="hidden" name="IsActive" value="true" /><p class="form-text"><i class="bi bi-star"></i> @L["This is the root entity: the central organization. It always holds every capability."]</p> }
     </div></div></div>

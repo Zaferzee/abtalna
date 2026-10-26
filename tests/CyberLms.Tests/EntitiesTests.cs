@@ -188,6 +188,27 @@ public class EntitiesTests(TestApp app) : IClassFixture<TestApp>
         Assert.Contains("ENTITY_CREATED", audit); Assert.Contains("ENTITY_MOVED", audit);
     }
 
+    [Fact]
+    public async Task Switches_post_checkbox_then_hidden_value_like_a_browser_and_bind_correctly()
+    {
+        // a ticked switch sends "true" followed by the hidden "false" (DOM order); MVC binds the first value
+        var central = await CentralAsync();
+        var root = await RootId();
+        var code = "SW-" + Guid.NewGuid().ToString("N")[..5].ToUpperInvariant();
+        var r = await central.PostForm("/Admin/Entities/Create", "/Admin/Entities/Create", [F("Name", "switch"), F("Code", code), F("ParentEntityId", root.ToString()), F("IsActive", "true"), F("IsActive", "false"), F("Allowed", "ManageUsers")]);
+        Assert.Equal(HttpStatusCode.Redirect, r.StatusCode);
+        Assert.True(await app.Db(d => d.Entities.Where(e => e.Code == code).Select(e => e.IsActive).SingleAsync()));
+        var form = await central.GetStringAsync("/Admin/Entities/Create");
+        Assert.Matches("name=\"IsActive\" value=\"true\"[^>]*/><input type=\"hidden\" name=\"IsActive\" value=\"false\"", form);
+        var basics = await central.GetStringAsync("/Admin/Authoring/New");
+        Assert.Matches("name=\"TargetsIncludeDescendants\" value=\"true\"[^>]*/><input type=\"hidden\" name=\"TargetsIncludeDescendants\" value=\"false\"", basics);
+        var id = await EntityAsync(central, "sw2", code + "B", root);
+        var c = await central.PostForm("/Admin/Authoring/New", "/Admin/Authoring/Basics", [F("Title", "switch content " + code), F("Type", "6"), F("OwnerEntityId", root.ToString()), F("Audience", "2"),
+            F("TargetIds", id.ToString()), F("TargetsIncludeDescendants", "true"), F("TargetsIncludeDescendants", "false"), F("go", "draft")]);
+        Assert.Equal(HttpStatusCode.Redirect, c.StatusCode);
+        Assert.True(await app.Db(d => d.ContentEntityTargets.Where(t => t.EntityId == id).Select(t => t.IncludeDescendants).SingleAsync()));
+    }
+
     // ------------------------------------------------------------------------------------------------ delegation
 
     [Fact]

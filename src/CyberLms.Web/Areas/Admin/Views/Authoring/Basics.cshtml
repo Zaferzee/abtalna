@@ -79,7 +79,7 @@
                         <label class="aud-node" style="--d:@(e.Depth - min)"><input type="checkbox" class="form-check-input" name="TargetIds" value="@e.Id" checked="@Model.TargetIds.Contains(e.Id)" /> <span class="bidi">@e.Name</span> <code dir="ltr">@e.Code</code></label>
                     }
                 </div>
-                <div class="form-check form-switch mt-2"><input type="hidden" name="TargetsIncludeDescendants" value="false" /><input class="form-check-input" type="checkbox" id="f-tdesc" name="TargetsIncludeDescendants" value="true" checked="@Model.TargetsIncludeDescendants" /><label class="form-check-label" for="f-tdesc">@L["Include the sub-entities of each selected entity"]</label></div>
+                <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" id="f-tdesc" name="TargetsIncludeDescendants" value="true" checked="@Model.TargetsIncludeDescendants" /><input type="hidden" name="TargetsIncludeDescendants" value="false" /><label class="form-check-label" for="f-tdesc">@L["Include the sub-entities of each selected entity"]</label></div>
             </div>
         </div>
     </section>

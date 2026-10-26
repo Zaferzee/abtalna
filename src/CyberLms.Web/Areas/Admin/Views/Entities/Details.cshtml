@@ -77,7 +77,7 @@
                             @if (editable)
                             {
                                 <div class="ac-actions">
-                                    <div class="form-check form-switch m-0"><input type="hidden" name="includeDescendants" value="false" /><input class="form-check-input" type="checkbox" id="desc-@a.Id" name="includeDescendants" value="true" checked="@a.IncludeDescendants" /><label class="form-check-label" for="desc-@a.Id">@L["Also for sub-entities"]</label></div>
+                                    <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" id="desc-@a.Id" name="includeDescendants" value="true" checked="@a.IncludeDescendants" /><input type="hidden" name="includeDescendants" value="false" /><label class="form-check-label" for="desc-@a.Id">@L["Also for sub-entities"]</label></div>
                                     <button class="btn btn-sm btn-primary"><i class="bi bi-check2"></i> @L["Save permissions"]</button>
                                     <button class="btn btn-sm btn-outline-danger" formaction="@Url.Action("RevokeAdmin", new { id = n.Id })" data-confirm-click="@L["Remove this administrator from the entity?"]"><i class="bi bi-person-dash"></i> @L["Remove"]</button>
                                 </div>
@@ -96,7 +96,7 @@
                                 @foreach (var c in CyberLms.Web.Areas.Admin.Controllers.EntitiesController.Delegable.Where(c => grantable.HasFlag(c)))
                                 { <label class="cap-opt"><input type="checkbox" class="form-check-input" name="caps" value="@c" /><i class="bi @Labels.CapabilityIcon(c)"></i><span>@L[Labels.Capability(c)]</span></label> }
                             </div>
-                            <div class="form-check form-switch"><input type="hidden" name="includeDescendants" value="false" /><input class="form-check-input" type="checkbox" id="f-desc" name="includeDescendants" value="true" checked /><label class="form-check-label" for="f-desc">@L["Also for sub-entities"]</label></div>
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="f-desc" name="includeDescendants" value="true" checked /><input type="hidden" name="includeDescendants" value="false" /><label class="form-check-label" for="f-desc">@L["Also for sub-entities"]</label></div>
                             <button class="btn btn-primary"><i class="bi bi-person-check"></i> @L["Assign"]</button>
                         </form>
                     </div></section>
@@ -148,7 +148,7 @@
             else
             {
                 <form method="post" asp-action="SaveDirectory" asp-route-id="@n.Id" class="stack" style="--gap:1rem" autocomplete="off">
-                    <div class="form-check form-switch"><input type="hidden" name="Enabled" value="false" /><input class="form-check-input" type="checkbox" id="f-den" name="Enabled" value="true" checked="@(d?.Enabled == true)" /><label class="form-check-label" for="f-den">@L["Use this directory for the entity"]</label></div>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="f-den" name="Enabled" value="true" checked="@(d?.Enabled == true)" /><input type="hidden" name="Enabled" value="false" /><label class="form-check-label" for="f-den">@L["Use this directory for the entity"]</label></div>
                     <div class="row g-3">
                         <div class="col-md-5"><label class="form-label" for="f-dom">@L["Domain (NetBIOS)"]</label><input class="form-control" dir="ltr" id="f-dom" name="Domain" value="@d?.Domain" maxlength="15" placeholder="AGENCY" /></div>
                         <div class="col-md-7"><label class="form-label" for="f-ldap">@L["LDAP path"]</label><input class="form-control" dir="ltr" id="f-ldap" name="LdapPath" value="@d?.LdapPath" maxlength="500" placeholder="LDAP://dc01.agency.local" /></div>

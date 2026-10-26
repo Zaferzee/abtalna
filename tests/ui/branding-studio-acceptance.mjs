@@ -173,7 +173,7 @@ await choose(a, 'LoginImageFit', 'cover'); await choose(a, 'LoginImagePosition',
 await range(a, 'LoginImageZoom', 100); await range(a, 'LoginOverlayOpacity', 40);
 await a.fill('#f-LoginOverlayColor', '#3a2434');
 await choose(a, 'LoginLayout', 'full'); await choose(a, 'LoginTextAlign', 'center');
-await choose(a, 'LoginDecorStyle', 'none');
+await tab(a, 'composition'); await a.click('[data-comp-preset="clean"]'); await tab(a, 'media');
 const pvFull = await a.evaluate(() => { const r = document.querySelector('[data-pv-auth]'); return r.classList.contains('layout-full') && r.classList.contains('align-center') && r.classList.contains('no-decor') && r.classList.contains('logo-card'); });
 ok(pvFull, 'preview switches layout (full-screen), text placement (centered), decoration and logo placement');
 await top(a); await shot(a, '13-studio-mauve-full', 'الاستوديو: سمة «الوردي الموفي الهادئ» مع صورة بملء الشاشة ونص في المنتصف وشعار داخل بطاقة الدخول');

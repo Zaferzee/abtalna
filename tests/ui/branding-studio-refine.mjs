@@ -24,6 +24,9 @@ async function shot(p, name, desc, { wait = 700, el = null } = {}) {
   shots.push({ name, desc }); console.log('shot', name);
 }
 const login = async (p, u, pw) => { await p.goto(base + '/Account/Login'); await p.fill('#Username', u); await p.fill('#Password', pw); await p.click('form[action="/Account/Login"] button.btn-primary'); await p.waitForLoadState('networkidle'); };
+// v1.2: the single decorative pattern became the visual composition system; the old styles map to these presets
+const COMP = { shield: 'executive', orbs: 'minimal', checklist: 'policy', grid: 'governance', document: 'policy', journey: 'journey', none: 'clean' };
+const decor = async (p, style, back = 'media') => { await tab(p, 'composition'); await p.click(`[data-comp-preset="${COMP[style]}"]`); await tab(p, back); };
 const tab = async (p, id) => { await p.click(`[data-studio-tab="${id}"]`); await p.waitForTimeout(250); };
 const choose = (p, name, value) => p.click(`label:has(> input[name="${name}"][value="${value}"])`);
 const range = (p, name, v) => p.evaluate(([n, x]) => { const el = document.querySelector(`input[name="${n}"]`); el.value = x; el.dispatchEvent(new Event('input', { bubbles: true })); }, [name, v]);
@@ -40,11 +43,11 @@ const pvState = p => p.evaluate(() => {
   const inner = root.querySelector('.auth-hero-inner');
   return { cls: root.className, frame: vis('.auth-media-frame'), figure: !!fig, slot: fig ? (fig.classList.contains('slot-above') ? 'above' : 'below') : '',
     figW: fig ? Math.round(fig.getBoundingClientRect().width / inner.getBoundingClientRect().width * 100) : 0,
-    decor: [...root.querySelectorAll('.dc')].filter(e => getComputedStyle(e).display !== 'none').map(e => [...e.classList].filter(c => c.startsWith('dc-')).join(' ')) };
+    decor: [...root.querySelectorAll('.auth-layer')].filter(e => getComputedStyle(e).display !== 'none' && !e.hasAttribute('hidden')).map(e => 'dc-' + e.dataset.motif) };
 });
 const realState = p => p.evaluate(() => {
   const root = document.querySelector('.auth'), fig = document.querySelector('.auth-figure'), inner = document.querySelector('.auth-hero-inner');
-  const art = [...document.querySelectorAll('.dc')].filter(e => getComputedStyle(e).display !== 'none').map(e => e.tagName.toLowerCase() + '.' + [...e.classList].filter(c => c.startsWith('dc-')).join('.'));
+  const art = [...document.querySelectorAll('.auth-layer')].filter(e => getComputedStyle(e).display !== 'none').map(e => 'svg.dc-' + e.dataset.motif);
   return { cls: root.className, rtl: document.documentElement.dir, overflow: document.documentElement.scrollWidth > innerWidth + 1,
     frame: getComputedStyle(document.querySelector('.auth-media-frame')).display !== 'none', mediaBg: getComputedStyle(document.querySelector('.auth-media')).backgroundImage,
     figure: !!fig && getComputedStyle(fig).display !== 'none', figW: fig ? Math.round(fig.getBoundingClientRect().width / inner.getBoundingClientRect().width * 100) : 0,
@@ -102,7 +105,7 @@ ok(pv.cls.includes('img-small') && pv.figure && !pv.frame && pv.figW >= 18 && pv
 const sizeShown = await a.evaluate(() => !document.querySelector('[data-show-modes="large medium small"]').hidden && document.querySelector('[data-show-modes="background"]').hidden);
 ok(sizeShown, 'size / alignment / placement controls appear for framed modes; overlay only for the full background');
 await choose(a, 'LoginImageAlign', 'start'); await choose(a, 'LoginImageSlot', 'above'); await range(a, 'LoginImageSize', 24);
-await choose(a, 'LoginDecorStyle', 'grid');
+await decor(a, 'grid');
 await shot(a, '05-studio-image-small', 'الاستوديو: وضع «صغيرة (عنصر بصري)» مع الحجم والمحاذاة والمكان، والمعاينة تعرض الصورة فوراً');
 await save(a);
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
@@ -117,7 +120,7 @@ await a.waitForFunction(() => (document.querySelector('[data-pv-auth] .auth-hero
 await choose(a, 'LoginImageMode', 'medium'); await choose(a, 'LoginImageSlot', 'below'); await choose(a, 'LoginImageAlign', 'start');
 pv = await pvState(a);
 ok(pv.cls.includes('img-medium') && pv.figure && pv.slot === 'below' && pv.figW >= 56 && pv.figW <= 64, `preview: medium image below the text (${pv.figW}%)`);
-await choose(a, 'LoginDecorStyle', 'orbs');
+await decor(a, 'orbs');
 await save(a);
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
 R = await realState(g);
@@ -126,7 +129,7 @@ await shot(g, '07-login-image-medium', 'صفحة الدخول: صورة متوس
 
 // full background with an inset frame
 await toStudio(a); await tab(a, 'media');
-await choose(a, 'LoginImageMode', 'background'); await range(a, 'LoginImageInset', 0); await choose(a, 'LoginDecorStyle', 'shield');
+await choose(a, 'LoginImageMode', 'background'); await range(a, 'LoginImageInset', 0); await decor(a, 'shield');
 pv = await pvState(a);
 ok(pv.cls.includes('img-background') && pv.cls.includes('has-image') && pv.frame && !pv.figure, 'preview: full background, no framed picture');
 await shot(a, '08-studio-image-background', 'الاستوديو: وضع «خلفية كاملة» (تظهر التغطية والتكبير ونقطة التركيز)');
@@ -139,7 +142,7 @@ await shot(g, '09-login-image-background', 'صفحة الدخول: الصورة 
 const m = await page({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 await m.goto(base + '/Account/Login'); await m.waitForLoadState('networkidle'); await m.evaluate(() => window.scrollTo(0, 0));
 R = await realState(m);
-ok(!R.overflow && R.frame && R.art.every(x => !x.startsWith('svg')), 'phone: full background, no overflow, line art hidden');
+ok(!R.overflow && R.frame && R.art.every(x => x === 'svg.dc-circles'), 'phone: full background, no overflow, only the soft accent remains');
 await m.context().close();
 
 // hidden
@@ -147,32 +150,33 @@ await toStudio(a); await tab(a, 'media'); await choose(a, 'LoginImageMode', 'hid
 pv = await pvState(a);
 ok(pv.cls.includes('img-hidden') && !pv.frame && !pv.figure, 'preview: hidden mode shows no image (file kept)');
 
-// ================= 3. decorative patterns (instant in the preview) =================
-const styles = ['shield', 'orbs', 'checklist', 'grid', 'document', 'journey', 'none'];
+// ================= 3. visual compositions (instant in the preview) =================
+const ids = ['executive', 'governance', 'policy', 'journey', 'defense', 'minimal', 'clean'];
 const seen = {};
-for (const s of styles) { await choose(a, 'LoginDecorStyle', s); seen[s] = await pvState(a); }
-ok(styles.every(s => seen[s].cls.includes('decor-' + s)), 'preview: every decorative pattern applies immediately');
-ok(['checklist', 'grid', 'document', 'journey'].every(s => seen[s].decor.some(d => d.includes('dc-' + s))) && seen.none.decor.length === 0 && seen.none.cls.includes('no-decor'),
-  'preview: the chosen line art is shown and "No decoration" hides everything');
-await choose(a, 'LoginDecorStyle', 'checklist');
-await a.evaluate(() => document.querySelector('.decor-picker').scrollIntoView({ block: 'center', behavior: 'instant' }));
-await shot(a, '10-studio-decor-picker', 'الاستوديو: اختيار «النمط الزخرفي» (درع، دوائر ناعمة، قائمة تحقق، شبكة الضوابط، وثيقة السياسة، مسار التقدم، بدون) والمعاينة تتغير فوراً');
+await tab(a, 'composition');
+for (const id of ids) { await a.click(`[data-comp-preset="${id}"]`); seen[id] = await pvState(a); }
+ok(ids.every(id => seen[id].cls.includes('comp-' + id)), 'preview: every composition applies immediately');
+ok(['executive', 'governance', 'policy', 'defense'].every(id => seen[id].decor.length >= 2) && seen.clean.decor.length === 0 && seen.clean.cls.includes('no-decor'),
+  'preview: compositions show their layered line art and "Clean" hides everything');
+await a.click('[data-comp-preset="policy"]');
+await a.evaluate(() => document.querySelector('.comp-grid').scrollIntoView({ block: 'center', behavior: 'instant' }));
+await shot(a, '10-studio-decor-picker', 'الاستوديو: «التكوين البصري» يحل محل النمط الزخرفي المفرد (تكوينات جاهزة بطبقات) والمعاينة تتغير فوراً');
 await save(a);
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
 R = await realState(g);
-ok(R.cls.includes('decor-checklist') && R.art.includes('svg.dc-checklist'), 'login page: "Checklist" pattern');
-await shot(g, '11-login-decor-checklist', 'صفحة الدخول: نمط «قائمة تحقق»', { wait: 1200 });
-await toStudio(a); await tab(a, 'media'); await choose(a, 'LoginDecorStyle', 'journey'); await save(a);
+ok(R.cls.includes('comp-policy') && R.art.includes('svg.dc-checklist') && R.art.includes('svg.dc-document'), 'login page: "Policy & Controls" composition (document + checklist)');
+await shot(g, '11-login-decor-checklist', 'صفحة الدخول: تكوين «السياسات والضوابط»', { wait: 1200 });
+await toStudio(a); await tab(a, 'composition'); await a.click('[data-comp-preset="journey"]'); await save(a);
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
 R = await realState(g);
-ok(R.cls.includes('decor-journey') && R.art.includes('svg.dc-journey'), 'login page: "Progress journey" pattern');
-await shot(g, '12-login-decor-journey', 'صفحة الدخول: نمط «مسار التقدم»', { wait: 1200 });
-await toStudio(a); await tab(a, 'media'); await choose(a, 'LoginDecorStyle', 'document'); await save(a);
+ok(R.cls.includes('comp-journey') && R.art.includes('svg.dc-journey'), 'login page: "Awareness Journey" composition');
+await shot(g, '12-login-decor-journey', 'صفحة الدخول: تكوين «رحلة التوعية»', { wait: 1200 });
+await toStudio(a); await tab(a, 'composition'); await a.click('[data-comp-preset="governance"]'); await save(a);
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
-await shot(g, '13-login-decor-document', 'صفحة الدخول: نمط «وثيقة السياسة»', { wait: 1200 });
+await shot(g, '13-login-decor-document', 'صفحة الدخول: تكوين «الحوكمة والامتثال»', { wait: 1200 });
 
 // ================= 4. themes, Arabic and RTL unaffected =================
-await toStudio(a); await tab(a, 'colors'); await a.click('[data-preset-id="mauve"]'); await tab(a, 'media'); await choose(a, 'LoginImageMode', 'large'); await choose(a, 'LoginDecorStyle', 'grid'); await save(a);
+await toStudio(a); await tab(a, 'colors'); await a.click('[data-preset-id="mauve"]'); await tab(a, 'media'); await choose(a, 'LoginImageMode', 'large'); await decor(a, 'grid'); await save(a);
 const css = await (await a.request.get(base + '/branding/theme.css')).text();
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
 R = await realState(g);
@@ -185,7 +189,7 @@ await shot(g, '14-login-mauve-large', 'سمة «الوردي الموفي اله
 await toStudio(a); await a.click('[data-studio-reset]'); await a.waitForSelector('#confirmModal.show'); await a.click('#confirmModalOk'); await a.waitForLoadState('networkidle');
 await g.goto(base + '/Account/Login'); await g.waitForLoadState('networkidle');
 R = await realState(g);
-ok(R.cls.includes('decor-shield') && R.cls.includes('img-none') && !R.figure && !R.frame, 'reset to default: default decoration, no image');
+ok(R.cls.includes('comp-executive') && R.cls.includes('img-none') && !R.figure && !R.frame, 'reset to default: default decoration, no image');
 
 console.log('CHECKS ' + checks.filter(c => c.pass).length + '/' + checks.length);
 console.log('ERRORS ' + (errs.length ? errs.join('\n') : 'none'));

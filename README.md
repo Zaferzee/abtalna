@@ -12,6 +12,7 @@ Internal, on-premises LMS for publishing cybersecurity policies/controls/trainin
 | Build assessments (single / true-false / multiple choice), pass mark, attempts | Take assessments, see Passed/Failed immediately |
 | Reports (assessment results, attempts, acknowledgments) + CSV/Excel export, email reminders | Acknowledge policies, view own history |
 | Users (create, import CSV, roles, reset password), audit log | **Arabic-first, fully RTL** interface (English kept for future use) |
+| **Organization (hierarchical entities)**: central governance, delegated entity administrators with explicit capabilities, content targeting, scoped reports, entity branding, directory sources ([docs/ENTERPRISE_ENTITIES.md](docs/ENTERPRISE_ENTITIES.md)) | |
 | **Settings -> Branding & Appearance studio** (multi-line names, logos and icons, login page text and image controls, formal theme presets, colors, live preview, readability checks; see [docs/BRANDING.md](docs/BRANDING.md)), SMTP | |
 
 ## Quick start (development)
