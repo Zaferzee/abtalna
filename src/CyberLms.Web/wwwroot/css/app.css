@@ -136,6 +136,8 @@
 .ref-chip { display: inline-flex; align-items: center; gap: .35rem; font-size: .76rem; font-weight: 600; padding: .2rem .6rem; border-radius: var(--radius-pill); background: var(--color-surface-alt, #f4f6fb); color: var(--color-muted); border: 1px solid var(--color-border); width: fit-content; max-width: 100%; }
 .ref-chip.warn { background: #fff7e6; color: #8a5a00; border-color: #f3d9a4; }
 .ref-chip.muted { opacity: .85; }
+.ref-chip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-refs { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .35rem; } .t-refs .ref-chip { font-size: .72rem; padding: .1rem .55rem; }
 .starter-ref { display: flex; flex-wrap: wrap; gap: .4rem; }
 .type-1 { --tc: var(--warning-ink); --tc-bg: var(--warning-bg); } .type-2 { --tc: var(--primary-700); --tc-bg: var(--primary-50); } .type-3 { --tc: var(--accent-600); --tc-bg: var(--accent-50); }
 .type-4 { --tc: #6b3fb0; --tc-bg: #f1ebfb; } .type-5 { --tc: var(--neutral-ink); --tc-bg: var(--neutral-bg); } .type-6 { --tc: var(--neutral-ink); --tc-bg: var(--color-surface-alt); }
