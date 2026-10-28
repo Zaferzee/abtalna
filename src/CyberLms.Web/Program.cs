@@ -203,6 +203,27 @@ app.MapGet("/health", async (AppDbContext db) =>
 
 await DbSeeder.MigrateAndSeedAsync(app.Services, builder.Configuration, app.Logger);
 
+// Optional starter content pack (default OFF). Installed only on explicit request, never by default in any environment:
+//   configuration  Seed:StarterContentPack=true  (environment variable Seed__StarterContentPack=true), or
+//   console        dotnet CyberLms.Web.dll --install-starter-pack
+// Idempotent: a second run reports that the pack is already installed and changes nothing.
+var installPack = args.Contains("--install-starter-pack");
+if (installPack || builder.Configuration.GetValue("Seed:StarterContentPack", false))
+{
+    var r = await StarterContentPack.InstallAsync(app.Services, app.Logger);
+    if (installPack) { Console.WriteLine(r.Message); Environment.ExitCode = r.Ok ? 0 : 1; return; }
+    if (!r.Ok) app.Logger.LogError("{Message}", r.Message);
+}
+// Development-only demonstration users and results for the starter pack (separate from the content; refused outside Development):
+//   dotnet CyberLms.Web.dll --seed-starter-demo
+if (args.Contains("--seed-starter-demo"))
+{
+    var r = await StarterContentPack.SeedDemoDataAsync(app.Services, app.Environment, app.Logger);
+    Console.WriteLine(r.Message);
+    Environment.ExitCode = r.Ok ? 0 : 1;
+    return;
+}
+
 // One-time administrator bootstrap from the server console:  dotnet CyberLms.Web.dll --bootstrap-admin "DOMAIN\\user"
 var bootstrapIdx = Array.IndexOf(args, "--bootstrap-admin");
 if (bootstrapIdx >= 0)

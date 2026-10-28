@@ -74,13 +74,17 @@ public class ContentAuthoring(AppDbContext db, StorageService storage, AuditServ
     private static HtmlSanitizer CreateSanitizer()
     {
         var s = new HtmlSanitizer();
-        // Images may only reference files uploaded through the editor (served by FilesController.Inline); no external or data: images.
-        s.FilterUrl += (_, e) => { if (string.Equals(e.Tag?.LocalName, "img", StringComparison.OrdinalIgnoreCase) && !(e.OriginalUrl ?? "").StartsWith("/Files/Inline/", StringComparison.Ordinal)) e.SanitizedUrl = null; };
+        // Images may only reference files uploaded through the editor (served by FilesController.Inline) or the static illustrations
+        // shipped with the application for the starter content pack; no external or data: images.
+        s.FilterUrl += (_, e) => { if (string.Equals(e.Tag?.LocalName, "img", StringComparison.OrdinalIgnoreCase) && !IsAllowedImage(e.OriginalUrl)) e.SanitizedUrl = null; };
         s.AllowedAttributes.Add("dir");
         // Tables (regulations, violation schedules): structure only. Cell spans are kept; no inline event/style tricks get through the sanitizer.
         foreach (var a in new[] { "colspan", "rowspan" }) s.AllowedAttributes.Add(a);
         return s;
     }
+
+    private static readonly System.Text.RegularExpressions.Regex StarterIllustration = new(@"^/img/starter-pack/[a-z0-9-]{1,40}\.svg$");
+    private static bool IsAllowedImage(string? url) => url != null && (url.StartsWith("/Files/Inline/", StringComparison.Ordinal) || StarterIllustration.IsMatch(url));
 
     public static string? CleanBody(string? html) => string.IsNullOrWhiteSpace(html) ? null : Sanitizer.Sanitize(html);
 

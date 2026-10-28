@@ -468,6 +468,7 @@
   <data name="Graphite" xml:space="preserve"><value>جرافيتي</value></data>
   <data name="Graphite Gold" xml:space="preserve"><value>الجرافيت الذهبي</value></data>
   <data name="Great, there are no pending tasks right now." xml:space="preserve"><value>رائع، لا توجد مهام معلقة حالياً.</value></data>
+  <data name="Guidance reference: {0} — {1}" xml:space="preserve"><value>مرجع استرشادي: {0} — {1}</value></data>
   <data name="Have you finished reading this item?" xml:space="preserve"><value>هل أنهيت قراءة هذه المادة؟</value></data>
   <data name="Header and sidebar" xml:space="preserve"><value>الترويسة والقائمة الجانبية</value></data>
   <data name="Header background" xml:space="preserve"><value>خلفية الترويسة</value></data>
@@ -669,6 +670,7 @@
   <data name="of" xml:space="preserve"><value>من</value></data>
   <data name="of {0}" xml:space="preserve"><value>من {0}</value></data>
   <data name="Official and authoritative" xml:space="preserve"><value>رسمي وموثوق</value></data>
+  <data name="Official media slot: an NCA/Haseen awareness asset can be attached here later" xml:space="preserve"><value>موضع وسائط رسمية: يمكن إرفاق مادة توعوية رسمية لاحقًا</value></data>
   <data name="On this page" xml:space="preserve"><value>في هذه الصفحة</value></data>
   <data name="One or two sentences shown in lists and on the employee dashboard." xml:space="preserve"><value>جملة أو جملتان تظهران في القوائم ولوحة الموظف.</value></data>
   <data name="One platform, one governance: entities receive delegated administration; the central administrator keeps visibility and control over the whole hierarchy." xml:space="preserve"><value>منصة واحدة وحوكمة واحدة: تحصل الجهات على إدارة مفوّضة، ويحتفظ المدير المركزي بالرؤية والتحكم في الهيكل كله.</value></data>
@@ -978,6 +980,9 @@
   <data name="Start reading" xml:space="preserve"><value>ابدأ القراءة</value></data>
   <data name="Start writing here, or paste from Word..." xml:space="preserve"><value>ابدأ الكتابة هنا، أو الصق من Word...</value></data>
   <data name="Started" xml:space="preserve"><value>البدء</value></data>
+  <data name="Starter content pack" xml:space="preserve"><value>حزمة المحتوى الأولي</value></data>
+  <data name="STARTER_DEMO_DATA_CREATED" xml:space="preserve"><value>إنشاء بيانات تجريبية للحزمة الأولية</value></data>
+  <data name="STARTER_PACK_INSTALLED" xml:space="preserve"><value>تثبيت حزمة المحتوى الأولي</value></data>
   <data name="Status" xml:space="preserve"><value>الحالة</value></data>
   <data name="Status badges" xml:space="preserve"><value>شارات الحالة</value></data>
   <data name="Step {0} of {1}" xml:space="preserve"><value>الخطوة {0} من {1}</value></data>
@@ -995,6 +1000,7 @@
   <data name="Table size (rows x columns), e.g. 4x3" xml:space="preserve"><value>حجم الجدول (صفوف × أعمدة)، مثال 4×3</value></data>
   <data name="Tables: use the table button, then add rows and columns." xml:space="preserve"><value>الجداول: استخدم زر الجدول ثم أضف الصفوف والأعمدة.</value></data>
   <data name="Target entities" xml:space="preserve"><value>الجهات المستهدفة</value></data>
+  <data name="Template: review and approve before production use" xml:space="preserve"><value>نموذج استرشادي: يُراجع ويُعتمد قبل الاستخدام الإنتاجي</value></data>
   <data name="Temporary password" xml:space="preserve"><value>كلمة مرور مؤقتة</value></data>
   <data name="Test email" xml:space="preserve"><value>رسالة تجريبية</value></data>
   <data name="Test email sent to {0}." xml:space="preserve"><value>تم إرسال رسالة تجريبية إلى {0}.</value></data>

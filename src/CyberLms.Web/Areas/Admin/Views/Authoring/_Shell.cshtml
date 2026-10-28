@@ -1,4 +1,5 @@
 @model AuthorPageVm
+@inject SettingsService StarterSettings
 @{
     var c = Model.Content;
     var isNew = c == null;
@@ -23,6 +24,17 @@
                 <span class="badge badge-dot text-bg-@(c!.Status == ContentStatus.Published ? "success" : "secondary")">@L[Labels.ContentStatus(c.Status)]</span>
                 <span class="type-chip type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i> @L[Labels.Type(c.Type)]</span>
             </div>
+            @* starter content pack: governance metadata for administrators only (never shown on the employee page) *@
+            @if (StarterSettings.Info(c!.Id) is { } sp)
+            {
+                <div class="starter-ref mt-2">
+                    <span class="ref-chip"><i class="bi bi-box-seam"></i> @L["Starter content pack"] · <span dir="ltr">@sp.Code</span></span>
+                    <span class="ref-chip" dir="auto"><i class="bi bi-bookmark-check"></i> @L.Format("Guidance reference: {0} — {1}", sp.Framework, sp.Reference)</span>
+                    <span class="ref-chip"><i class="bi bi-people"></i> @L["Audience"]: @sp.Audience</span>
+                    @if (sp.Template) { <span class="ref-chip warn"><i class="bi bi-exclamation-triangle"></i> @L["Template: review and approve before production use"]</span> }
+                    @if (sp.MediaSlot != null) { <span class="ref-chip muted" title="@sp.MediaSlot"><i class="bi bi-film"></i> @L["Official media slot: an NCA/Haseen awareness asset can be attached here later"]</span> }
+                </div>
+            }
         }
     </div>
     <div class="page-actions cluster">

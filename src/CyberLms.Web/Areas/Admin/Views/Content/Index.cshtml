@@ -1,4 +1,5 @@
 @model ContentListVm
+@inject SettingsService StarterSettings
 @{
     ViewData["Title"] = L["Content Management"]; var filtered = !string.IsNullOrEmpty(Model.Q) || Model.Type != null || Model.Status != null || ViewBag.EntityId != null; var i = 0;
     var entities = (List<EntityNode>)ViewBag.Entities; var all = (IReadOnlyList<EntityNode>)ViewBag.All; var targets = (ILookup<int, int>)ViewBag.Targets;
@@ -34,7 +35,7 @@
             <td><div class="t-title">
                 <span class="icon-chip tc type-@((int)c.Type)"><i class="bi @Ui.TypeIcon(c.Type)"></i></span>
                 <div class="min-w-0"><a class="t-name bidi" asp-controller="Authoring" asp-action="Basics" asp-route-id="@c.Id">@c.Title</a>
-                    <span class="t-meta"><span class="type-chip type-@((int)c.Type)">@L[Labels.Type(c.Type)]</span>@await Html.PartialAsync("_AudienceChips", (c, all, targets[c.Id]))@if (!string.IsNullOrWhiteSpace(c.Description)) { <span class="t-desc bidi">@c.Description</span> }</span></div>
+                    <span class="t-meta"><span class="type-chip type-@((int)c.Type)">@L[Labels.Type(c.Type)]</span>@await Html.PartialAsync("_AudienceChips", (c, all, targets[c.Id]))@if (StarterSettings.Info(c.Id) is { } sp) { <span class="ref-chip" dir="auto" title="@L["Starter content pack"] · @sp.Code"><i class="bi bi-bookmark-check"></i> @L.Format("Guidance reference: {0} — {1}", sp.Framework, sp.Reference)</span>@if (sp.Template) { <span class="ref-chip warn"><i class="bi bi-exclamation-triangle"></i> @L["Template: review and approve before production use"]</span> } }@if (!string.IsNullOrWhiteSpace(c.Description)) { <span class="t-desc bidi">@c.Description</span> }</span></div>
             </div></td>
             <td><span class="badge badge-dot text-bg-@(published ? "success" : "secondary")">@L[Labels.ContentStatus(c.Status)]</span></td>
             <td class="text-nowrap">

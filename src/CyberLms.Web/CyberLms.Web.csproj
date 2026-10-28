@@ -26,6 +26,9 @@
     <Content Update="appsettings.Production.sample.json" CopyToPublishDirectory="PreserveNewest" />
     <Content Remove="storage-dev/**" />
     <None Remove="storage-dev/**" />
+    <!-- Optional starter content pack: compiled into the assembly (no file path is read at run time) -->
+    <Content Remove="Data/StarterPack/**" />
+    <EmbeddedResource Include="Data/StarterPack/*.json" LogicalName="CyberLms.Web.Data.StarterPack.%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>
